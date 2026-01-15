@@ -36,7 +36,7 @@ export default function AccessGate() {
 
     try {
       const res = await authApi.login(phone, password);
-      login(res.access_token);
+      login(res.user as any, res.access_token);
       // Redirect to campus after successful login
       router.push('/campus');
     } catch {

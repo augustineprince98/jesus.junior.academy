@@ -66,9 +66,20 @@ async function request<T>(endpoint: string, options: ApiOptions = {}): Promise<T
 // AUTH API
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+interface LoginUser {
+  id: number;
+  name: string;
+  phone: string;
+  email: string | null;
+  role: string;
+  student_id: number | null;
+  parent_id: number | null;
+  teacher_id: number | null;
+}
+
 export const authApi = {
   login: (phone: string, password: string) =>
-    request<{ access_token: string; token_type: string }>('/auth/login', {
+    request<{ access_token: string; token_type: string; user: LoginUser }>('/auth/login', {
       method: 'POST',
       body: { phone, password },
     }),

@@ -58,6 +58,16 @@ async def login(request: Request, payload: LoginRequest, db: Session = Depends(g
     return {
         "access_token": create_access_token({"sub": str(user.id)}),
         "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "name": user.name,
+            "phone": user.phone,
+            "email": user.email,
+            "role": user.role,
+            "student_id": user.student_id,
+            "parent_id": user.parent_id,
+            "teacher_id": user.teacher_id,
+        }
     }
 
 @router.post("/password-reset/request")
