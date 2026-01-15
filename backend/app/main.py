@@ -38,6 +38,7 @@ from app.routers import (
     # File uploads
     uploads_router,
 )
+from app.core.config import settings
 
 # Configure logging
 logging.basicConfig(
