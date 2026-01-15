@@ -21,9 +21,9 @@ import {
   X,
   Save,
   Calendar,
-  Clock,
   MapPin,
-  Users,
+  Upload,
+  Image,
 } from 'lucide-react';
 
 interface Event {
@@ -32,8 +32,6 @@ interface Event {
   description: string;
   event_type: string;
   event_date: string;
-  start_time?: string;
-  end_time?: string;
   venue?: string;
   image_url?: string;
   is_featured: boolean;
@@ -43,6 +41,16 @@ interface Event {
   for_teachers: boolean;
 }
 
+const EVENT_TYPES = [
+  { value: 'CELEBRATION', label: 'Celebration', description: 'Diwali, Christmas, etc.' },
+  { value: 'SPORTS', label: 'Sports', description: 'Sports day, competitions' },
+  { value: 'CULTURAL', label: 'Cultural', description: 'Annual day, dance, music' },
+  { value: 'ACADEMIC', label: 'Academic', description: 'Science fair, exhibitions' },
+  { value: 'HOLIDAY', label: 'Holiday', description: 'Public holidays' },
+  { value: 'MEETING', label: 'Meeting', description: 'PTM, staff meetings' },
+  { value: 'OTHER', label: 'Other', description: 'Other events' },
+];
+
 export default function EventsPage() {
   const router = useRouter();
   const { user, isAuthenticated, token } = useAuthStore();
@@ -50,15 +58,14 @@ export default function EventsPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [eventTypes, setEventTypes] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
 
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     event_type: 'CELEBRATION',
     event_date: new Date().toISOString().split('T')[0],
-    start_time: '',
-    end_time: '',
     venue: '',
     image_url: '',
     is_featured: false,
@@ -79,16 +86,54 @@ export default function EventsPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [eventsData, typesData] = await Promise.all([
-        eventsApi.list(token!),
-        eventsApi.getTypes(),
-      ]);
+      const eventsData = await eventsApi.list(token!);
       setEvents(eventsData as Event[]);
-      setEventTypes((typesData as { types: string[] }).types);
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    const newImages: string[] = [];
+
+    try {
+      for (const file of Array.from(files)) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('category', 'events');
+
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/uploads/image`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            body: formData,
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          newImages.push(data.file_path);
+        }
+      }
+
+      setUploadedImages((prev) => [...prev, ...newImages]);
+      if (newImages.length > 0) {
+        setFormData((prev) => ({ ...prev, image_url: newImages[0] }));
+      }
+    } catch (error) {
+      console.error('Failed to upload images:', error);
+      alert('Failed to upload images. Please try again.');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -127,8 +172,6 @@ export default function EventsPage() {
       description: event.description,
       event_type: event.event_type,
       event_date: event.event_date,
-      start_time: event.start_time || '',
-      end_time: event.end_time || '',
       venue: event.venue || '',
       image_url: event.image_url || '',
       is_featured: event.is_featured,
@@ -137,6 +180,7 @@ export default function EventsPage() {
       for_parents: event.for_parents,
       for_teachers: event.for_teachers,
     });
+    setUploadedImages(event.image_url ? [event.image_url] : []);
     setShowModal(true);
   };
 
@@ -154,13 +198,12 @@ export default function EventsPage() {
   const closeModal = () => {
     setShowModal(false);
     setEditingId(null);
+    setUploadedImages([]);
     setFormData({
       title: '',
       description: '',
       event_type: 'CELEBRATION',
       event_date: new Date().toISOString().split('T')[0],
-      start_time: '',
-      end_time: '',
       venue: '',
       image_url: '',
       is_featured: false,
@@ -253,7 +296,7 @@ export default function EventsPage() {
 
                     <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
                       <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getEventColor(event.event_type)}`}>
-                        {event.event_type}
+                        {EVENT_TYPES.find(t => t.value === event.event_type)?.label || event.event_type}
                       </span>
                       <span className="flex items-center gap-1">
                         <Calendar className="w-4 h-4" />
@@ -263,13 +306,6 @@ export default function EventsPage() {
                           year: 'numeric'
                         })}
                       </span>
-                      {event.start_time && (
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          {event.start_time}
-                          {event.end_time && ` - ${event.end_time}`}
-                        </span>
-                      )}
                       {event.venue && (
                         <span className="flex items-center gap-1">
                           <MapPin className="w-4 h-4" />
@@ -372,8 +408,10 @@ export default function EventsPage() {
                       required
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                     >
-                      {eventTypes.map((type) => (
-                        <option key={type} value={type}>{type}</option>
+                      {EVENT_TYPES.map((type) => (
+                        <option key={type.value} value={type.value}>
+                          {type.label} - {type.description}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -390,50 +428,73 @@ export default function EventsPage() {
                   </div>
                 </div>
 
-                {/* Time & Venue */}
-                <div className="grid md:grid-cols-3 gap-5">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Start Time</label>
-                    <input
-                      type="time"
-                      value={formData.start_time}
-                      onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">End Time</label>
-                    <input
-                      type="time"
-                      value={formData.end_time}
-                      onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Venue</label>
-                    <input
-                      type="text"
-                      value={formData.venue}
-                      onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                      placeholder="School Ground"
-                    />
-                  </div>
+                {/* Venue */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Venue</label>
+                  <input
+                    type="text"
+                    value={formData.venue}
+                    onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    placeholder="School Ground"
+                  />
                 </div>
 
-                {/* Image URL */}
+                {/* Image Upload */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Image URL (Optional)</label>
-                  <input
-                    type="url"
-                    value={formData.image_url}
-                    onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    placeholder="https://example.com/image.jpg"
-                  />
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Event Images</label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary-400 transition-colors">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleImageUpload}
+                      className="hidden"
+                      id="image-upload"
+                      disabled={uploading}
+                    />
+                    <label htmlFor="image-upload" className="cursor-pointer">
+                      {uploading ? (
+                        <div className="flex flex-col items-center">
+                          <div className="w-10 h-10 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin mb-2" />
+                          <span className="text-gray-500">Uploading...</span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center">
+                          <Upload className="w-10 h-10 text-gray-400 mb-2" />
+                          <span className="text-gray-600 font-medium">Click to upload images</span>
+                          <span className="text-gray-400 text-sm mt-1">PNG, JPG, GIF up to 5MB each</span>
+                        </div>
+                      )}
+                    </label>
+                  </div>
+
+                  {/* Preview uploaded images */}
+                  {uploadedImages.length > 0 && (
+                    <div className="mt-4 flex flex-wrap gap-3">
+                      {uploadedImages.map((img, idx) => (
+                        <div key={idx} className="relative group">
+                          <img
+                            src={`${process.env.NEXT_PUBLIC_API_URL}${img}`}
+                            alt={`Upload ${idx + 1}`}
+                            className="w-24 h-24 object-cover rounded-lg border border-gray-200"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setUploadedImages((prev) => prev.filter((_, i) => i !== idx));
+                              if (formData.image_url === img) {
+                                setFormData((prev) => ({ ...prev, image_url: uploadedImages[0] || '' }));
+                              }
+                            }}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Audience */}
