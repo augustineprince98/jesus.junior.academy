@@ -93,7 +93,7 @@ export default function ResultsPage() {
     ? marks
     : marks.filter(m => m.exam_type === selectedExamType);
 
-  const examTypes = [...new Set(marks.map(m => m.exam_type))];
+  const examTypes = Array.from(new Set(marks.map(m => m.exam_type)));
 
   if (!isAuthenticated || !user) return null;
 

@@ -90,7 +90,7 @@ export default function AchievementsPage() {
     return colors[category] || 'bg-gray-100 text-gray-700';
   };
 
-  const categories = ['all', ...new Set(achievements.map(a => a.category))];
+  const categories = ['all', ...Array.from(new Set(achievements.map(a => a.category)))];
 
   const filteredAchievements = selectedCategory === 'all'
     ? achievements

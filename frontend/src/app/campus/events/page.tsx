@@ -100,7 +100,7 @@ export default function EventsPage() {
     return colors[type] || 'bg-gray-100 text-gray-700';
   };
 
-  const eventTypes = ['all', ...new Set(events.map(e => e.event_type))];
+  const eventTypes = ['all', ...Array.from(new Set(events.map(e => e.event_type)))];
 
   const filteredEvents = selectedType === 'all'
     ? events
