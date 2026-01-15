@@ -36,7 +36,7 @@ export default function AdmissionsPage() {
     try {
       setLoading(true);
       const data = await admissionsApi.list(token!, filterStatus || undefined);
-      setEnquiries(data);
+      setEnquiries(data as Enquiry[]);
     } catch (error) {
       console.error('Failed to load enquiries:', error);
     } finally {

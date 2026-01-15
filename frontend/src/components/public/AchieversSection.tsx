@@ -32,7 +32,7 @@ export default function AchieversSection() {
   const loadAchievements = async () => {
     try {
       const data = await achievementsApi.getPublic();
-      setAchievements(data);
+      setAchievements(data as Achievement[]);
     } catch (error) {
       console.error('Failed to load achievements:', error);
     } finally {

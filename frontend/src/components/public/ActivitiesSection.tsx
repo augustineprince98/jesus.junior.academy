@@ -34,7 +34,7 @@ export default function ActivitiesSection() {
   const loadEvents = async () => {
     try {
       const data = await eventsApi.getPublic();
-      setEvents(data);
+      setEvents(data as Event[]);
     } catch (error) {
       console.error('Failed to load events:', error);
     } finally {

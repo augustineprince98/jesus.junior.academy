@@ -34,7 +34,7 @@ export default function UsersPage() {
     try {
       setLoading(true);
       const data = await adminApi.listUsers(token!);
-      setUsers(data);
+      setUsers(data as User[]);
     } catch (error) {
       console.error('Failed to load users:', error);
     } finally {
