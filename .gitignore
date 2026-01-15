@@ -1,0 +1,66 @@
+# Environment files (contain secrets)
+.env
+.env.local
+.env.production
+*.env
+
+# Keep example files
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv/
+ENV/
+
+# Node.js
+node_modules/
+.next/
+out/
+.npm
+*.tsbuildinfo
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Uploads (will be on cloud storage in production)
+uploads/*
+!uploads/.gitkeep
+
+# Temp files
+tmp/
+temp/
+*.tmp
+tmpclaude-*
+
+# Coverage
+coverage/
+.coverage
+htmlcov/
+
+# Build
+dist/
+build/
