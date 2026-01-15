@@ -74,7 +74,7 @@ export default function AchievementsPage() {
         achievementsApi.getCategories(),
       ]);
       setAchievements(achievementsData as Achievement[]);
-      setCategories(categoriesData.categories);
+      setCategories((categoriesData as { categories: string[] }).categories);
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {
