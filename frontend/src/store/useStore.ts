@@ -195,7 +195,7 @@ export const useUIStore = create<UIState>()((set) => ({
   modalData: null,
   unreadCount: 0,
 
-  setLoading: (loading, message = null) =>
+  setLoading: (loading, message) =>
     set({
       isLoading: loading,
       loadingMessage: message,
