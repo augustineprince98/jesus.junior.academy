@@ -84,7 +84,7 @@ export default function EventsPage() {
         eventsApi.getTypes(),
       ]);
       setEvents(eventsData as Event[]);
-      setEventTypes(typesData.types);
+      setEventTypes((typesData as { types: string[] }).types);
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {
