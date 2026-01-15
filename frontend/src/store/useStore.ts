@@ -201,7 +201,7 @@ export const useUIStore = create<UIState>()((set) => ({
       loadingMessage: message,
     }),
 
-  openModal: (modalId, data = null) =>
+  openModal: (modalId, data) =>
     set({
       activeModal: modalId,
       modalData: data,
