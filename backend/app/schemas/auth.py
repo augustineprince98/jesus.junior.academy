@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from typing import Optional
 
 
 class LoginRequest(BaseModel):
@@ -6,9 +7,21 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class UserResponse(BaseModel):
+    id: int
+    name: str
+    phone: str
+    email: Optional[str] = None
+    role: str
+    student_id: Optional[int] = None
+    parent_id: Optional[int] = None
+    teacher_id: Optional[int] = None
+
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    user: UserResponse
 
 
 class OTPRequest(BaseModel):
