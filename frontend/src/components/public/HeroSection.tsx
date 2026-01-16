@@ -12,9 +12,9 @@ import Link from 'next/link';
 export default function HeroSection() {
   return (
     <section className="flex flex-col items-center justify-center text-center py-20 md:py-28 bg-white px-4">
-      {/* School Name - Bambi Bold Font, All Caps, Single Line */}
-      <h1 className="font-bambi text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-blue-900 mb-6 whitespace-nowrap">
-        JESUS JUNIOR ACADEMY
+      {/* School Name - Bambi Bold Font, All Caps */}
+      <h1 className="font-bambi text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-blue-900 mb-6 leading-tight">
+        JESUS JUNIOR<br className="sm:hidden" /> ACADEMY
       </h1>
 
       {/* Tagline - Nunito Font */}
