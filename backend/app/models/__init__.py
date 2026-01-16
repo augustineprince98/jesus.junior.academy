@@ -27,6 +27,7 @@ from .student_parent import StudentParent, ParentRelationship
 # Teacher management models
 from .teacher_attendance import TeacherAttendance
 from .teacher_leave import TeacherLeave, LeaveStatus, LeaveType
+from .teacher_class_subject import TeacherClassSubject
 
 # Public website content models
 from .achievement import Achievement, AchievementCategory
@@ -75,6 +76,7 @@ __all__ = [
     "TeacherLeave",
     "LeaveStatus",
     "LeaveType",
+    "TeacherClassSubject",
     # Public website content
     "Achievement",
     "AchievementCategory",

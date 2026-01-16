@@ -29,6 +29,7 @@ from app.services.homework_service import (
 )
 from app.services.notification_service import send_daily_homework_digest_all_classes
 from app.models.academic_year import AcademicYear
+from app.routers.teacher_subjects import is_teacher_assigned_to_subject
 
 
 router = APIRouter(
@@ -82,7 +83,24 @@ def create_new_homework(
     [TEACHER] Create a new homework assignment.
 
     Homework is created as draft. Use /publish to send notification.
+
+    NOTE: Teachers can only create homework for subjects they are assigned to teach.
+    Admins can create homework for any subject.
     """
+    # Check if teacher is assigned to this subject (skip for admin)
+    if user.role != Role.ADMIN.value:
+        if not is_teacher_assigned_to_subject(
+            db,
+            teacher_id=user.id,
+            class_id=payload.class_id,
+            subject_id=payload.subject_id,
+            academic_year_id=payload.academic_year_id,
+        ):
+            raise HTTPException(
+                status_code=403,
+                detail="You are not assigned to teach this subject in this class. Contact admin."
+            )
+
     homework = create_homework(
         db,
         class_id=payload.class_id,

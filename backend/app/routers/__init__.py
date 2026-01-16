@@ -17,6 +17,7 @@ from .calendar import router as calendar_router
 # Teacher management
 from .teacher_attendance import router as teacher_attendance_router
 from .teacher_leave import router as teacher_leave_router
+from .teacher_subjects import router as teacher_subjects_router
 
 # Public website content
 from .achievements import router as achievements_router

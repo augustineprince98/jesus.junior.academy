@@ -30,6 +30,7 @@ from app.routers import (
     # Teacher management
     teacher_attendance_router,
     teacher_leave_router,
+    teacher_subjects_router,
     # Public website content
     achievements_router,
     events_router,
@@ -143,6 +144,7 @@ app.include_router(calendar_router)
 # Teacher management
 app.include_router(teacher_attendance_router)
 app.include_router(teacher_leave_router)
+app.include_router(teacher_subjects_router)
 # Public website content
 app.include_router(achievements_router)
 app.include_router(events_router)
