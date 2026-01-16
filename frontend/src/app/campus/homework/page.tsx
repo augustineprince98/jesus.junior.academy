@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useStore';
-import { homeworkApi, teacherSubjectsApi } from '@/lib/api';
+import { homeworkApi, teacherSubjectsApi, schoolApi } from '@/lib/api';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
@@ -61,6 +61,7 @@ export default function HomeworkPage() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
+  const [currentAcademicYearId, setCurrentAcademicYearId] = useState<number | null>(null);
   const [formData, setFormData] = useState<HomeworkFormData>({
     class_id: 0,
     subject_id: 0,
@@ -80,7 +81,22 @@ export default function HomeworkPage() {
     }
 
     loadHomework();
+    loadCurrentAcademicYear();
   }, [isAuthenticated, router, token]);
+
+  const loadCurrentAcademicYear = async () => {
+    if (!token) return;
+
+    try {
+      const data = await schoolApi.getAcademicYears(token);
+      const currentYear = data.find((year: any) => year.is_current);
+      if (currentYear) {
+        setCurrentAcademicYearId(currentYear.id);
+      }
+    } catch (err: any) {
+      console.error('Failed to load academic year:', err);
+    }
+  };
 
   const loadHomework = async () => {
     if (!token) return;
@@ -154,6 +170,11 @@ export default function HomeworkPage() {
       return;
     }
 
+    if (!currentAcademicYearId) {
+      setFormError('Academic year not loaded. Please refresh the page.');
+      return;
+    }
+
     try {
       setSubmitting(true);
       setFormError(null);
@@ -161,6 +182,7 @@ export default function HomeworkPage() {
       await homeworkApi.create(token, {
         class_id: formData.class_id,
         subject_id: formData.subject_id,
+        academic_year_id: currentAcademicYearId,
         title: formData.title.trim(),
         description: formData.description.trim(),
         assigned_date: formData.assigned_date,

@@ -1,3 +1,24 @@
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session, joinedload
+from datetime import datetime
+from typing import List
+
+from app.core.database import get_db
+from app.core.auth import get_current_user
+from app.core.roles import Role
+from app.models.user import User
+from app.models.academic_year import AcademicYear
+from app.models.fees import (
+    StudentFeeProfile,
+    FeeStructure,
+    FeePayment,
+    PaymentFrequency,
+    PaymentMode,
+)
+from app.services.fee_service import calculate_total_paid, validate_payment_amount
+
+router = APIRouter(prefix="/fees", tags=["Fees"])
+
 # ========================================
 # PARENT FEE MANAGEMENT ENDPOINTS
 # ========================================
