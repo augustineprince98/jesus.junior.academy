@@ -32,3 +32,21 @@ from .uploads import router as uploads_router
 
 # Subjects
 from .subjects import router as subjects_router
+# Admin management
+from .classes import router as classes_router
+# Admin management
+from .classes import router as classes_router
+# Admin management
+from .classes import router as classes_router
+# Admin management
+from .classes import router as classes_router
+# Admin management
+from .classes import router as classes_router
+# Admin management
+from .classes import router as classes_router
+# Admin management
+from .classes import router as classes_router
+# Admin management
+from .classes import router as classes_router
+# Admin management
+from .classes import router as classes_router

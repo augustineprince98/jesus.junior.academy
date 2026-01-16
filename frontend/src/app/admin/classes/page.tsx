@@ -1,0 +1,589 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/store/useStore';
+import AdminLayout from '@/components/admin/AdminLayout';
+import { classesApi, schoolApi, enrollmentApi } from '@/lib/api';
+import {
+  Plus,
+  BookOpen,
+  FileText,
+  Users,
+  Edit,
+  Trash2,
+  X,
+  Save,
+  Search,
+  Filter,
+  GraduationCap,
+  Calendar,
+  CheckCircle,
+  AlertCircle,
+  Eye,
+  UserCheck,
+} from 'lucide-react';
+
+interface SchoolClass {
+  id: number;
+  name: string;
+  section?: string;
+  academic_year_id: number;
+  academic_year_name: string;
+  class_teacher_name?: string;
+}
+
+interface Subject {
+  id: number;
+  name: string;
+}
+
+interface Exam {
+  id: number;
+  name: string;
+  exam_type: string;
+  academic_year_name: string;
+  exam_date?: string;
+}
+
+interface Student {
+  id: number;
+  name: string;
+  roll_number?: string;
+}
+
+export default function AdminClassesPage() {
+  const router = useRouter();
+  const { user, token, isAuthenticated } = useAuthStore();
+  const [classes, setClasses] = useState<SchoolClass[]>([]);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [academicYears, setAcademicYears] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedClass, setSelectedClass] = useState<SchoolClass | null>(null);
+  const [showClassModal, setShowClassModal] = useState(false);
+  const [showSubjectModal, setShowSubjectModal] = useState(false);
+  const [showExamModal, setShowExamModal] = useState(false);
+  const [classSubjects, setClassSubjects] = useState<any[]>([]);
+  const [classExams, setClassExams] = useState<Exam[]>([]);
+  const [classStudents, setClassStudents] = useState<Student[]>([]);
+  const [filterYear, setFilterYear] = useState<number | null>(null);
+
+  // Form states
+  const [classForm, setClassForm] = useState({
+    name: '',
+    section: '',
+    academic_year_id: 0,
+  });
+
+  const [subjectForm, setSubjectForm] = useState({
+    subject_id: 0,
+    academic_year_id: 0,
+  });
+
+  const [examForm, setExamForm] = useState({
+    name: '',
+    exam_type: 'MID_TERM',
+    academic_year_id: 0,
+    exam_date: '',
+  });
+
+  useEffect(() => {
+    if (!isAuthenticated || user?.role !== 'ADMIN') {
+      router.push('/login');
+      return;
+    }
+
+    loadData();
+  }, [isAuthenticated, user, router]);
+
+  const loadData = async () => {
+    if (!token) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const [classesData, subjectsData, yearsData] = await Promise.all([
+        classesApi.list(token, filterYear || undefined),
+        schoolApi.getSubjects(token),
+        enrollmentApi.getAcademicYears(token),
+      ]);
+
+      setClasses(classesData.classes || []);
+      setSubjects(subjectsData);
+      setAcademicYears(yearsData.academic_years || []);
+    } catch (err: any) {
+      setError(err.detail || 'Failed to load data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadClassDetails = async (classItem: SchoolClass) => {
+    if (!token) return;
+
+    try {
+      const [subjectsData, examsData] = await Promise.all([
+        classesApi.getSubjects(token, classItem.id, classItem.academic_year_id),
+        classesApi.getExams(token, classItem.id, classItem.academic_year_id),
+      ]);
+
+      setClassSubjects(subjectsData.subjects || []);
+      setClassExams(examsData.exams || []);
+      setSelectedClass(classItem);
+    } catch (err: any) {
+      console.error('Failed to load class details:', err);
+    }
+  };
+
+  const handleCreateClass = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) return;
+
+    try {
+      await classesApi.create(token, classForm);
+      setShowClassModal(false);
+      setClassForm({ name: '', section: '', academic_year_id: 0 });
+      loadData();
+    } catch (err: any) {
+      setError(err.detail || 'Failed to create class');
+    }
+  };
+
+  const handleAssignSubject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token || !selectedClass) return;
+
+    try {
+      await classesApi.assignSubject(token, selectedClass.id, subjectForm);
+      setShowSubjectModal(false);
+      setSubjectForm({ subject_id: 0, academic_year_id: 0 });
+      loadClassDetails(selectedClass);
+    } catch (err: any) {
+      setError(err.detail || 'Failed to assign subject');
+    }
+  };
+
+  const handleCreateExam = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token || !selectedClass) return;
+
+    try {
+      await classesApi.createExam(token, selectedClass.id, examForm);
+      setShowExamModal(false);
+      setExamForm({ name: '', exam_type: 'MID_TERM', academic_year_id: 0, exam_date: '' });
+      loadClassDetails(selectedClass);
+    } catch (err: any) {
+      setError(err.detail || 'Failed to create exam');
+    }
+  };
+
+  const openClassModal = () => {
+    setShowClassModal(true);
+    setClassForm({ name: '', section: '', academic_year_id: 0 });
+  };
+
+  const openSubjectModal = () => {
+    if (!selectedClass) return;
+    setShowSubjectModal(true);
+    setSubjectForm({ subject_id: 0, academic_year_id: selectedClass.academic_year_id });
+  };
+
+  const openExamModal = () => {
+    if (!selectedClass) return;
+    setShowExamModal(true);
+    setExamForm({ name: '', exam_type: 'MID_TERM', academic_year_id: selectedClass.academic_year_id, exam_date: '' });
+  };
+
+  if (!isAuthenticated || user?.role !== 'ADMIN') return null;
+
+  return (
+    <AdminLayout activeSection="classes">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Class Management</h1>
+            <p className="text-gray-600">Manage classes, subjects, and exams</p>
+          </div>
+          <button
+            onClick={openClassModal}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add Class
+          </button>
+        </div>
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-600">
+            {error}
+          </div>
+        )}
+
+        {/* Filters */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-gray-500" />
+              <select
+                value={filterYear || ''}
+                onChange={(e) => setFilterYear(e.target.value ? Number(e.target.value) : null)}
+                className="border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All Academic Years</option>
+                {academicYears.map(year => (
+                  <option key={year.id} value={year.id}>{year.name}</option>
+                ))}
+              </select>
+            </div>
+            <button
+              onClick={loadData}
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Classes List */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="p-4 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900">Classes</h2>
+              </div>
+              <div className="divide-y divide-gray-100 max-h-96 overflow-y-auto">
+                {classes.length === 0 ? (
+                  <div className="p-8 text-center text-gray-500">
+                    No classes found
+                  </div>
+                ) : (
+                  classes.map(cls => (
+                    <div
+                      key={cls.id}
+                      className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
+                        selectedClass?.id === cls.id ? 'bg-blue-50 border-r-4 border-blue-500' : ''
+                      }`}
+                      onClick={() => loadClassDetails(cls)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="font-medium text-gray-900">
+                            {cls.name} {cls.section && `(${cls.section})`}
+                          </h3>
+                          <p className="text-sm text-gray-600">{cls.academic_year_name}</p>
+                          {cls.class_teacher_name && (
+                            <p className="text-xs text-gray-500">Teacher: {cls.class_teacher_name}</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Users className="w-4 h-4 text-gray-400" />
+                          <span className="text-sm text-gray-500">Students</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Class Details */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              {selectedClass ? (
+                <>
+                  <div className="p-4 border-b border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h2 className="text-lg font-semibold text-gray-900">
+                          {selectedClass.name} {selectedClass.section && `(${selectedClass.section})`}
+                        </h2>
+                        <p className="text-sm text-gray-600">{selectedClass.academic_year_name}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={openSubjectModal}
+                          className="flex items-center gap-1 px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
+                        >
+                          <BookOpen className="w-3 h-3" />
+                          Add Subject
+                        </button>
+                        <button
+                          onClick={openExamModal}
+                          className="flex items-center gap-1 px-3 py-1 bg-purple-600 text-white text-sm rounded hover:bg-purple-700"
+                        >
+                          <FileText className="w-3 h-3" />
+                          Add Exam
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 space-y-4">
+                    {/* Subjects */}
+                    <div>
+                      <h3 className="font-medium text-gray-900 mb-2">Subjects</h3>
+                      {classSubjects.length === 0 ? (
+                        <p className="text-sm text-gray-500">No subjects assigned</p>
+                      ) : (
+                        <div className="space-y-1">
+                          {classSubjects.map(subject => (
+                            <div key={subject.assignment_id} className="flex items-center gap-2 text-sm">
+                              <BookOpen className="w-4 h-4 text-green-600" />
+                              <span>{subject.subject_name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Exams */}
+                    <div>
+                      <h3 className="font-medium text-gray-900 mb-2">Exams</h3>
+                      {classExams.length === 0 ? (
+                        <p className="text-sm text-gray-500">No exams scheduled</p>
+                      ) : (
+                        <div className="space-y-1">
+                          {classExams.map(exam => (
+                            <div key={exam.id} className="flex items-center gap-2 text-sm">
+                              <FileText className="w-4 h-4 text-purple-600" />
+                              <span>{exam.name} ({exam.exam_type})</span>
+                              {exam.exam_date && (
+                                <span className="text-gray-500">
+                                  - {new Date(exam.exam_date).toLocaleDateString()}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="p-8 text-center text-gray-500">
+                  <GraduationCap className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p>Select a class to view details</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Create Class Modal */}
+      {showClassModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <h2 className="text-lg font-bold text-gray-900">Create New Class</h2>
+              <button
+                onClick={() => setShowClassModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateClass} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Class Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={classForm.name}
+                  onChange={(e) => setClassForm({ ...classForm, name: e.target.value })}
+                  placeholder="e.g., Class 10"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Section
+                </label>
+                <input
+                  type="text"
+                  value={classForm.section}
+                  onChange={(e) => setClassForm({ ...classForm, section: e.target.value })}
+                  placeholder="e.g., A, B"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Academic Year <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={classForm.academic_year_id}
+                  onChange={(e) => setClassForm({ ...classForm, academic_year_id: Number(e.target.value) })}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value={0}>Select Academic Year</option>
+                  {academicYears.map(year => (
+                    <option key={year.id} value={year.id}>{year.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowClassModal(false)}
+                  className="flex-1 px-4 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700"
+                >
+                  Create Class
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Assign Subject Modal */}
+      {showSubjectModal && selectedClass && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <h2 className="text-lg font-bold text-gray-900">Assign Subject to Class</h2>
+              <button
+                onClick={() => setShowSubjectModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAssignSubject} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Subject <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={subjectForm.subject_id}
+                  onChange={(e) => setSubjectForm({ ...subjectForm, subject_id: Number(e.target.value) })}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                  required
+                >
+                  <option value={0}>Select Subject</option>
+                  {subjects.map(subject => (
+                    <option key={subject.id} value={subject.id}>{subject.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowSubjectModal(false)}
+                  className="flex-1 px-4 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700"
+                >
+                  Assign Subject
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Create Exam Modal */}
+      {showExamModal && selectedClass && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <h2 className="text-lg font-bold text-gray-900">Create Exam</h2>
+              <button
+                onClick={() => setShowExamModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateExam} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Exam Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={examForm.name}
+                  onChange={(e) => setExamForm({ ...examForm, name: e.target.value })}
+                  placeholder="e.g., Mid Term Exam 1"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Exam Type <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={examForm.exam_type}
+                  onChange={(e) => setExamForm({ ...examForm, exam_type: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  required
+                >
+                  <option value="MID_TERM">Mid Term</option>
+                  <option value="FINAL">Final</option>
+                  <option value="UNIT_TEST">Unit Test</option>
+                  <option value="QUIZ">Quiz</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Exam Date
+                </label>
+                <input
+                  type="date"
+                  value={examForm.exam_date}
+                  onChange={(e) => setExamForm({ ...examForm, exam_date: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowExamModal(false)}
+                  className="flex-1 px-4 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700"
+                >
+                  Create Exam
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </AdminLayout>
+  );
+}

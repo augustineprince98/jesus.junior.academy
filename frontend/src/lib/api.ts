@@ -859,3 +859,67 @@ export const schoolApi = {
 };
 
 export { ApiError };
+
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ADMIN CLASSES API
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+export const classesApi = {
+  // List classes
+  list: (token: string, academicYearId?: number) =>
+    request("/admin/classes/", { token, params: { academic_year_id: academicYearId } }),
+
+  // Create class
+  create: (token: string, data: { name: string; section?: string; academic_year_id: number }) =>
+    request("/admin/classes/", { method: "POST", token, body: data }),
+
+  // Assign subject to class
+  assignSubject: (token: string, classId: number, data: { subject_id: number; academic_year_id: number }) =>
+    request(`/admin/classes/${classId}/subjects`, { method: "POST", token, body: data }),
+
+  // Get class subjects
+  getSubjects: (token: string, classId: number, academicYearId?: number) =>
+    request(`/admin/classes/${classId}/subjects`, { token, params: { academic_year_id: academicYearId } }),
+
+  // Create exam for class
+  createExam: (token: string, classId: number, data: { name: string; exam_type: string; academic_year_id: number; exam_date?: string }) =>
+    request(`/admin/classes/${classId}/exams`, { method: "POST", token, body: data }),
+
+  // Get class exams
+  getExams: (token: string, classId: number, academicYearId?: number) =>
+    request(`/admin/classes/${classId}/exams`, { token, params: { academic_year_id: academicYearId } }),
+};
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ADMIN NOTIFICATIONS API
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+export const adminNotificationsApi = {
+  // Create notification
+  create: (token: string, data: {
+    title: string;
+    message: string;
+    notification_type: string;
+    priority: string;
+    target_audience: string;
+    target_class_id?: number;
+    academic_year_id: number;
+    scheduled_for?: string;
+  }) =>
+    request("/notifications/create", { method: "POST", token, body: data }),
+
+  // Send notification
+  send: (token: string, notificationId: number) =>
+    request(`/notifications/${notificationId}/send`, { method: "POST", token }),
+
+  // Send quick notice
+  sendNotice: (token: string, data: {
+    notice_type: string;
+    title: string;
+    message: string;
+    effective_date?: string;
+    end_date?: string;
+  }) =>
+    request("/notifications/send-notice", { method: "POST", token, body: data }),
+};
