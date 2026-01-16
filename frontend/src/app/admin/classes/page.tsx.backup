@@ -129,8 +129,8 @@ export default function AdminClassesPage() {
         classesApi.getExams(token, classItem.id, classItem.academic_year_id),
       ]);
 
-      setClassSubjects((subjectsData as any).subjects || []);
-      setClassExams((examsData as any).exams || []);
+      setClassSubjects(subjectsData.subjects || []);
+      setClassExams(examsData.exams || []);
       setSelectedClass(classItem);
     } catch (err: any) {
       console.error('Failed to load class details:', err);

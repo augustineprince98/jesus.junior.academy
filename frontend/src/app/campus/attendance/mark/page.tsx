@@ -78,8 +78,8 @@ export default function MarkAttendancePage() {
       const classList: ClassInfo[] = data.classes.map((cls: any) => ({
         class_id: cls.class_id,
         class_name: cls.class_name,
-        academic_year_id: data.academic_year.id,
-        academic_year_name: data.academic_year.name,
+        academic_year_id: 1, // TODO: Get from API
+        academic_year_name: data.academic_year,
       }));
       setClasses(classList);
 
