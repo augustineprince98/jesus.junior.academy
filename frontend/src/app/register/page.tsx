@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { registrationApi } from '@/lib/api';
 import { motion } from 'framer-motion';
@@ -16,9 +16,16 @@ import {
   CheckCircle2,
   ArrowLeft,
   AlertCircle,
+  BookOpen,
+  Calendar,
 } from 'lucide-react';
 
 type RegistrationStep = 'form' | 'success' | 'check';
+
+interface SchoolClass {
+  id: number;
+  name: string;
+}
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -35,9 +42,35 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState('PARENT');
 
+  // Student-specific state
+  const [classId, setClassId] = useState<number | null>(null);
+  const [dob, setDob] = useState('');
+  const [gender, setGender] = useState('');
+  const [classes, setClasses] = useState<SchoolClass[]>([]);
+  const [loadingClasses, setLoadingClasses] = useState(false);
+
   // Check status state
   const [checkPhone, setCheckPhone] = useState('');
   const [statusResult, setStatusResult] = useState<{ status: string; message: string } | null>(null);
+
+  // Load classes when role changes to STUDENT
+  useEffect(() => {
+    if (role === 'STUDENT' && classes.length === 0) {
+      loadClasses();
+    }
+  }, [role]);
+
+  const loadClasses = async () => {
+    try {
+      setLoadingClasses(true);
+      const result = await registrationApi.getClasses();
+      setClasses(result.classes || []);
+    } catch (err) {
+      console.error('Failed to load classes:', err);
+    } finally {
+      setLoadingClasses(false);
+    }
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,6 +94,12 @@ export default function RegisterPage() {
       return;
     }
 
+    // Additional validation for students
+    if (role === 'STUDENT' && !classId) {
+      setError('Please select your class');
+      return;
+    }
+
     try {
       setLoading(true);
       await registrationApi.register({
@@ -69,6 +108,9 @@ export default function RegisterPage() {
         password,
         email: email.trim() || undefined,
         role,
+        class_id: role === 'STUDENT' ? classId || undefined : undefined,
+        dob: role === 'STUDENT' && dob ? dob : undefined,
+        gender: role === 'STUDENT' && gender ? gender : undefined,
       });
       setStep('success');
     } catch (err: any) {
@@ -289,6 +331,63 @@ export default function RegisterPage() {
                     </button>
                   </div>
                 </div>
+
+                {/* Student-specific fields */}
+                {role === 'STUDENT' && (
+                  <div className="space-y-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                    <p className="text-sm font-medium text-blue-800">Student Information</p>
+
+                    {/* Class Selection */}
+                    <div className="relative">
+                      <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <select
+                        value={classId || ''}
+                        onChange={(e) => setClassId(Number(e.target.value) || null)}
+                        className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white appearance-none"
+                        disabled={loadingClasses}
+                      >
+                        <option value="">
+                          {loadingClasses ? 'Loading classes...' : 'Select Class *'}
+                        </option>
+                        {classes.map((cls) => (
+                          <option key={cls.id} value={cls.id}>
+                            {cls.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Date of Birth */}
+                    <div className="relative">
+                      <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        type="date"
+                        value={dob}
+                        onChange={(e) => setDob(e.target.value)}
+                        className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        placeholder="Date of Birth"
+                      />
+                    </div>
+
+                    {/* Gender */}
+                    <div className="grid grid-cols-3 gap-2">
+                      {['Male', 'Female', 'Other'].map((g) => (
+                        <button
+                          key={g}
+                          type="button"
+                          onClick={() => setGender(g)}
+                          className={`py-2 px-3 rounded-lg border text-sm font-medium transition-all ${
+                            gender === g
+                              ? 'border-primary-500 bg-primary-50 text-primary-700'
+                              : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                          }`}
+                        >
+                          {g}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Password */}
                 <div className="relative">

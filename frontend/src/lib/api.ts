@@ -365,6 +365,9 @@ export const registrationApi = {
     password: string;
     email?: string;
     role: string;
+    class_id?: number;
+    dob?: string;
+    gender?: string;
   }) =>
     request<{ status: string; message: string; user_id: number }>('/register/', {
       method: 'POST',
@@ -373,6 +376,54 @@ export const registrationApi = {
 
   checkStatus: (phone: string) =>
     request<{ phone: string; status: string; message: string }>(`/register/status/${phone}`),
+
+  // Get classes for registration dropdown (public endpoint)
+  getClasses: () =>
+    request<{
+      classes: { id: number; name: string }[];
+      academic_year: { id: number; name: string } | null;
+    }>('/enrollment/classes'),
+};
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ENROLLMENT API (Admin)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+export const enrollmentApi = {
+  // Assign user to class (creates Student + Enrollment)
+  assignUserToClass: (token: string, data: {
+    user_id: number;
+    class_id: number;
+    academic_year_id?: number;
+    student_name?: string;
+    dob?: string;
+    gender?: string;
+  }) =>
+    request('/enrollment/assign-user-to-class', { method: 'POST', token, body: data }),
+
+  // Get user's class assignment
+  getUserClass: (token: string, userId: number) =>
+    request<{
+      user_id: number;
+      student_id?: number;
+      class?: { id: number; name: string };
+      academic_year?: string;
+      roll_number?: number;
+      message?: string;
+    }>(`/enrollment/user/${userId}/class`, { token }),
+
+  // Get available classes
+  getClasses: (token: string) =>
+    request<{
+      classes: { id: number; name: string }[];
+      academic_year: { id: number; name: string } | null;
+    }>('/enrollment/classes', { token }),
+
+  // Get academic years
+  getAcademicYears: (token: string) =>
+    request<{
+      academic_years: { id: number; name: string; is_current: boolean }[];
+    }>('/enrollment/academic-years', { token }),
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

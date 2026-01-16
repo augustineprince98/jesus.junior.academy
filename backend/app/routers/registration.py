@@ -15,6 +15,11 @@ from app.core.security import hash_password
 from app.core.rate_limit import rate_limit
 from app.core.roles import Role
 from app.models.user import User, ApprovalStatus
+from app.models.people import Student
+from app.models.enrollment import Enrollment
+from app.models.school_class import SchoolClass
+from app.models.academic_year import AcademicYear
+from datetime import date
 
 router = APIRouter(prefix="/register", tags=["Registration"])
 
@@ -26,6 +31,9 @@ class RegistrationRequest(BaseModel):
     password: str
     email: Optional[EmailStr] = None
     role: str  # PARENT or STUDENT only for public registration
+    class_id: Optional[int] = None  # Required for STUDENT role
+    dob: Optional[str] = None  # Date of birth for students (YYYY-MM-DD)
+    gender: Optional[str] = None  # Gender for students
 
     @field_validator("phone")
     @classmethod
@@ -90,6 +98,19 @@ async def register_user(
                 detail="Email already registered",
             )
 
+    # For STUDENT role, validate class_id if provided
+    school_class = None
+    academic_year = None
+    if payload.role == Role.STUDENT.value and payload.class_id:
+        school_class = db.get(SchoolClass, payload.class_id)
+        if not school_class:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid class selected",
+            )
+        # Get current academic year
+        academic_year = db.query(AcademicYear).filter(AcademicYear.is_current == True).first()
+
     # Create new user with pending approval
     new_user = User(
         name=payload.name,
@@ -103,6 +124,31 @@ async def register_user(
     )
 
     db.add(new_user)
+    db.flush()  # Get user ID
+
+    # For STUDENT role with class_id, create Student and Enrollment records
+    if payload.role == Role.STUDENT.value and school_class and academic_year:
+        # Create student record
+        student = Student(
+            name=payload.name,
+            dob=date.fromisoformat(payload.dob) if payload.dob else date(2010, 1, 1),
+            gender=payload.gender or "Not Specified",
+        )
+        db.add(student)
+        db.flush()
+
+        # Link user to student
+        new_user.student_id = student.id
+
+        # Create enrollment
+        enrollment = Enrollment(
+            student_id=student.id,
+            class_id=school_class.id,
+            academic_year_id=academic_year.id,
+            status="ACTIVE",
+        )
+        db.add(enrollment)
+
     db.commit()
     db.refresh(new_user)
 
