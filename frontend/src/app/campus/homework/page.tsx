@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useStore';
-import { homeworkApi, teacherSubjectsApi, classApi } from '@/lib/api';
+import { homeworkApi, teacherSubjectsApi } from '@/lib/api';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,

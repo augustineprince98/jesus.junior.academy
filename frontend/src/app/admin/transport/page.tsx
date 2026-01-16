@@ -41,7 +41,7 @@ interface StudentTransport {
   student_name: string;
   admission_number: string;
   uses_transport: boolean;
-  transport_chargess: number;
+  transport_charges: number;
 }
 
 export default function TransportManagementPage() {
