@@ -23,6 +23,8 @@ import {
   ChevronRight,
   UserCheck,
   Wallet,
+  Bus,
+  BookOpenCheck,
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -65,6 +67,18 @@ export default function AdminLayout({ children, activeSection }: AdminLayoutProp
       label: 'Fee Management',
       icon: Wallet,
       href: '/admin/fees',
+    },
+    {
+      id: 'transport',
+      label: 'Transport',
+      icon: Bus,
+      href: '/admin/transport',
+    },
+    {
+      id: 'teacher-subjects',
+      label: 'Teacher Subjects',
+      icon: BookOpenCheck,
+      href: '/admin/teacher-subjects',
     },
     {
       id: 'admissions',

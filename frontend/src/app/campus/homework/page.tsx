@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useStore';
-import { homeworkApi } from '@/lib/api';
+import { homeworkApi, teacherSubjectsApi, classApi } from '@/lib/api';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
@@ -15,6 +15,7 @@ import {
   Filter,
   Plus,
   FileText,
+  X,
 } from 'lucide-react';
 
 interface Homework {
@@ -30,6 +31,21 @@ interface Homework {
   is_completed: boolean;
 }
 
+interface TeacherAssignment {
+  class_id: number;
+  class_name: string;
+  subjects: { subject_id: number; subject_name: string }[];
+}
+
+interface HomeworkFormData {
+  class_id: number;
+  subject_id: number;
+  title: string;
+  description: string;
+  assigned_date: string;
+  due_date: string;
+}
+
 export default function HomeworkPage() {
   const router = useRouter();
   const { user, token, isAuthenticated } = useAuthStore();
@@ -37,6 +53,25 @@ export default function HomeworkPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'pending' | 'submitted' | 'overdue'>('all');
+
+  // Teacher homework form states
+  const [showModal, setShowModal] = useState(false);
+  const [teacherAssignments, setTeacherAssignments] = useState<TeacherAssignment[]>([]);
+  const [loadingAssignments, setLoadingAssignments] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [formSuccess, setFormSuccess] = useState<string | null>(null);
+  const [formData, setFormData] = useState<HomeworkFormData>({
+    class_id: 0,
+    subject_id: 0,
+    title: '',
+    description: '',
+    assigned_date: new Date().toISOString().split('T')[0],
+    due_date: '',
+  });
+
+  // Get available subjects based on selected class
+  const availableSubjects = teacherAssignments.find(a => a.class_id === formData.class_id)?.subjects || [];
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -48,18 +83,99 @@ export default function HomeworkPage() {
   }, [isAuthenticated, router, token]);
 
   const loadHomework = async () => {
-    if (!token || !user?.student_id) return;
+    if (!token) return;
+
+    // For students, load homework
+    if (user?.student_id) {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const data = await homeworkApi.getForStudent(token, user.student_id, false);
+        setHomework((data as any).homework || []);
+      } catch (err: any) {
+        setError(err.detail || 'Failed to load homework');
+      } finally {
+        setLoading(false);
+      }
+    } else if (user?.role === 'TEACHER' || user?.role === 'CLASS_TEACHER') {
+      // For teachers, just hide loading state
+      setLoading(false);
+    } else {
+      setLoading(false);
+    }
+  };
+
+  // Load teacher's assigned classes and subjects when modal opens
+  const loadTeacherAssignments = async () => {
+    if (!token) return;
 
     try {
-      setLoading(true);
-      setError(null);
-
-      const data = await homeworkApi.getForStudent(token, user.student_id, false);
-      setHomework((data as any).homework || []);
+      setLoadingAssignments(true);
+      const data = await teacherSubjectsApi.getMyAssignments(token);
+      setTeacherAssignments((data as any).classes || []);
     } catch (err: any) {
-      setError(err.detail || 'Failed to load homework');
+      setFormError('Failed to load your class assignments');
     } finally {
-      setLoading(false);
+      setLoadingAssignments(false);
+    }
+  };
+
+  const openModal = () => {
+    setShowModal(true);
+    setFormError(null);
+    setFormSuccess(null);
+    setFormData({
+      class_id: 0,
+      subject_id: 0,
+      title: '',
+      description: '',
+      assigned_date: new Date().toISOString().split('T')[0],
+      due_date: '',
+    });
+    loadTeacherAssignments();
+  };
+
+  const handleSubmitHomework = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) return;
+
+    // Validation
+    if (!formData.class_id || !formData.subject_id) {
+      setFormError('Please select a class and subject');
+      return;
+    }
+    if (!formData.title.trim()) {
+      setFormError('Please enter a title');
+      return;
+    }
+    if (!formData.due_date) {
+      setFormError('Please select a due date');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setFormError(null);
+
+      await homeworkApi.create(token, {
+        class_id: formData.class_id,
+        subject_id: formData.subject_id,
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        assigned_date: formData.assigned_date,
+        due_date: formData.due_date,
+      });
+
+      setFormSuccess('Homework assigned successfully!');
+      setTimeout(() => {
+        setShowModal(false);
+        setFormSuccess(null);
+      }, 1500);
+    } catch (err: any) {
+      setFormError(err.detail || 'Failed to create homework');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -145,7 +261,10 @@ export default function HomeworkPage() {
             </div>
 
             {(user.role === 'TEACHER' || user.role === 'CLASS_TEACHER') && (
-              <button className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+              <button
+                onClick={openModal}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
                 <Plus className="w-4 h-4" />
                 Assign Homework
               </button>
@@ -288,6 +407,195 @@ export default function HomeworkPage() {
           </>
         )}
       </main>
+
+      {/* Homework Assignment Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
+                  <BookOpen className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">Assign Homework</h2>
+                  <p className="text-xs text-gray-500">Create a new assignment</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <form onSubmit={handleSubmitHomework} className="p-6 space-y-5">
+              {/* Error/Success Messages */}
+              {formError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+                  {formError}
+                </div>
+              )}
+              {formSuccess && (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-green-600 text-sm">
+                  {formSuccess}
+                </div>
+              )}
+
+              {loadingAssignments ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+                </div>
+              ) : teacherAssignments.length === 0 ? (
+                <div className="text-center py-8">
+                  <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-3" />
+                  <p className="text-gray-600 mb-2">No class assignments found</p>
+                  <p className="text-sm text-gray-500">
+                    Please contact admin to assign you to classes and subjects.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {/* Class Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Class <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={formData.class_id}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        class_id: Number(e.target.value),
+                        subject_id: 0, // Reset subject when class changes
+                      })}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    >
+                      <option value={0}>Select a class</option>
+                      {teacherAssignments.map(assignment => (
+                        <option key={assignment.class_id} value={assignment.class_id}>
+                          {assignment.class_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Subject Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Subject <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={formData.subject_id}
+                      onChange={(e) => setFormData({ ...formData, subject_id: Number(e.target.value) })}
+                      disabled={!formData.class_id}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400"
+                    >
+                      <option value={0}>
+                        {formData.class_id ? 'Select a subject' : 'Select class first'}
+                      </option>
+                      {availableSubjects.map(subject => (
+                        <option key={subject.subject_id} value={subject.subject_id}>
+                          {subject.subject_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Title */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Title <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      placeholder="e.g., Chapter 5 Exercise Questions"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Description
+                    </label>
+                    <textarea
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      placeholder="Add details about the homework..."
+                      rows={3}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                    />
+                  </div>
+
+                  {/* Dates */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Assigned Date
+                      </label>
+                      <input
+                        type="date"
+                        value={formData.assigned_date}
+                        onChange={(e) => setFormData({ ...formData, assigned_date: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Due Date <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="date"
+                        value={formData.due_date}
+                        onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                        min={formData.assigned_date}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Submit Button */}
+                  <div className="flex gap-3 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => setShowModal(false)}
+                      className="flex-1 px-4 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="flex-1 px-4 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      {submitting ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          Assigning...
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="w-4 h-4" />
+                          Assign Homework
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </>
+              )}
+            </form>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

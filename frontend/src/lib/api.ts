@@ -178,20 +178,45 @@ export const homeworkApi = {
   getForStudent: (token: string, studentId: number, pendingOnly = true) =>
     request('/homework/student', { token, params: { student_id: studentId, pending_only: pendingOnly } }),
 
-  getForClass: (token: string, classId: number) =>
-    request(`/homework/class/${classId}`, { token }),
+  getForClass: (token: string, classId: number, academicYearId: number, subjectId?: number) =>
+    request(`/homework/class/${classId}/year/${academicYearId}`, {
+      token,
+      params: { subject_id: subjectId }
+    }),
 
   create: (
     token: string,
     data: {
       class_id: number;
       subject_id: number;
+      academic_year_id: number;
       title: string;
       description: string;
+      assigned_date: string;
       due_date: string;
     }
   ) =>
-    request('/homework/create', { method: 'POST', token, body: data }),
+    request<{ status: string; homework_id: number; title: string; is_published: boolean }>(
+      '/homework/create',
+      { method: 'POST', token, body: data }
+    ),
+
+  publish: (token: string, homeworkId: number, sendNotification = false) =>
+    request(`/homework/${homeworkId}/publish`, {
+      method: 'POST',
+      token,
+      body: { send_individual_notification: sendNotification },
+    }),
+
+  update: (token: string, homeworkId: number, data: {
+    title?: string;
+    description?: string;
+    due_date?: string;
+  }) =>
+    request(`/homework/${homeworkId}`, { method: 'PUT', token, body: data }),
+
+  delete: (token: string, homeworkId: number) =>
+    request(`/homework/${homeworkId}`, { method: 'DELETE', token }),
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -588,6 +613,85 @@ export const uploadsApi = {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // ADMIN FEES API
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TEACHER SUBJECTS API
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+export const teacherSubjectsApi = {
+  // Get my assignments (for teachers)
+  getMyAssignments: (token: string) =>
+    request<{
+      teacher_id: number;
+      teacher_name: string;
+      academic_year: string;
+      classes: { class_id: number; class_name: string; subjects: { subject_id: number; subject_name: string }[] }[];
+    }>('/teacher-subjects/my-assignments', { token }),
+
+  // Admin: Assign teacher to subject
+  assignTeacher: (token: string, data: {
+    teacher_id: number;
+    class_id: number;
+    subject_id: number;
+    academic_year_id?: number;
+  }) =>
+    request('/teacher-subjects/assign', { method: 'POST', token, body: data }),
+
+  // Admin: Bulk assign
+  bulkAssign: (token: string, data: {
+    teacher_id: number;
+    class_id: number;
+    subject_ids: number[];
+    academic_year_id?: number;
+  }) =>
+    request('/teacher-subjects/assign-bulk', { method: 'POST', token, body: data }),
+
+  // Admin: Get class assignments
+  getClassAssignments: (token: string, classId: number, academicYearId?: number) =>
+    request(`/teacher-subjects/class/${classId}`, { token, params: { academic_year_id: academicYearId } }),
+
+  // Admin: Remove assignment
+  removeAssignment: (token: string, assignmentId: number) =>
+    request(`/teacher-subjects/remove/${assignmentId}`, { method: 'DELETE', token }),
+};
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TRANSPORT API
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+export const transportApi = {
+  // Get transport status for class
+  getClassTransport: (token: string, classId: number, academicYearId: number) =>
+    request<{
+      class_id: number;
+      class_name: string;
+      total_students: number;
+      using_transport: number;
+      students: {
+        student_id: number;
+        student_name: string;
+        uses_transport: boolean;
+        transport_charges: number;
+      }[];
+    }>(`/fees/transport/class/${classId}/year/${academicYearId}`, { token }),
+
+  // Update single student transport
+  updateStudentTransport: (token: string, studentId: number, transportCharges: number, academicYearId?: number) =>
+    request(`/fees/transport/student/${studentId}`, {
+      method: 'PUT',
+      token,
+      params: { transport_charges: transportCharges, academic_year_id: academicYearId },
+    }),
+
+  // Bulk update transport
+  bulkUpdateTransport: (token: string, updates: { student_id: number; transport_charges: number; uses_transport: boolean }[], academicYearId?: number) =>
+    request('/fees/transport/bulk', {
+      method: 'PUT',
+      token,
+      body: { updates },
+      params: { academic_year_id: academicYearId },
+    }),
+};
 
 export const adminFeesApi = {
   // Fee Structure
