@@ -1,4 +1,4 @@
-e /**
+/**
  * API Client for Jesus Junior Academy Backend
  *
  * Clean, type-safe API calls with automatic token management
