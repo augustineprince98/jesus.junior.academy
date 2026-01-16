@@ -51,12 +51,24 @@ export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
 
-  // Modal state
+  // Assign class modal state
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
   const [userClassInfo, setUserClassInfo] = useState<UserClassInfo | null>(null);
   const [assigning, setAssigning] = useState(false);
+
+  // Add user modal state
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newUser, setNewUser] = useState({
+    name: '',
+    phone: '',
+    password: '',
+    email: '',
+    role: 'STUDENT',
+  });
+  const [addingUser, setAddingUser] = useState(false);
+  const [addError, setAddError] = useState('');
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'ADMIN') {
@@ -125,6 +137,39 @@ export default function UsersPage() {
     }
   };
 
+  const openAddModal = () => {
+    setNewUser({ name: '', phone: '', password: '', email: '', role: 'STUDENT' });
+    setAddError('');
+    setShowAddModal(true);
+  };
+
+  const handleAddUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newUser.name || !newUser.phone || !newUser.password || !newUser.role) {
+      setAddError('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      setAddingUser(true);
+      setAddError('');
+      await adminApi.createUser(token!, {
+        name: newUser.name,
+        phone: newUser.phone,
+        password: newUser.password,
+        role: newUser.role,
+        email: newUser.email || undefined,
+      });
+      setShowAddModal(false);
+      loadUsers(); // Refresh users list
+    } catch (error: any) {
+      console.error('Failed to add user:', error);
+      setAddError(error.detail || 'Failed to add user');
+    } finally {
+      setAddingUser(false);
+    }
+  };
+
   const getRoleBadge = (role: string) => {
     const colors: Record<string, string> = {
       ADMIN: 'bg-red-100 text-red-700',
@@ -154,7 +199,10 @@ export default function UsersPage() {
             <h1 className="text-2xl font-bold text-gray-800 mb-2">User Management</h1>
             <p className="text-gray-600">Manage system users and assign classes</p>
           </div>
-          <button className="flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
+          <button
+            onClick={openAddModal}
+            className="flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+          >
             <UserPlus className="w-5 h-5" />
             Add User
           </button>
@@ -330,6 +378,136 @@ export default function UsersPage() {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Add User Modal */}
+        {showAddModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+                <h2 className="text-xl font-bold text-gray-800">Add New User</h2>
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleAddUser} className="p-6 space-y-4">
+                {addError && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                    {addError}
+                  </div>
+                )}
+
+                {/* Name */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Full Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={newUser.name}
+                    onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    placeholder="Enter full name"
+                    required
+                  />
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Phone Number <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    value={newUser.phone}
+                    onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    placeholder="Enter phone number"
+                    required
+                  />
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Email (Optional)
+                  </label>
+                  <input
+                    type="email"
+                    value={newUser.email}
+                    onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    placeholder="Enter email address"
+                  />
+                </div>
+
+                {/* Password */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Password <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="password"
+                    value={newUser.password}
+                    onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    placeholder="Enter password (min 6 characters)"
+                    minLength={6}
+                    required
+                  />
+                </div>
+
+                {/* Role */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Role <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={newUser.role}
+                    onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    required
+                  >
+                    <option value="STUDENT">Student</option>
+                    <option value="PARENT">Parent</option>
+                    <option value="TEACHER">Teacher</option>
+                    <option value="CLASS_TEACHER">Class Teacher</option>
+                    <option value="ADMIN">Admin</option>
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {newUser.role === 'STUDENT' && 'Can view own results, attendance, and homework'}
+                    {newUser.role === 'PARENT' && "Can view child's progress, fees, and notifications"}
+                    {newUser.role === 'TEACHER' && 'Can teach subjects and enter marks'}
+                    {newUser.role === 'CLASS_TEACHER' && 'Teacher + class management + attendance'}
+                    {newUser.role === 'ADMIN' && 'Full system access'}
+                  </p>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddModal(false)}
+                    className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={addingUser}
+                    className="flex-1 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    <UserPlus className="w-5 h-5" />
+                    {addingUser ? 'Adding...' : 'Add User'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

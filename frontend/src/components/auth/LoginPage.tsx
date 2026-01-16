@@ -115,8 +115,21 @@ export default function AccessGate() {
           </button>
         </form>
 
+        {/* Registration link */}
+        <div className="mt-8 text-center border-t border-gray-800 pt-6">
+          <p className="text-xs text-gray-500 mb-2">
+            New to the academy?
+          </p>
+          <a
+            href="/register"
+            className="text-xs tracking-wider uppercase text-gray-400 hover:text-gray-200 transition-colors"
+          >
+            Request Access
+          </a>
+        </div>
+
         {/* Footer authority line */}
-        <footer className="mt-12 text-center">
+        <footer className="mt-8 text-center">
           <p className="text-[10px] tracking-wide text-gray-500">
             Access granted by the administration
           </p>
