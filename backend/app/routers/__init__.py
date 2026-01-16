@@ -29,3 +29,6 @@ from .registration import router as registration_router
 
 # File uploads
 from .uploads import router as uploads_router
+
+# Subjects
+from .subjects import router as subjects_router

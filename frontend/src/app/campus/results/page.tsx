@@ -24,7 +24,6 @@ interface Mark {
   marks_obtained: number;
   max_marks: number;
   percentage: number;
-  grade: string;
 }
 
 interface Result {
@@ -73,20 +72,6 @@ export default function ResultsPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const getGradeColor = (grade: string) => {
-    const colors: Record<string, string> = {
-      'A+': 'text-green-600 bg-green-100',
-      'A': 'text-green-600 bg-green-100',
-      'B+': 'text-blue-600 bg-blue-100',
-      'B': 'text-blue-600 bg-blue-100',
-      'C+': 'text-yellow-600 bg-yellow-100',
-      'C': 'text-yellow-600 bg-yellow-100',
-      'D': 'text-orange-600 bg-orange-100',
-      'F': 'text-red-600 bg-red-100',
-    };
-    return colors[grade] || 'text-gray-600 bg-gray-100';
   };
 
   const filteredMarks = selectedExamType === 'all'
@@ -259,9 +244,6 @@ export default function ResultsPage() {
                         <th className="px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
                           Percentage
                         </th>
-                        <th className="px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                          Grade
-                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -286,11 +268,6 @@ export default function ResultsPage() {
                               ></div>
                             </div>
                             <span className="text-sm text-gray-600">{mark.percentage.toFixed(1)}%</span>
-                          </td>
-                          <td className="px-6 py-4 text-center">
-                            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getGradeColor(mark.grade)}`}>
-                              {mark.grade}
-                            </span>
                           </td>
                         </tr>
                       ))}

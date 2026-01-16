@@ -1,4 +1,4 @@
-/**
+e /**
  * API Client for Jesus Junior Academy Backend
  *
  * Clean, type-safe API calls with automatic token management
@@ -373,6 +373,69 @@ export const teacherLeaveApi = {
 
   cancel: (token: string, leaveId: number) =>
     request(`/teacher-leave/${leaveId}/cancel`, { method: 'DELETE', token }),
+};
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// USERS API
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+export const usersApi = {
+  getUsers: (token: string, role?: string, isActive?: boolean) =>
+    request('/users/', { token, params: { role, is_active: isActive } }),
+
+  getUser: (token: string, userId: number) =>
+    request(`/users/${userId}`, { token }),
+
+  createUser: (
+    token: string,
+    data: {
+      name: string;
+      phone: string;
+      password: string;
+      role: string;
+      email?: string;
+      student_id?: number;
+      parent_id?: number;
+      teacher_id?: number;
+    }
+  ) =>
+    request('/users/create', { method: 'POST', token, body: data }),
+
+  updateRole: (token: string, userId: number, data: { new_role: string; teacher_id?: number }) =>
+    request(`/users/${userId}/role`, { method: 'PUT', token, body: data }),
+
+  assignClassTeacher: (token: string, userId: number, classId: number) =>
+    request(`/users/${userId}/assign-class-teacher`, {
+      method: 'POST',
+      token,
+      body: { class_id: classId },
+    }),
+
+  linkEntity: (
+    token: string,
+    userId: number,
+    data: { student_id?: number; parent_id?: number; teacher_id?: number }
+  ) =>
+    request(`/users/${userId}/link`, { method: 'POST', token, body: data }),
+
+  deactivateUser: (token: string, userId: number) =>
+    request(`/users/${userId}`, { method: 'DELETE', token }),
+
+  getRoles: () =>
+    request('/users/roles/list'),
+
+  // Approval management
+  getPendingApprovals: (token: string, limit = 50, offset = 0) =>
+    request('/users/pending-approvals', { token, params: { limit, offset } }),
+
+  approveUser: (token: string, userId: number) =>
+    request(`/users/${userId}/approve`, { method: 'POST', token }),
+
+  rejectUser: (token: string, userId: number, reason?: string) =>
+    request(`/users/${userId}/reject`, { method: 'POST', token, body: { reason } }),
+
+  getApprovalStats: (token: string) =>
+    request('/users/approval-stats', { token }),
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -787,6 +850,9 @@ export const schoolApi = {
 
   getAcademicYears: (token: string) =>
     request<{ id: number; name: string; is_current: boolean }[]>('/academic-years/', { token }),
+
+  getSubjects: (token: string) =>
+    request<{ id: number; name: string }[]>('/subjects/', { token }),
 
   getStudentsByClass: (token: string, classId: number) =>
     request<{ id: number; name: string; roll_number?: string }[]>(`/students/class/${classId}`, { token }),

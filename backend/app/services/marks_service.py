@@ -6,6 +6,7 @@ from app.models.exam import ExamSubjectMax, Exam
 from app.models.enrollment import Enrollment
 from app.models.class_subject import ClassSubject
 from app.core.roles import Role
+from app.routers.teacher_subjects import is_teacher_assigned_to_subject
 
 
 def enter_marks(
@@ -35,6 +36,20 @@ def enter_marks(
     exam = db.query(Exam).filter_by(id=exam_id).first()
     if not exam:
         raise HTTPException(status_code=404, detail="Exam not found")
+
+    # Enforce subject teacher restrictions for teachers (not admins)
+    if user.role in {Role.TEACHER, Role.CLASS_TEACHER}:
+        if not is_teacher_assigned_to_subject(
+            db,
+            teacher_id=user.id,
+            class_id=exam.class_id,
+            subject_id=subject_id,
+            academic_year_id=exam.academic_year_id,
+        ):
+            raise HTTPException(
+                status_code=403,
+                detail="You are not assigned to teach this subject in this class. Contact admin."
+            )
 
     # Validate student is enrolled in this class
     enrollment = (
