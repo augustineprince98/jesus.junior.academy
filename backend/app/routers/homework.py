@@ -27,6 +27,8 @@ from app.services.homework_service import (
     update_homework,
     delete_homework,
 )
+from app.services.notification_service import send_daily_homework_digest_all_classes
+from app.models.academic_year import AcademicYear
 
 
 router = APIRouter(
@@ -101,23 +103,31 @@ def create_new_homework(
     }
 
 
+class PublishHomeworkRequest(BaseModel):
+    send_individual_notification: bool = False  # Default: use daily digest
+
+
 @router.post("/{homework_id}/publish")
 def publish_homework_endpoint(
     homework_id: int,
+    payload: PublishHomeworkRequest = PublishHomeworkRequest(),
     db: Session = Depends(get_db),
     user: User = Depends(require_role_at_least(Role.TEACHER)),
 ):
     """
-    [TEACHER] Publish homework and send notification to parents.
+    [TEACHER] Publish homework (makes it visible to parents/students).
 
-    Once published:
-    - Notification sent to all parents of students in the class
-    - Homework cannot be edited or deleted
+    By default, NO individual notification is sent. Instead:
+    - Admin sends a compiled "daily digest" at end of day
+    - Parents receive ONE notification with ALL subjects' homework
+
+    Set send_individual_notification=true to send notification immediately.
     """
     result = publish_homework(
         db,
         homework_id=homework_id,
         user_id=user.id,
+        send_individual_notification=payload.send_individual_notification,
     )
 
     return {
@@ -226,4 +236,44 @@ def get_todays_homework(
         "date": date.today(),
         "homework": homework_list,
         "total": len(homework_list),
+    }
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Admin Endpoints - Daily Digest
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+class SendDailyDigestRequest(BaseModel):
+    target_date: Optional[date] = None  # Defaults to today
+
+
+@router.post("/send-daily-digest")
+def send_daily_digest(
+    payload: SendDailyDigestRequest = SendDailyDigestRequest(),
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role_at_least(Role.CLASS_TEACHER)),
+):
+    """
+    [CLASS_TEACHER/ADMIN] Send compiled daily homework notification to all classes.
+
+    This sends a SINGLE notification per class containing ALL homework
+    assigned on that date, grouped by subject.
+
+    Use this instead of individual notifications for a cleaner parent experience.
+    """
+    # Get current academic year
+    current_year = db.query(AcademicYear).filter(AcademicYear.is_current == True).first()
+    if not current_year:
+        raise HTTPException(status_code=400, detail="No current academic year found")
+
+    result = send_daily_homework_digest_all_classes(
+        db,
+        academic_year_id=current_year.id,
+        created_by_id=user.id,
+        target_date=payload.target_date,
+    )
+
+    return {
+        "status": "daily_digest_sent",
+        **result,
     }

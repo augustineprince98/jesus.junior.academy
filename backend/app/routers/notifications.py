@@ -219,3 +219,91 @@ def mark_all_as_read(
         "status": "all_marked_as_read",
         "notifications_updated": updated,
     }
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Admin Quick-Send Notices
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+class QuickNoticeRequest(BaseModel):
+    """Quick notice for common announcements."""
+    notice_type: str  # HOLIDAY, VACATION, TIMING_CHANGE, GENERAL
+    title: str
+    message: str
+    effective_date: Optional[str] = None  # For holidays/timing changes
+    end_date: Optional[str] = None  # For vacations
+
+
+@router.post("/send-notice")
+def send_quick_notice(
+    payload: QuickNoticeRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role_at_least(Role.ADMIN)),
+):
+    """
+    [ADMIN] Send a quick notice to all parents and students.
+
+    Notice types:
+    - HOLIDAY: School closure notification
+    - VACATION: Extended vacation notice (summer/winter break)
+    - TIMING_CHANGE: Change in school timings
+    - GENERAL: Any other announcement
+
+    This creates AND sends the notification in one step.
+    """
+    from app.models.academic_year import AcademicYear
+
+    # Get current academic year
+    current_year = db.query(AcademicYear).filter(AcademicYear.is_current == True).first()
+    if not current_year:
+        raise HTTPException(status_code=400, detail="No current academic year found")
+
+    # Map notice type to notification type and priority
+    type_mapping = {
+        "HOLIDAY": (NotificationType.HOLIDAY, NotificationPriority.HIGH),
+        "VACATION": (NotificationType.HOLIDAY, NotificationPriority.HIGH),
+        "TIMING_CHANGE": (NotificationType.ANNOUNCEMENT, NotificationPriority.URGENT),
+        "GENERAL": (NotificationType.ANNOUNCEMENT, NotificationPriority.NORMAL),
+    }
+
+    if payload.notice_type not in type_mapping:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid notice_type. Must be one of: {list(type_mapping.keys())}"
+        )
+
+    notification_type, priority = type_mapping[payload.notice_type]
+
+    # Build message with dates if provided
+    full_message = f"Dear Parents and Students,\n\n{payload.message}"
+
+    if payload.effective_date:
+        if payload.notice_type == "VACATION" and payload.end_date:
+            full_message += f"\n\nDuration: {payload.effective_date} to {payload.end_date}"
+        else:
+            full_message += f"\n\nEffective Date: {payload.effective_date}"
+
+    full_message += "\n\nThank you,\nJesus Junior Academy"
+
+    # Create notification
+    notification = create_notification(
+        db,
+        title=payload.title,
+        message=full_message,
+        notification_type=notification_type,
+        priority=priority,
+        target_audience=TargetAudience.ALL,  # Send to everyone
+        academic_year_id=current_year.id,
+        created_by_id=user.id,
+    )
+
+    # Send immediately
+    result = send_notification(db, notification_id=notification.id)
+
+    return {
+        "status": "notice_sent",
+        "notice_type": payload.notice_type,
+        "title": payload.title,
+        "recipients_count": result["recipients_count"],
+        "sent_at": result["sent_at"],
+    }

@@ -307,3 +307,124 @@ def get_unread_count(db: Session, *, user_id: int) -> int:
         NotificationRecipient.user_id == user_id,
         NotificationRecipient.is_read.is_(False),
     ).count()
+
+
+def create_daily_homework_digest(
+    db: Session,
+    *,
+    class_id: int,
+    academic_year_id: int,
+    created_by_id: int,
+    target_date: Optional[date] = None,
+) -> Optional[Notification]:
+    """
+    Create a compiled notification with all homework assigned on a specific date.
+
+    Groups all subjects' homework into a single notification.
+    Returns None if no homework was assigned that day.
+    """
+    from app.models.homework import Homework
+    from app.models.subject import Subject
+    from app.models.school_class import SchoolClass
+
+    check_date = target_date or date.today()
+
+    # Get all published homework for this class on the target date
+    homework_list = db.query(Homework).filter(
+        Homework.class_id == class_id,
+        Homework.academic_year_id == academic_year_id,
+        Homework.assigned_date == check_date,
+        Homework.is_published.is_(True),
+    ).all()
+
+    if not homework_list:
+        return None
+
+    # Get class name
+    school_class = db.get(SchoolClass, class_id)
+    class_name = school_class.name if school_class else f"Class {class_id}"
+
+    # Build compiled message
+    title = f"Daily Homework - {class_name} ({check_date.strftime('%d %B %Y')})"
+
+    message_parts = [f"Dear Parents,\n\nHere is today's homework for {class_name}:\n"]
+
+    for hw in homework_list:
+        subject = db.get(Subject, hw.subject_id)
+        subject_name = subject.name if subject else "Unknown Subject"
+        message_parts.append(
+            f"\n**{subject_name}**\n"
+            f"Title: {hw.title}\n"
+            f"{hw.description}\n"
+            f"Due: {hw.due_date.strftime('%d %B %Y')}\n"
+        )
+
+    message_parts.append("\nPlease ensure your child completes all assignments on time.")
+    message = "".join(message_parts)
+
+    return create_notification(
+        db,
+        title=title,
+        message=message,
+        notification_type=NotificationType.HOMEWORK,
+        priority=NotificationPriority.NORMAL,
+        target_audience=TargetAudience.CLASS_SPECIFIC,
+        target_class_id=class_id,
+        academic_year_id=academic_year_id,
+        created_by_id=created_by_id,
+    )
+
+
+def send_daily_homework_digest_all_classes(
+    db: Session,
+    *,
+    academic_year_id: int,
+    created_by_id: int,
+    target_date: Optional[date] = None,
+) -> dict:
+    """
+    Send daily homework digest to all classes that have homework assigned.
+
+    Returns summary of notifications sent.
+    """
+    from app.models.homework import Homework
+    from app.models.school_class import SchoolClass
+
+    check_date = target_date or date.today()
+
+    # Get all classes that have homework assigned today
+    class_ids = db.query(Homework.class_id).filter(
+        Homework.academic_year_id == academic_year_id,
+        Homework.assigned_date == check_date,
+        Homework.is_published.is_(True),
+    ).distinct().all()
+
+    results = {
+        "date": check_date.isoformat(),
+        "classes_notified": 0,
+        "total_recipients": 0,
+        "details": [],
+    }
+
+    for (class_id,) in class_ids:
+        notification = create_daily_homework_digest(
+            db,
+            class_id=class_id,
+            academic_year_id=academic_year_id,
+            created_by_id=created_by_id,
+            target_date=check_date,
+        )
+
+        if notification:
+            send_result = send_notification(db, notification_id=notification.id)
+            school_class = db.get(SchoolClass, class_id)
+
+            results["classes_notified"] += 1
+            results["total_recipients"] += send_result["recipients_count"]
+            results["details"].append({
+                "class_id": class_id,
+                "class_name": school_class.name if school_class else f"Class {class_id}",
+                "recipients": send_result["recipients_count"],
+            })
+
+    return results

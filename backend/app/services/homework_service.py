@@ -75,11 +75,15 @@ def publish_homework(
     *,
     homework_id: int,
     user_id: int,
+    send_individual_notification: bool = False,
 ) -> dict:
     """
-    Publish homework and send notification to parents.
+    Publish homework (optionally send individual notification).
 
-    Only the teacher who created the homework or admin can publish.
+    By default, no individual notification is sent. Instead, use the
+    daily digest feature to send a compiled notification at end of day.
+
+    Set send_individual_notification=True to send notification immediately.
     """
     homework = db.get(Homework, homework_id)
     if not homework:
@@ -95,26 +99,30 @@ def publish_homework(
     homework.is_published = True
     homework.published_at = datetime.utcnow()
 
-    # Create and send notification
-    notification = create_homework_notification(
-        db,
-        class_id=homework.class_id,
-        subject_name=subject.name,
-        homework_title=homework.title,
-        homework_description=homework.description,
-        due_date=homework.due_date,
-        academic_year_id=homework.academic_year_id,
-        created_by_id=user_id,
-    )
+    notification_sent_to = 0
 
-    send_result = send_notification(db, notification_id=notification.id)
+    # Only send individual notification if requested
+    if send_individual_notification:
+        notification = create_homework_notification(
+            db,
+            class_id=homework.class_id,
+            subject_name=subject.name,
+            homework_title=homework.title,
+            homework_description=homework.description,
+            due_date=homework.due_date,
+            academic_year_id=homework.academic_year_id,
+            created_by_id=user_id,
+        )
+        send_result = send_notification(db, notification_id=notification.id)
+        notification_sent_to = send_result["recipients_count"]
 
     db.commit()
 
     return {
         "homework_id": homework_id,
         "published_at": homework.published_at,
-        "notification_sent_to": send_result["recipients_count"],
+        "notification_sent_to": notification_sent_to,
+        "message": "Homework published. Use daily digest to send compiled notification." if not send_individual_notification else "Individual notification sent.",
     }
 
 

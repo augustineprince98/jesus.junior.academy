@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -39,6 +40,7 @@ from app.routers import (
     uploads_router,
 )
 from app.core.config import settings
+from app.services.scheduler_service import start_scheduler, stop_scheduler
 
 # Configure logging
 logging.basicConfig(
@@ -47,12 +49,24 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Manage application lifecycle - start/stop scheduler."""
+    logger.info("Starting application...")
+    start_scheduler()
+    yield
+    logger.info("Shutting down application...")
+    stop_scheduler()
+
+
 app = FastAPI(
     title="Jesus Junior Academy ERP",
     version="2.0.0",
     description="Enterprise Resource Planning system for Jesus Junior Academy",
     docs_url="/docs",
     redoc_url="/redoc",
+    lifespan=lifespan,
 )
 
 # CORS Configuration - Update origins for production
