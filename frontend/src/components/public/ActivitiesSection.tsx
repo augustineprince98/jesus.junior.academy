@@ -3,11 +3,13 @@
 /**
  * Activities & Celebrations Section
  *
- * Clean design showcasing school events.
+ * Clean design showcasing featured school events.
  * Connects to backend events API.
+ * Shows only featured items with "View All" link.
  */
 
-import { Calendar, Users, PartyPopper, Sparkles } from 'lucide-react';
+import Link from 'next/link';
+import { Calendar, Users, PartyPopper, Sparkles, ArrowRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { eventsApi } from '@/lib/api';
 
@@ -21,6 +23,7 @@ interface Event {
   audience_students: boolean;
   audience_parents: boolean;
   audience_teachers: boolean;
+  is_featured?: boolean;
 }
 
 export default function ActivitiesSection() {
@@ -33,7 +36,8 @@ export default function ActivitiesSection() {
 
   const loadEvents = async () => {
     try {
-      const data = await eventsApi.getPublic();
+      // Load only featured events for homepage (limit to 6)
+      const data = await eventsApi.getPublic(undefined, true, 6, true);
       setEvents(data as Event[]);
     } catch (error) {
       console.error('Failed to load events:', error);
@@ -83,6 +87,19 @@ export default function ActivitiesSection() {
             Festivals, events, and special moments at our school
           </p>
         </div>
+
+        {/* View All Link - Top Right */}
+        {events.length > 0 && (
+          <div className="flex justify-end mb-6">
+            <Link
+              href="/celebrations"
+              className="inline-flex items-center gap-2 text-blue-900 hover:text-blue-700 font-semibold transition-colors"
+            >
+              View All Events
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        )}
 
         {/* Events Grid */}
         {loading ? (

@@ -199,8 +199,8 @@ export const homeworkApi = {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 export const eventsApi = {
-  getPublic: (eventType?: string, upcomingOnly = true, limit = 20) =>
-    request('/events/public', { params: { event_type: eventType, upcoming_only: upcomingOnly, limit } }),
+  getPublic: (eventType?: string, upcomingOnly = true, limit = 20, featuredOnly = false) =>
+    request('/events/public', { params: { event_type: eventType, upcoming_only: upcomingOnly, limit, featured_only: featuredOnly } }),
 
   getUpcoming: (token: string, days = 30) =>
     request('/events/upcoming', { token, params: { days } }),
@@ -461,6 +461,180 @@ export const adminApi = {
       token,
       body: { current_academic_year_id: academicYearId, new_academic_year_id: newAcademicYearId },
     }),
+};
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// UPLOADS API
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+export const uploadsApi = {
+  uploadImage: async (token: string, file: File, category = 'images', prefix = '') => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('category', category);
+    formData.append('prefix', prefix);
+
+    const response = await fetch(`${API_BASE}/uploads/image`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Upload failed' }));
+      throw new ApiError(response.status, error.detail || 'Upload failed');
+    }
+
+    return response.json() as Promise<{ status: string; file_path: string; category: string; filename: string }>;
+  },
+
+  uploadMultipleImages: async (token: string, files: File[], category = 'gallery') => {
+    const formData = new FormData();
+    files.forEach(file => formData.append('files', file));
+    formData.append('category', category);
+
+    const response = await fetch(`${API_BASE}/uploads/images/bulk`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Upload failed' }));
+      throw new ApiError(response.status, error.detail || 'Upload failed');
+    }
+
+    return response.json() as Promise<{
+      status: string;
+      uploaded: { filename: string; file_path: string }[];
+      errors: { filename: string; error: string }[];
+      total_uploaded: number;
+      total_errors: number;
+    }>;
+  },
+
+  deleteFile: async (token: string, filePath: string) => {
+    const response = await fetch(`${API_BASE}/uploads/?file_path=${encodeURIComponent(filePath)}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Delete failed' }));
+      throw new ApiError(response.status, error.detail || 'Delete failed');
+    }
+
+    return response.json();
+  },
+};
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ADMIN FEES API
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+export const adminFeesApi = {
+  // Fee Structure
+  createFeeStructure: (token: string, data: {
+    class_id: number;
+    academic_year_id: number;
+    annual_charges: number;
+    monthly_fee: number;
+  }) =>
+    request('/fees/structure', { method: 'POST', token, body: data }),
+
+  getFeeStructure: (token: string, structureId: number) =>
+    request(`/fees/structure/${structureId}`, { token }),
+
+  getFeeStructureByClassYear: (token: string, classId: number, academicYearId: number) =>
+    request(`/fees/structure/class/${classId}/year/${academicYearId}`, { token }),
+
+  updateFeeStructure: (token: string, structureId: number, data: {
+    annual_charges?: number;
+    monthly_fee?: number;
+  }) =>
+    request(`/fees/structure/${structureId}`, { method: 'PUT', token, body: data }),
+
+  // Student Fee Profiles
+  createStudentFeeProfile: (token: string, data: {
+    student_id: number;
+    fee_structure_id: number;
+    transport_charges?: number;
+    concession_amount?: number;
+    concession_reason?: string;
+  }) =>
+    request('/fees/profile', { method: 'POST', token, body: data }),
+
+  bulkCreateFeeProfiles: (token: string, data: {
+    fee_structure_id: number;
+    student_ids: number[];
+    default_transport_charges?: number;
+    default_concession?: number;
+  }) =>
+    request('/fees/profile/bulk', { method: 'POST', token, body: data }),
+
+  getStudentFeeProfile: (token: string, studentId: number, academicYearId: number) =>
+    request(`/fees/profile/student/${studentId}/year/${academicYearId}`, { token }),
+
+  updateStudentFeeProfile: (token: string, profileId: number, data: {
+    transport_charges?: number;
+    transport_locked?: boolean;
+    concession_amount?: number;
+    concession_reason?: string;
+    is_locked?: boolean;
+  }) =>
+    request(`/fees/profile/${profileId}`, { method: 'PUT', token, body: data }),
+
+  // Payments
+  recordCashPayment: (token: string, data: {
+    student_fee_profile_id: number;
+    amount_paid: number;
+    payment_frequency: string;
+    receipt_number?: string;
+    paid_at?: string;
+    remarks?: string;
+  }) =>
+    request('/fees/payment/cash', { method: 'POST', token, body: data }),
+
+  getPaymentHistory: (token: string, profileId: number) =>
+    request(`/fees/payment/history/${profileId}`, { token }),
+
+  verifyPayment: (token: string, paymentId: number, data: {
+    is_verified: boolean;
+    remarks?: string;
+  }) =>
+    request(`/fees/payment/${paymentId}/verify`, { method: 'PUT', token, body: data }),
+
+  // Reports
+  getClassFeeSummary: (token: string, classId: number, academicYearId: number) =>
+    request(`/fees/summary/class/${classId}/year/${academicYearId}`, { token }),
+
+  exportFeeReport: (token: string, filters: {
+    academic_year_id?: number;
+    class_id?: number;
+    payment_status?: string;
+  }) =>
+    request('/fees/reports/export/excel', { method: 'POST', token, body: filters }),
+};
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// SCHOOL DATA API (Classes, Academic Years)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+export const schoolApi = {
+  getClasses: (token: string) =>
+    request<{ id: number; name: string; section?: string }[]>('/classes/', { token }),
+
+  getAcademicYears: (token: string) =>
+    request<{ id: number; name: string; is_current: boolean }[]>('/academic-years/', { token }),
+
+  getStudentsByClass: (token: string, classId: number) =>
+    request<{ id: number; name: string; roll_number?: string }[]>(`/students/class/${classId}`, { token }),
 };
 
 export { ApiError };

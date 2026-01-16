@@ -6,11 +6,11 @@
  * Create, edit, delete, and manage achievements for the Achievers Club
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useStore';
 import AdminLayout from '@/components/admin/AdminLayout';
-import { achievementsApi } from '@/lib/api';
+import { achievementsApi, uploadsApi } from '@/lib/api';
 import {
   Plus,
   Edit,
@@ -24,7 +24,22 @@ import {
   Award,
   Medal,
   Sparkles,
+  Upload,
+  Image as ImageIcon,
+  Loader2,
 } from 'lucide-react';
+
+// Achievement categories with descriptions
+const ACHIEVEMENT_CATEGORIES = [
+  { value: 'ACADEMIC', label: 'Academic', description: 'Scholarships, exams, competitions' },
+  { value: 'SPORTS', label: 'Sports', description: 'Sports day, tournaments, athletics' },
+  { value: 'ARTS', label: 'Arts', description: 'Drawing, painting, craft' },
+  { value: 'CULTURAL', label: 'Cultural', description: 'Dance, music, drama' },
+  { value: 'SCIENCE', label: 'Science', description: 'Science fairs, exhibitions, projects' },
+  { value: 'LEADERSHIP', label: 'Leadership', description: 'Student council, prefects' },
+  { value: 'COMMUNITY', label: 'Community', description: 'Social service, volunteering' },
+  { value: 'OTHER', label: 'Other', description: 'Other achievements' },
+];
 
 interface Achievement {
   id: number;
@@ -48,6 +63,11 @@ export default function AchievementsPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [categories, setCategories] = useState<string[]>([]);
 
+  // Image upload state
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -57,6 +77,51 @@ export default function AchievementsPage() {
     is_featured: false,
     is_public: true,
   });
+
+  // Handle image upload from device
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !token) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size should be less than 5MB');
+      return;
+    }
+
+    // Show preview immediately
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setImagePreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    try {
+      setUploadingImage(true);
+      const result = await uploadsApi.uploadImage(token, file, 'achievements', 'achievement');
+      setFormData(prev => ({ ...prev, image_url: result.file_path }));
+    } catch (error) {
+      console.error('Failed to upload image:', error);
+      alert('Failed to upload image. Please try again.');
+      setImagePreview(null);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const removeImage = () => {
+    setFormData(prev => ({ ...prev, image_url: '' }));
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'ADMIN') {
@@ -121,6 +186,10 @@ export default function AchievementsPage() {
       is_featured: achievement.is_featured,
       is_public: achievement.is_public,
     });
+    // Set image preview if there's an existing image
+    if (achievement.image_url) {
+      setImagePreview(achievement.image_url);
+    }
     setShowModal(true);
   };
 
@@ -149,6 +218,10 @@ export default function AchievementsPage() {
   const closeModal = () => {
     setShowModal(false);
     setEditingId(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
     setFormData({
       title: '',
       description: '',
@@ -365,9 +438,9 @@ export default function AchievementsPage() {
                       required
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                     >
-                      {categories.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
+                      {ACHIEVEMENT_CATEGORIES.map((cat) => (
+                        <option key={cat.value} value={cat.value}>
+                          {cat.label} - {cat.description}
                         </option>
                       ))}
                     </select>
@@ -387,18 +460,76 @@ export default function AchievementsPage() {
                   </div>
                 </div>
 
-                {/* Image URL */}
+                {/* Image Upload */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Image URL (Optional)
+                    Achievement Image (Optional)
                   </label>
+
+                  {/* Hidden file input */}
                   <input
-                    type="url"
-                    value={formData.image_url}
-                    onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    placeholder="https://example.com/image.jpg"
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleImageUpload}
+                    accept="image/*"
+                    className="hidden"
                   />
+
+                  {/* Image Preview or Upload Button */}
+                  {imagePreview || formData.image_url ? (
+                    <div className="relative">
+                      <div className="relative w-full h-48 rounded-lg overflow-hidden border border-gray-300">
+                        <img
+                          src={imagePreview || formData.image_url}
+                          alt="Achievement preview"
+                          className="w-full h-full object-cover"
+                        />
+                        {uploadingImage && (
+                          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                            <Loader2 className="w-8 h-8 text-white animate-spin" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="flex-1 px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                          disabled={uploadingImage}
+                        >
+                          Change Image
+                        </button>
+                        <button
+                          type="button"
+                          onClick={removeImage}
+                          className="px-4 py-2 text-sm bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+                          disabled={uploadingImage}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingImage}
+                      className="w-full h-32 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center gap-2 hover:border-primary-500 hover:bg-primary-50 transition-colors cursor-pointer"
+                    >
+                      {uploadingImage ? (
+                        <>
+                          <Loader2 className="w-8 h-8 text-primary-500 animate-spin" />
+                          <span className="text-sm text-gray-500">Uploading...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-8 h-8 text-gray-400" />
+                          <span className="text-sm text-gray-500">Click to upload image</span>
+                          <span className="text-xs text-gray-400">JPEG, PNG, GIF up to 5MB</span>
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
 
                 {/* Toggles */}

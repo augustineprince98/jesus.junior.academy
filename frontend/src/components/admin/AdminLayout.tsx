@@ -22,6 +22,7 @@ import {
   X,
   ChevronRight,
   UserCheck,
+  Wallet,
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -58,6 +59,12 @@ export default function AdminLayout({ children, activeSection }: AdminLayoutProp
       label: 'Events & Activities',
       icon: Calendar,
       href: '/admin/events',
+    },
+    {
+      id: 'fees',
+      label: 'Fee Management',
+      icon: Wallet,
+      href: '/admin/fees',
     },
     {
       id: 'admissions',

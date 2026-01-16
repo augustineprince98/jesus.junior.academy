@@ -3,11 +3,13 @@
 /**
  * Achievers Club Section
  *
- * Clean design showcasing student achievements.
+ * Clean design showcasing featured student achievements.
  * Connects to backend achievements API.
+ * Shows only featured items with "View All" link.
  */
 
-import { Trophy, Award, Star, Medal } from 'lucide-react';
+import Link from 'next/link';
+import { Trophy, Award, Star, Medal, ArrowRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { achievementsApi } from '@/lib/api';
 
@@ -19,6 +21,7 @@ interface Achievement {
   description: string;
   date: string;
   image_url?: string;
+  is_featured?: boolean;
 }
 
 export default function AchieversSection() {
@@ -31,7 +34,8 @@ export default function AchieversSection() {
 
   const loadAchievements = async () => {
     try {
-      const data = await achievementsApi.getPublic();
+      // Load only featured achievements for homepage (limit to 6)
+      const data = await achievementsApi.getPublic(undefined, true, 6);
       setAchievements(data as Achievement[]);
     } catch (error) {
       console.error('Failed to load achievements:', error);
@@ -81,6 +85,19 @@ export default function AchieversSection() {
             Students excelling in academics and co-curricular activities
           </p>
         </div>
+
+        {/* View All Link - Top Right */}
+        {achievements.length > 0 && (
+          <div className="flex justify-end mb-6">
+            <Link
+              href="/achievers"
+              className="inline-flex items-center gap-2 text-blue-900 hover:text-blue-700 font-semibold transition-colors"
+            >
+              View All Achievements
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        )}
 
         {/* Achievements Grid */}
         {loading ? (

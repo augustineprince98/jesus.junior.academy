@@ -126,6 +126,7 @@ def list_all_events(
 def get_public_events(
     event_type: Optional[str] = None,
     upcoming_only: bool = True,
+    featured_only: bool = False,
     limit: int = 20,
     db: Session = Depends(get_db),
 ):
@@ -136,6 +137,8 @@ def get_public_events(
         query = query.filter(Event.event_type == event_type)
     if upcoming_only:
         query = query.filter(Event.event_date >= date.today())
+    if featured_only:
+        query = query.filter(Event.is_featured.is_(True))
 
     events = query.order_by(
         Event.is_featured.desc(),
@@ -149,8 +152,13 @@ def get_public_events(
             "description": e.description,
             "event_type": e.event_type,
             "date": str(e.event_date),
+            "event_date": str(e.event_date),
             "venue": e.venue,
             "image_url": e.image_url,
+            "is_featured": e.is_featured,
+            "for_students": e.for_students,
+            "for_parents": e.for_parents,
+            "for_teachers": e.for_teachers,
             "audience_students": e.for_students,
             "audience_parents": e.for_parents,
             "audience_teachers": e.for_teachers,
