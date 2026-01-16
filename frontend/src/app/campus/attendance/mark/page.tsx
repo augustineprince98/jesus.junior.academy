@@ -27,7 +27,7 @@ interface Student {
 
 interface AttendanceRecord {
   student_id: number;
-  is_present: boolean;
+  status: string;
   remarks?: string;
 }
 
@@ -51,7 +51,6 @@ export default function MarkAttendancePage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [isWorkingDay, setIsWorkingDay] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated || (user?.role !== 'TEACHER' && user?.role !== 'CLASS_TEACHER')) {
@@ -64,7 +63,6 @@ export default function MarkAttendancePage() {
 
   useEffect(() => {
     if (selectedClass && selectedDate) {
-      checkWorkingDay();
       loadStudents();
     }
   }, [selectedClass, selectedDate]);
@@ -91,22 +89,6 @@ export default function MarkAttendancePage() {
       setError(err.detail || 'Failed to load classes');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const checkWorkingDay = async () => {
-    if (!token || !selectedClass) return;
-
-    try {
-      const response = await attendanceApi.checkWorkingDay(token, selectedClass.academic_year_id, selectedDate);
-      setIsWorkingDay(response.is_working_day);
-      if (!response.is_working_day) {
-        setError(`Cannot mark attendance: ${response.reason}`);
-      } else {
-        setError(null);
-      }
-    } catch (err: any) {
-      setError('Failed to check working day status');
     }
   };
 
@@ -151,7 +133,7 @@ export default function MarkAttendancePage() {
   };
 
   const handleSaveAttendance = async () => {
-    if (!token || !selectedClass || !isWorkingDay) return;
+    if (!token || !selectedClass) return;
 
     try {
       setSaving(true);
@@ -159,7 +141,7 @@ export default function MarkAttendancePage() {
 
       const records: AttendanceRecord[] = students.map(student => ({
         student_id: student.id,
-        is_present: attendance[student.id] || false,
+        status: attendance[student.id] ? 'PRESENT' : 'ABSENT',
         remarks: remarks[student.id] || '',
       }));
 
@@ -228,7 +210,7 @@ export default function MarkAttendancePage() {
               animate={{ opacity: 1, y: 0 }}
               className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6"
             >
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Select Class
@@ -262,27 +244,6 @@ export default function MarkAttendancePage() {
                     max={new Date().toISOString().split('T')[0]}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                </div>
-
-                <div className="flex items-end">
-                  <div className="w-full">
-                    {isWorkingDay === false && (
-                      <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
-                        <div className="flex items-center gap-2">
-                          <AlertCircle className="w-4 h-4" />
-                          Not a working day
-                        </div>
-                      </div>
-                    )}
-                    {isWorkingDay === true && (
-                      <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-green-600 text-sm">
-                        <div className="flex items-center gap-2">
-                          <CheckCircle2 className="w-4 h-4" />
-                          Working day
-                        </div>
-                      </div>
-                    )}
-                  </div>
                 </div>
               </div>
             </motion.div>
@@ -373,7 +334,7 @@ export default function MarkAttendancePage() {
                       </div>
                       <button
                         onClick={handleSaveAttendance}
-                        disabled={saving || !isWorkingDay}
+                        disabled={saving}
                         className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {saving ? (
