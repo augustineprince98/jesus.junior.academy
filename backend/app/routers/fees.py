@@ -404,3 +404,253 @@ def get_parent_payment_history(
         "students": list(student_payments.values()),
         "payment_count": len(payments)
     }
+
+
+# ========================================
+# ADMIN TRANSPORT MANAGEMENT ENDPOINTS
+# ========================================
+
+@router.get("/transport/class/{class_id}/year/{academic_year_id}")
+def get_class_transport_status(
+    class_id: int,
+    academic_year_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_user)
+):
+    """
+    [ADMIN] Get transport status for all students in a class.
+    
+    Returns list of students with their transport usage and charges.
+    """
+    if admin.role != Role.ADMIN.value:
+        raise HTTPException(
+            status_code=403,
+            detail="Only admins can access this endpoint"
+        )
+
+    from app.models.school_class import SchoolClass
+    from app.models.enrollment import Enrollment
+    from app.models.people import Student
+
+    # Verify class exists
+    school_class = db.get(SchoolClass, class_id)
+    if not school_class:
+        raise HTTPException(status_code=404, detail="Class not found")
+
+    # Verify academic year exists
+    academic_year = db.get(AcademicYear, academic_year_id)
+    if not academic_year:
+        raise HTTPException(status_code=404, detail="Academic year not found")
+
+    # Get all active enrollments for this class and year
+    enrollments = db.query(Enrollment).filter(
+        Enrollment.class_id == class_id,
+        Enrollment.academic_year_id == academic_year_id,
+        Enrollment.status == "ACTIVE"
+    ).options(
+        joinedload(Enrollment.student)
+    ).all()
+
+    students_data = []
+    total_students = 0
+    using_transport = 0
+
+    for enrollment in enrollments:
+        student = enrollment.student
+        total_students += 1
+
+        # Get student's fee profile
+        fee_profile = db.query(StudentFeeProfile).join(FeeStructure).filter(
+            StudentFeeProfile.student_id == student.id,
+            FeeStructure.academic_year_id == academic_year_id
+        ).first()
+
+        # Determine transport status
+        uses_transport = False
+        transport_charges = 0
+
+        if fee_profile and fee_profile.transport_charges > 0:
+            uses_transport = True
+            transport_charges = fee_profile.transport_charges
+            using_transport += 1
+
+        students_data.append({
+            "student_id": student.id,
+            "student_name": student.name,
+            "admission_number": enrollment.admission_number or "",
+            "uses_transport": uses_transport,
+            "transport_charges": transport_charges
+        })
+
+    return {
+        "class_id": class_id,
+        "class_name": school_class.name,
+        "academic_year_id": academic_year_id,
+        "academic_year_name": academic_year.name,
+        "total_students": total_students,
+        "using_transport": using_transport,
+        "students": students_data
+    }
+
+
+@router.put("/transport/student/{student_id}")
+def update_student_transport(
+    student_id: int,
+    transport_charges: int,
+    academic_year_id: int = None,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_user)
+):
+    """
+    [ADMIN] Update transport charges for a single student.
+    """
+    if admin.role != Role.ADMIN.value:
+        raise HTTPException(
+            status_code=403,
+            detail="Only admins can access this endpoint"
+        )
+
+    from app.models.people import Student
+
+    # Verify student exists
+    student = db.get(Student, student_id)
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    # Get academic year
+    if academic_year_id:
+        academic_year = db.get(AcademicYear, academic_year_id)
+    else:
+        academic_year = db.query(AcademicYear).filter(AcademicYear.is_current == True).first()
+
+    if not academic_year:
+        raise HTTPException(status_code=400, detail="No academic year found")
+
+    # Get or create fee profile
+    fee_profile = db.query(StudentFeeProfile).join(FeeStructure).filter(
+        StudentFeeProfile.student_id == student_id,
+        FeeStructure.academic_year_id == academic_year.id
+    ).first()
+
+    if not fee_profile:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No fee profile found for student {student_id} in academic year {academic_year.name}"
+        )
+
+    # Update transport charges
+    fee_profile.transport_charges = transport_charges
+    
+    # Recalculate total fee
+    fee_structure = fee_profile.fee_structure
+    fee_profile.total_yearly_fee = (
+        fee_structure.annual_charges +
+        (fee_structure.monthly_fee * 12) +
+        fee_profile.transport_charges -
+        fee_profile.concession_amount
+    )
+
+    db.commit()
+    db.refresh(fee_profile)
+
+    return {
+        "status": "transport_updated",
+        "student_id": student_id,
+        "transport_charges": fee_profile.transport_charges,
+        "total_yearly_fee": fee_profile.total_yearly_fee
+    }
+
+
+@router.put("/transport/bulk")
+def bulk_update_transport(
+    updates: List[dict],
+    academic_year_id: int = None,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_user)
+):
+    """
+    [ADMIN] Bulk update transport charges for multiple students.
+    
+    Expected format:
+    {
+        "updates": [
+            {
+                "student_id": 1,
+                "uses_transport": true,
+                "transport_charges": 5000
+            },
+            ...
+        ],
+        "academic_year_id": 1  # optional
+    }
+    """
+    if admin.role != Role.ADMIN.value:
+        raise HTTPException(
+            status_code=403,
+            detail="Only admins can access this endpoint"
+        )
+
+    # Get academic year
+    if academic_year_id:
+        academic_year = db.get(AcademicYear, academic_year_id)
+    else:
+        academic_year = db.query(AcademicYear).filter(AcademicYear.is_current == True).first()
+
+    if not academic_year:
+        raise HTTPException(status_code=400, detail="No academic year found")
+
+    updated_count = 0
+    errors = []
+
+    for update in updates:
+        student_id = update.get("student_id")
+        uses_transport = update.get("uses_transport", False)
+        transport_charges = update.get("transport_charges", 0)
+
+        if not student_id:
+            errors.append({"student_id": None, "error": "Missing student_id"})
+            continue
+
+        try:
+            # Get fee profile
+            fee_profile = db.query(StudentFeeProfile).join(FeeStructure).filter(
+                StudentFeeProfile.student_id == student_id,
+                FeeStructure.academic_year_id == academic_year.id
+            ).first()
+
+            if not fee_profile:
+                errors.append({
+                    "student_id": student_id,
+                    "error": f"No fee profile found for academic year {academic_year.name}"
+                })
+                continue
+
+            # Update transport charges (set to 0 if not using transport)
+            fee_profile.transport_charges = transport_charges if uses_transport else 0
+
+            # Recalculate total fee
+            fee_structure = fee_profile.fee_structure
+            fee_profile.total_yearly_fee = (
+                fee_structure.annual_charges +
+                (fee_structure.monthly_fee * 12) +
+                fee_profile.transport_charges -
+                fee_profile.concession_amount
+            )
+
+            updated_count += 1
+
+        except Exception as e:
+            errors.append({
+                "student_id": student_id,
+                "error": str(e)
+            })
+
+    db.commit()
+
+    return {
+        "status": "bulk_update_completed",
+        "academic_year": academic_year.name,
+        "updated_count": updated_count,
+        "total_requested": len(updates),
+        "errors": errors if errors else None
+    }

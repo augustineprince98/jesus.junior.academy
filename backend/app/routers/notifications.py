@@ -75,6 +75,48 @@ class UserNotificationResponse(BaseModel):
 # Admin Endpoints
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+@router.get("/list")
+def list_all_notifications(
+    limit: int = 50,
+    offset: int = 0,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role_at_least(Role.ADMIN)),
+):
+    """
+    [ADMIN] List all notifications created by admins.
+    """
+    from app.models.notification import Notification
+    
+    notifications = db.query(Notification).order_by(
+        Notification.created_at.desc()
+    ).limit(limit).offset(offset).all()
+    
+    result = []
+    for notif in notifications:
+        # Count recipients
+        from app.models.notification import NotificationRecipient
+        recipients_count = db.query(NotificationRecipient).filter(
+            NotificationRecipient.notification_id == notif.id
+        ).count()
+        
+        result.append({
+            "id": notif.id,
+            "title": notif.title,
+            "message": notif.message,
+            "notification_type": notif.notification_type.value,
+            "priority": notif.priority.value,
+            "is_sent": notif.is_sent,
+            "sent_at": notif.sent_at.isoformat() if notif.sent_at else None,
+            "created_at": notif.created_at.isoformat() if notif.created_at else None,
+            "recipients_count": recipients_count if notif.is_sent else 0,
+        })
+    
+    return {
+        "notifications": result,
+        "total": len(result),
+    }
+
+
 @router.post("/create")
 def create_new_notification(
     payload: CreateNotificationRequest,

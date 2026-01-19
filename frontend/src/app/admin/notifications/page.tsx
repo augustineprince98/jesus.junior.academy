@@ -79,9 +79,13 @@ export default function AdminNotificationsPage() {
       setLoading(true);
       setError(null);
 
-      // For now, we'll just load academic years
-      // Notifications list would need a backend endpoint
-      const yearsData = await enrollmentApi.getAcademicYears(token);
+      // Load both notifications and academic years
+      const [notificationsData, yearsData] = await Promise.all([
+        adminNotificationsApi.list(token),
+        enrollmentApi.getAcademicYears(token)
+      ]);
+
+      setNotifications(notificationsData.notifications || []);
       setAcademicYears(yearsData.academic_years || []);
     } catch (err: any) {
       setError(err.detail || 'Failed to load data');
@@ -107,7 +111,8 @@ export default function AdminNotificationsPage() {
         academic_year_id: 0,
         scheduled_for: '',
       });
-      // Reload notifications if we had a list
+      // Reload notifications list
+      loadData();
     } catch (err: any) {
       setError(err.detail || 'Failed to create notification');
     }
@@ -127,7 +132,8 @@ export default function AdminNotificationsPage() {
         effective_date: '',
         end_date: '',
       });
-      // Reload notifications if we had a list
+      // Reload notifications list
+      loadData();
     } catch (err: any) {
       setError(err.detail || 'Failed to send notice');
     }
@@ -139,7 +145,8 @@ export default function AdminNotificationsPage() {
     try {
       setSending(notificationId);
       await adminNotificationsApi.send(token, notificationId);
-      // Update notification status in list
+      // Reload notifications list to update status
+      loadData();
     } catch (err: any) {
       setError(err.detail || 'Failed to send notification');
     } finally {

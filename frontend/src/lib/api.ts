@@ -896,6 +896,13 @@ export const classesApi = {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 export const adminNotificationsApi = {
+  // List all notifications
+  list: (token: string, limit = 50, offset = 0) =>
+    request<{ notifications: any[]; total: number }>("/notifications/list", { 
+      token, 
+      params: { limit, offset } 
+    }),
+
   // Create notification
   create: (token: string, data: {
     title: string;
