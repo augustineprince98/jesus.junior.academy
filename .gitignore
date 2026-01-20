@@ -68,3 +68,6 @@ build/
 # Windows reserved names
 nul
 NUL
+
+.vercel
+.env*.local

@@ -21,7 +21,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 # JWT Config - FIXED: Use settings instead of hardcoded
 SECRET_KEY = settings.JWT_SECRET
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+ACCESS_TOKEN_EXPIRE_MINUTES = 480  # 8 hours instead of 1 hour
 
 def create_access_token(data: dict, expires_minutes: int = ACCESS_TOKEN_EXPIRE_MINUTES):
     to_encode = data.copy()
