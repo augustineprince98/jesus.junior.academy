@@ -43,10 +43,12 @@ class CreateNotificationRequest(BaseModel):
     message: str
     notification_type: str  # HOLIDAY, ANNOUNCEMENT, etc.
     priority: str = "NORMAL"  # LOW, NORMAL, HIGH, URGENT
-    target_audience: str  # ALL, PARENTS, STUDENTS, TEACHERS, CLASS_SPECIFIC
+    target_audience: str  # ALL, PARENTS, STUDENTS, TEACHERS, CLASS_SPECIFIC, PUBLIC, PUBLIC_AND_REGISTERED
     target_class_id: Optional[int] = None
     academic_year_id: int
-    scheduled_for: Optional[datetime] = None
+    scheduled_for: Optional[datetime] = None  # Schedule publication for this time (IST)
+    is_public: bool = False  # Show on public homepage
+    expires_at: Optional[datetime] = None  # Auto-hide after this time
 
 
 class NotificationResponse(BaseModel):
@@ -348,4 +350,224 @@ def send_quick_notice(
         "title": payload.title,
         "recipients_count": result["recipients_count"],
         "sent_at": result["sent_at"],
+    }
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Public Notice Endpoints (No Auth Required)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+@router.get("/public")
+def get_public_notices(
+    limit: int = 10,
+    db: Session = Depends(get_db),
+):
+    """
+    [PUBLIC] Get notices for public homepage.
+
+    Returns notices where is_public=True and is_published=True.
+    Automatically filters out expired notices.
+    """
+    from app.models.notification import Notification
+
+    now = datetime.utcnow()
+
+    notices = db.query(Notification).filter(
+        Notification.is_public == True,
+        Notification.is_published == True,
+        # Not expired (either no expiry or expiry in future)
+        (Notification.expires_at.is_(None) | (Notification.expires_at > now)),
+    ).order_by(
+        Notification.priority.desc(),  # URGENT first
+        Notification.published_at.desc()
+    ).limit(limit).all()
+
+    return {
+        "notices": [
+            {
+                "id": n.id,
+                "title": n.title,
+                "message": n.message,
+                "notification_type": n.notification_type,
+                "priority": n.priority,
+                "published_at": n.published_at.isoformat() if n.published_at else None,
+                "expires_at": n.expires_at.isoformat() if n.expires_at else None,
+            }
+            for n in notices
+        ],
+        "total": len(notices),
+    }
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Class Teacher Notice Endpoints
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+class ClassTeacherNoticeRequest(BaseModel):
+    """Notice from class teacher to class parents."""
+    title: str
+    message: str
+    notification_type: str = "ANNOUNCEMENT"
+    priority: str = "NORMAL"
+    scheduled_for: Optional[datetime] = None
+    is_public: bool = False
+
+
+@router.post("/class-notice")
+def create_class_notice(
+    payload: ClassTeacherNoticeRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role_at_least(Role.CLASS_TEACHER)),
+):
+    """
+    [CLASS_TEACHER] Create a notice for their assigned class.
+
+    Class teachers can only send notifications to their own class.
+    """
+    from app.models.academic_year import AcademicYear
+    from app.models.school_class import SchoolClass
+
+    # Get current academic year
+    current_year = db.query(AcademicYear).filter(AcademicYear.is_current == True).first()
+    if not current_year:
+        raise HTTPException(status_code=400, detail="No current academic year found")
+
+    # Find the class where this teacher is class teacher
+    assigned_class = db.query(SchoolClass).filter(
+        SchoolClass.class_teacher_id == user.teacher_id,
+        SchoolClass.academic_year_id == current_year.id,
+    ).first()
+
+    if not assigned_class:
+        raise HTTPException(
+            status_code=403,
+            detail="You are not assigned as class teacher to any class"
+        )
+
+    try:
+        notification_type = NotificationType(payload.notification_type)
+        priority = NotificationPriority(payload.priority)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid enum value: {e}")
+
+    notification = create_notification(
+        db,
+        title=payload.title,
+        message=payload.message,
+        notification_type=notification_type,
+        priority=priority,
+        target_audience=TargetAudience.CLASS_SPECIFIC,
+        target_class_id=assigned_class.id,
+        academic_year_id=current_year.id,
+        created_by_id=user.id,
+        scheduled_for=payload.scheduled_for,
+        is_public=payload.is_public,
+    )
+
+    return {
+        "status": "notice_created",
+        "notification_id": notification.id,
+        "class_name": assigned_class.name,
+        "title": notification.title,
+        "is_published": notification.is_published,
+    }
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Publish and Schedule Endpoints
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+@router.post("/{notification_id}/publish")
+def publish_notification(
+    notification_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role_at_least(Role.CLASS_TEACHER)),
+):
+    """
+    [ADMIN/CLASS_TEACHER] Publish a notification immediately.
+
+    For public notices, this makes them visible on the public homepage.
+    For registered user notices, this sends to recipients.
+    """
+    from app.models.notification import Notification
+
+    notification = db.get(Notification, notification_id)
+    if not notification:
+        raise HTTPException(status_code=404, detail="Notification not found")
+
+    # Class teachers can only publish their own notifications or their class notifications
+    if user.role == Role.CLASS_TEACHER.value:
+        if notification.created_by_id != user.id:
+            raise HTTPException(status_code=403, detail="You can only publish your own notifications")
+
+    if notification.is_published:
+        return {
+            "status": "already_published",
+            "notification_id": notification_id,
+            "published_at": notification.published_at.isoformat() if notification.published_at else None,
+        }
+
+    # Publish the notification
+    notification.is_published = True
+    notification.published_at = datetime.utcnow()
+
+    # If it's a registered user notice, send to recipients
+    recipients_count = 0
+    if notification.target_audience not in [TargetAudience.PUBLIC.value]:
+        result = send_notification(db, notification_id=notification.id)
+        recipients_count = result.get("recipients_count", 0)
+
+    db.commit()
+
+    return {
+        "status": "published",
+        "notification_id": notification_id,
+        "is_public": notification.is_public,
+        "published_at": notification.published_at.isoformat(),
+        "recipients_count": recipients_count,
+    }
+
+
+class ScheduleNotificationRequest(BaseModel):
+    """Schedule a notification for future publication."""
+    scheduled_for: datetime  # IST datetime for publication
+
+
+@router.post("/{notification_id}/schedule")
+def schedule_notification(
+    notification_id: int,
+    payload: ScheduleNotificationRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role_at_least(Role.CLASS_TEACHER)),
+):
+    """
+    [ADMIN/CLASS_TEACHER] Schedule a notification for future publication.
+
+    The notification will be automatically published at the scheduled time (IST).
+    """
+    from app.models.notification import Notification
+
+    notification = db.get(Notification, notification_id)
+    if not notification:
+        raise HTTPException(status_code=404, detail="Notification not found")
+
+    # Class teachers can only schedule their own notifications
+    if user.role == Role.CLASS_TEACHER.value:
+        if notification.created_by_id != user.id:
+            raise HTTPException(status_code=403, detail="You can only schedule your own notifications")
+
+    if notification.is_published:
+        raise HTTPException(status_code=400, detail="Cannot schedule an already published notification")
+
+    # Validate scheduled time is in the future
+    if payload.scheduled_for <= datetime.utcnow():
+        raise HTTPException(status_code=400, detail="Scheduled time must be in the future")
+
+    notification.scheduled_for = payload.scheduled_for
+    db.commit()
+
+    return {
+        "status": "scheduled",
+        "notification_id": notification_id,
+        "scheduled_for": notification.scheduled_for.isoformat(),
     }

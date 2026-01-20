@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useStore';
 import AdminLayout from '@/components/admin/AdminLayout';
+import { usersApi } from '@/lib/api';
 import {
   Users,
   FileText,
@@ -17,6 +18,9 @@ import {
   Calendar,
   TrendingUp,
   AlertCircle,
+  Bell,
+  GraduationCap,
+  UserCog,
 } from 'lucide-react';
 
 interface DashboardStats {
@@ -24,11 +28,16 @@ interface DashboardStats {
   pendingAdmissions: number;
   totalAchievements: number;
   upcomingEvents: number;
+  byRole?: {
+    students: number;
+    parents: number;
+    teachers: number;
+  };
 }
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, token, isAuthenticated } = useAuthStore();
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
     pendingAdmissions: 0,
@@ -50,20 +59,17 @@ export default function AdminDashboard() {
 
     // Load dashboard stats
     loadStats();
-  }, [isAuthenticated, user, router]);
+  }, [isAuthenticated, user, router, token]);
 
   const loadStats = async () => {
     try {
-      // TODO: Create aggregated stats endpoint
-      // For now, using placeholder values
-      setStats({
-        totalUsers: 0,
-        pendingAdmissions: 0,
-        totalAchievements: 0,
-        upcomingEvents: 0,
-      });
+      if (!token) return;
+
+      const result = await usersApi.getDashboardStats(token);
+      setStats(result);
     } catch (error) {
       console.error('Failed to load stats:', error);
+      // Keep default values on error
     } finally {
       setLoading(false);
     }
@@ -155,26 +161,79 @@ export default function AdminDashboard() {
           <h3 className="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
           <div className="space-y-3">
             <button
-              onClick={() => router.push('/admin/achievements')}
-              className="w-full px-4 py-3 bg-primary-50 text-primary-700 rounded-lg hover:bg-primary-100 transition-colors text-left font-semibold"
+              onClick={() => router.push('/admin/notifications')}
+              className="w-full px-4 py-3 bg-orange-50 text-orange-700 rounded-lg hover:bg-orange-100 transition-colors text-left font-semibold flex items-center gap-2"
             >
-              + Add Achievement
+              <Bell className="w-5 h-5" />
+              Send Notice/Announcement
+            </button>
+            <button
+              onClick={() => router.push('/admin/approvals')}
+              className="w-full px-4 py-3 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-left font-semibold flex items-center gap-2"
+            >
+              <UserCog className="w-5 h-5" />
+              Approve Pending Users ({stats.pendingAdmissions})
+            </button>
+            <button
+              onClick={() => router.push('/admin/achievements')}
+              className="w-full px-4 py-3 bg-primary-50 text-primary-700 rounded-lg hover:bg-primary-100 transition-colors text-left font-semibold flex items-center gap-2"
+            >
+              <Trophy className="w-5 h-5" />
+              Add Achievement
             </button>
             <button
               onClick={() => router.push('/admin/events')}
-              className="w-full px-4 py-3 bg-primary-50 text-primary-700 rounded-lg hover:bg-primary-100 transition-colors text-left font-semibold"
+              className="w-full px-4 py-3 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors text-left font-semibold flex items-center gap-2"
             >
-              + Create Event
+              <Calendar className="w-5 h-5" />
+              Create Event
             </button>
             <button
               onClick={() => router.push('/admin/users')}
-              className="w-full px-4 py-3 bg-primary-50 text-primary-700 rounded-lg hover:bg-primary-100 transition-colors text-left font-semibold"
+              className="w-full px-4 py-3 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors text-left font-semibold flex items-center gap-2"
             >
-              + Add User
+              <Users className="w-5 h-5" />
+              Manage Users
             </button>
           </div>
         </div>
       </div>
+
+      {/* User Breakdown */}
+      {stats.byRole && (
+        <div className="mt-6 bg-white rounded-xl p-6 shadow-md">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">User Breakdown</h3>
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="bg-blue-50 rounded-lg p-4">
+              <div className="flex items-center gap-3">
+                <GraduationCap className="w-8 h-8 text-blue-600" />
+                <div>
+                  <p className="text-2xl font-bold text-blue-700">{stats.byRole.students}</p>
+                  <p className="text-sm text-blue-600">Students</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-green-50 rounded-lg p-4">
+              <div className="flex items-center gap-3">
+                <Users className="w-8 h-8 text-green-600" />
+                <div>
+                  <p className="text-2xl font-bold text-green-700">{stats.byRole.parents}</p>
+                  <p className="text-sm text-green-600">Parents</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-purple-50 rounded-lg p-4">
+              <div className="flex items-center gap-3">
+                <UserCog className="w-8 h-8 text-purple-600" />
+                <div>
+                  <p className="text-2xl font-bold text-purple-700">{stats.byRole.teachers}</p>
+                  <p className="text-sm text-purple-600">Teachers</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 }

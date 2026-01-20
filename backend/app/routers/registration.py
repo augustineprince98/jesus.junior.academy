@@ -37,6 +37,8 @@ class RegistrationRequest(BaseModel):
     class_id: Optional[int] = None  # Required for STUDENT role
     dob: Optional[str] = None  # Date of birth for students (YYYY-MM-DD)
     gender: Optional[str] = None  # Gender for students
+    father_name: Optional[str] = None  # Required for students
+    mother_name: Optional[str] = None  # Required for students
 
     @field_validator("phone")
     @classmethod
@@ -101,18 +103,31 @@ async def register_user(
                 detail="Email already registered",
             )
 
-    # For STUDENT role, validate class_id if provided
+    # For STUDENT role, validate required fields
     school_class = None
     academic_year = None
-    if payload.role == Role.STUDENT.value and payload.class_id:
-        school_class = db.get(SchoolClass, payload.class_id)
-        if not school_class:
+    if payload.role == Role.STUDENT.value:
+        # Father's name and mother's name are required for students
+        if not payload.father_name or not payload.father_name.strip():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid class selected",
+                detail="Father's name is required for student registration",
             )
-        # Get current academic year
-        academic_year = db.query(AcademicYear).filter(AcademicYear.is_current == True).first()
+        if not payload.mother_name or not payload.mother_name.strip():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Mother's name is required for student registration",
+            )
+
+        if payload.class_id:
+            school_class = db.get(SchoolClass, payload.class_id)
+            if not school_class:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid class selected",
+                )
+            # Get current academic year
+            academic_year = db.query(AcademicYear).filter(AcademicYear.is_current == True).first()
 
     # Create new user with pending approval
     new_user = User(
@@ -131,11 +146,13 @@ async def register_user(
 
     # For STUDENT role with class_id, create Student and Enrollment records
     if payload.role == Role.STUDENT.value and school_class and academic_year:
-        # Create student record
+        # Create student record with parent information
         student = Student(
             name=payload.name,
             dob=date.fromisoformat(payload.dob) if payload.dob else date(2010, 1, 1),
             gender=payload.gender or "Not Specified",
+            father_name=payload.father_name.strip(),
+            mother_name=payload.mother_name.strip(),
         )
         db.add(student)
         db.flush()

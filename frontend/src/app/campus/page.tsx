@@ -136,6 +136,15 @@ export default function ModernCampusPage() {
       roles: ['TEACHER', 'CLASS_TEACHER'],
     },
     {
+      id: 'assign-homework',
+      title: 'Assign Homework',
+      description: 'Create and publish homework assignments',
+      icon: BookOpen,
+      color: 'from-green-500 to-emerald-600',
+      href: '/campus/homework/assign',
+      roles: ['TEACHER', 'CLASS_TEACHER'],
+    },
+    {
       id: 'mark-attendance',
       title: 'Mark Attendance',
       description: 'Take roll call and mark student attendance',
@@ -152,6 +161,35 @@ export default function ModernCampusPage() {
       color: 'from-teal-500 to-cyan-600',
       href: '/campus/results',
       roles: ['TEACHER', 'CLASS_TEACHER'],
+    },
+    {
+      id: 'class-notice',
+      title: 'Send Notice',
+      description: 'Send announcements to your class parents',
+      icon: Bell,
+      color: 'from-orange-500 to-red-600',
+      href: '/campus/notices/create',
+      roles: ['CLASS_TEACHER'],
+    },
+    {
+      id: 'leave-request',
+      title: 'Leave Request',
+      description: 'Apply for leave and view status',
+      icon: Calendar,
+      color: 'from-gray-500 to-slate-600',
+      href: '/campus/leave',
+      roles: ['TEACHER', 'CLASS_TEACHER'],
+    },
+
+    // STUDENT Cards - Fees
+    {
+      id: 'student-fees',
+      title: 'My Fees',
+      description: 'View fee details and payment status',
+      icon: DollarSign,
+      color: 'from-emerald-500 to-green-600',
+      href: '/campus/fees',
+      roles: ['STUDENT'],
     },
 
     // COMMON Cards

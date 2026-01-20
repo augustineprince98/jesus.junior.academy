@@ -1,6 +1,7 @@
-from sqlalchemy import String, Date, ForeignKey
+from sqlalchemy import String, Date, ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import date
+from typing import Optional
 
 from app.core.database import Base
 
@@ -12,6 +13,15 @@ class Student(Base):
     name: Mapped[str] = mapped_column(String(100))
     dob: Mapped[date] = mapped_column(Date)
     gender: Mapped[str] = mapped_column(String(10))
+
+    # Parent information (required for registration)
+    father_name: Mapped[str] = mapped_column(String(100), nullable=False, default="")
+    mother_name: Mapped[str] = mapped_column(String(100), nullable=False, default="")
+
+    # Optional additional info
+    address: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    blood_group: Mapped[Optional[str]] = mapped_column(String(5), nullable=True)
+    emergency_contact: Mapped[Optional[str]] = mapped_column(String(15), nullable=True)
 
     # Relationships
     enrollments = relationship("Enrollment", back_populates="student")

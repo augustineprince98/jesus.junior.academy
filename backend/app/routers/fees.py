@@ -19,6 +19,121 @@ from app.services.fee_service import calculate_total_paid, validate_payment_amou
 
 router = APIRouter(prefix="/fees", tags=["Fees"])
 
+
+# ========================================
+# STUDENT FEE ENDPOINT
+# ========================================
+
+@router.get("/student/my-fees")
+def get_student_fees(
+    academic_year_id: int = None,
+    db: Session = Depends(get_db),
+    student_user: User = Depends(get_current_user)
+):
+    """
+    [STUDENT] Get fee profile for the logged-in student.
+    Shows fee breakdown, payment history, and pending amount.
+    """
+    if student_user.role != Role.STUDENT.value:
+        raise HTTPException(
+            status_code=403,
+            detail="Only students can access this endpoint"
+        )
+
+    if not student_user.student_id:
+        raise HTTPException(
+            status_code=400,
+            detail="Your user account is not linked to a student record"
+        )
+
+    # Get academic year
+    if academic_year_id:
+        academic_year = db.get(AcademicYear, academic_year_id)
+    else:
+        academic_year = db.query(AcademicYear).filter(AcademicYear.is_current == True).first()
+
+    if not academic_year:
+        raise HTTPException(status_code=400, detail="No academic year found")
+
+    # Get student's enrollment
+    from app.models.enrollment import Enrollment
+    enrollment = db.query(Enrollment).filter(
+        Enrollment.student_id == student_user.student_id,
+        Enrollment.academic_year_id == academic_year.id,
+        Enrollment.status == "ACTIVE"
+    ).first()
+
+    if not enrollment:
+        return {
+            "student_id": student_user.student_id,
+            "academic_year": academic_year.year,
+            "message": "Not enrolled for this academic year",
+            "fee_profile": None
+        }
+
+    # Get fee profile
+    fee_profile = db.query(StudentFeeProfile).join(FeeStructure).filter(
+        StudentFeeProfile.student_id == student_user.student_id,
+        FeeStructure.academic_year_id == academic_year.id
+    ).options(
+        joinedload(StudentFeeProfile.fee_structure),
+        joinedload(StudentFeeProfile.payments)
+    ).first()
+
+    if not fee_profile:
+        return {
+            "student_id": student_user.student_id,
+            "academic_year": academic_year.year,
+            "class_name": enrollment.school_class.name,
+            "message": "Fee profile not yet created. Contact administration.",
+            "fee_profile": None
+        }
+
+    # Calculate amounts
+    paid = calculate_total_paid(db, fee_profile.id)
+    pending = fee_profile.total_yearly_fee - paid
+
+    # Get payment history
+    payments = [
+        {
+            "payment_id": p.id,
+            "amount_paid": p.amount_paid,
+            "payment_mode": p.payment_mode.value,
+            "payment_frequency": p.payment_frequency.value,
+            "paid_at": p.paid_at.isoformat(),
+            "is_verified": p.is_verified,
+            "receipt_number": p.receipt_number,
+        }
+        for p in fee_profile.payments
+    ]
+
+    fee_structure = fee_profile.fee_structure
+
+    return {
+        "student_id": student_user.student_id,
+        "student_name": student_user.name,
+        "academic_year": academic_year.year,
+        "class_name": enrollment.school_class.name,
+        "roll_number": enrollment.roll_number,
+        "fee_breakdown": {
+            "annual_charges": fee_structure.annual_charges,
+            "monthly_fee": fee_structure.monthly_fee,
+            "yearly_tuition": fee_structure.monthly_fee * 12,
+            "transport_charges": fee_profile.transport_charges,
+            "concession": fee_profile.concession_amount,
+            "concession_reason": fee_profile.concession_reason,
+        },
+        "fee_summary": {
+            "total_yearly_fee": fee_profile.total_yearly_fee,
+            "paid": paid,
+            "pending": pending,
+            "payment_status": "PAID" if pending == 0 else "PENDING" if paid == 0 else "PARTIAL"
+        },
+        "payment_history": payments,
+        "last_payment": max([p.paid_at for p in fee_profile.payments] or [None]),
+    }
+
+
 # ========================================
 # PARENT FEE MANAGEMENT ENDPOINTS
 # ========================================

@@ -39,11 +39,14 @@ def create_notification(
     academic_year_id: int,
     created_by_id: int,
     scheduled_for: Optional[datetime] = None,
+    is_public: bool = False,
+    expires_at: Optional[datetime] = None,
 ) -> Notification:
     """
     Create a new notification.
 
     If target_audience is CLASS_SPECIFIC, target_class_id must be provided.
+    If is_public is True, the notice will be shown on the public homepage.
     """
     notification = Notification(
         title=title,
@@ -56,6 +59,9 @@ def create_notification(
         created_by_id=created_by_id,
         scheduled_for=scheduled_for,
         is_sent=False,
+        is_public=is_public,
+        is_published=False,
+        expires_at=expires_at,
     )
     db.add(notification)
     db.commit()
@@ -182,6 +188,15 @@ def get_target_users(
         ).all()
 
         return list(set([u.id for u in parent_users] + [u.id for u in student_users]))
+
+    elif target_audience == TargetAudience.PUBLIC:
+        # Public notices don't have recipients - they're shown on the public homepage
+        return []
+
+    elif target_audience == TargetAudience.PUBLIC_AND_REGISTERED:
+        # Send to all registered users (also shown on public homepage)
+        users = db.query(User.id).filter(User.is_active.is_(True)).all()
+        return [u.id for u in users]
 
     return []
 

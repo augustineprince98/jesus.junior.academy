@@ -6,7 +6,8 @@ When published, goes out as bulk notification to all parents of that class.
 """
 
 from datetime import date, datetime
-from sqlalchemy import String, Boolean, Text, Date, DateTime, ForeignKey, func
+from typing import Optional
+from sqlalchemy import String, Boolean, Text, Date, DateTime, ForeignKey, func, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -46,11 +47,43 @@ class Homework(Base):
     published_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=func.now())
 
+    # File attachments (images and documents)
+    # Stored as JSON array: [{"filename": "...", "file_path": "...", "file_type": "image/png", "size": 1234}]
+    attachments: Mapped[Optional[list]] = mapped_column(JSON, nullable=True, default=list)
+
     # Relationships
     school_class = relationship("SchoolClass")
     subject = relationship("Subject")
     academic_year = relationship("AcademicYear")
     assigned_by = relationship("User")
 
+    # Relationship to submission attachments
+    homework_attachments = relationship("HomeworkAttachment", back_populates="homework", cascade="all, delete-orphan")
+
     def __repr__(self):
         return f"<Homework {self.id}: {self.title[:30]} for class {self.class_id}>"
+
+
+class HomeworkAttachment(Base):
+    """
+    Individual file attachment for homework.
+    Supports images (PNG, JPG, GIF) and documents (PDF, DOC, DOCX).
+    """
+    __tablename__ = "homework_attachments"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    homework_id: Mapped[int] = mapped_column(
+        ForeignKey("homework.id", ondelete="CASCADE"), nullable=False
+    )
+    filename: Mapped[str] = mapped_column(String(255), nullable=False)
+    original_filename: Mapped[str] = mapped_column(String(255), nullable=False)
+    file_path: Mapped[str] = mapped_column(String(500), nullable=False)
+    file_type: Mapped[str] = mapped_column(String(50), nullable=False)  # MIME type
+    file_size: Mapped[int] = mapped_column(nullable=False)  # Size in bytes
+    uploaded_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=func.now())
+
+    # Relationships
+    homework = relationship("Homework", back_populates="homework_attachments")
+
+    def __repr__(self):
+        return f"<HomeworkAttachment {self.id}: {self.original_filename}>"

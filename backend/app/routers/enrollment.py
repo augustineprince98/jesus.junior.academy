@@ -30,7 +30,7 @@ def get_classes_public(
     
     try:
         # Get current academic year
-        current_year = db.query(AcademicYear).filter(AcademicYear.is_active == True).first()
+        current_year = db.query(AcademicYear).filter(AcademicYear.is_current == True).first()
 
         if not current_year:
             logger.info("No active academic year found")
@@ -73,7 +73,7 @@ def get_academic_years(
 
         return {
             "academic_years": [
-                {"id": y.id, "name": y.year, "is_current": y.is_active}  # FIXED: Use 'year' field
+                {"id": y.id, "name": y.year, "is_current": y.is_current}
                 for y in years
             ]
         }
@@ -150,7 +150,7 @@ def assign_user_to_class(
     if payload.academic_year_id:
         academic_year = db.get(AcademicYear, payload.academic_year_id)
     else:
-        academic_year = db.query(AcademicYear).filter(AcademicYear.is_active == True).first()
+        academic_year = db.query(AcademicYear).filter(AcademicYear.is_current == True).first()
 
     if not academic_year:
         raise HTTPException(status_code=400, detail="No academic year found")
@@ -233,7 +233,7 @@ def get_user_class(
         return {"user_id": user_id, "class": None, "message": "User is not linked to a student"}
 
     # Get current academic year
-    current_year = db.query(AcademicYear).filter(AcademicYear.is_active == True).first()
+    current_year = db.query(AcademicYear).filter(AcademicYear.is_current == True).first()
     if not current_year:
         return {"user_id": user_id, "class": None, "message": "No current academic year"}
 

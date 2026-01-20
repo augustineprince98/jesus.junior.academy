@@ -455,6 +455,15 @@ export const usersApi = {
 
   getApprovalStats: (token: string) =>
     request('/users/approval-stats', { token }),
+
+  getDashboardStats: (token: string) =>
+    request<{
+      totalUsers: number;
+      pendingAdmissions: number;
+      totalAchievements: number;
+      upcomingEvents: number;
+      byRole: { students: number; parents: number; teachers: number };
+    }>('/users/dashboard-stats', { token }),
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -475,6 +484,8 @@ export const registrationApi = {
     class_id?: number;
     dob?: string;
     gender?: string;
+    father_name?: string;  // Required for students
+    mother_name?: string;  // Required for students
   }) =>
     request<{ status: string; message: string; user_id: number }>('/register/', {
       method: 'POST',

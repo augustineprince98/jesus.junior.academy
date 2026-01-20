@@ -8,7 +8,7 @@ class AcademicYear(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     year: Mapped[str] = mapped_column(String(9), unique=True)  # e.g. "2025-2026"
-    is_active: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_current: Mapped[bool] = mapped_column(Boolean, default=False)  # Changed from is_active to match code
     created_at: Mapped[DateTime] = mapped_column(DateTime, default=func.now())
     updated_at: Mapped[DateTime] = mapped_column(DateTime, default=func.now(), onupdate=func.now())
 

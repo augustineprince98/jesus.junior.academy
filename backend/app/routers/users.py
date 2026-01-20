@@ -392,3 +392,344 @@ def get_approval_stats(
         "rejected": rejected,
         "total": pending + approved + rejected,
     }
+
+
+# ==================== DASHBOARD STATISTICS ====================
+
+@router.get("/dashboard-stats")
+def get_dashboard_stats(
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_role_at_least(Role.ADMIN)),
+):
+    """
+    [ADMIN] Get comprehensive dashboard statistics.
+
+    Returns counts for users, pending approvals, achievements, events, etc.
+    """
+    from app.models.event import Event
+    from app.models.achievement import Achievement
+    from datetime import date
+
+    # User counts
+    total_users = db.query(User).filter(User.is_active == True).count()
+    pending_approvals = db.query(User).filter(
+        User.approval_status == ApprovalStatus.PENDING
+    ).count()
+
+    # User counts by role
+    student_count = db.query(User).filter(
+        User.role == Role.STUDENT.value,
+        User.is_active == True,
+    ).count()
+
+    parent_count = db.query(User).filter(
+        User.role == Role.PARENT.value,
+        User.is_active == True,
+    ).count()
+
+    teacher_count = db.query(User).filter(
+        User.role.in_([Role.TEACHER.value, Role.CLASS_TEACHER.value]),
+        User.is_active == True,
+    ).count()
+
+    # Achievements count
+    try:
+        total_achievements = db.query(Achievement).count()
+    except:
+        total_achievements = 0
+
+    # Upcoming events count
+    try:
+        upcoming_events = db.query(Event).filter(
+            Event.event_date >= date.today()
+        ).count()
+    except:
+        upcoming_events = 0
+
+    return {
+        "totalUsers": total_users,
+        "pendingAdmissions": pending_approvals,
+        "totalAchievements": total_achievements,
+        "upcomingEvents": upcoming_events,
+        "byRole": {
+            "students": student_count,
+            "parents": parent_count,
+            "teachers": teacher_count,
+        },
+    }
+
+
+# ==================== PARENT-STUDENT LINKING ====================
+
+class LinkChildRequest(BaseModel):
+    """Request to link a parent to a student."""
+    parent_id: int
+    student_id: int
+    relation_type: str = "GUARDIAN"  # FATHER, MOTHER, GUARDIAN
+    is_primary: bool = False
+
+
+@router.post("/parent-student/link")
+def link_parent_to_student(
+    payload: LinkChildRequest,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_role_at_least(Role.ADMIN)),
+):
+    """
+    [ADMIN] Link a parent to a student.
+
+    Creates a StudentParent relationship record.
+    """
+    from app.models.people import Student, Parent
+    from app.models.student_parent import StudentParent, ParentRelationship
+
+    # Verify student exists
+    student = db.get(Student, payload.student_id)
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    # Verify parent exists
+    parent = db.get(Parent, payload.parent_id)
+    if not parent:
+        raise HTTPException(status_code=404, detail="Parent not found")
+
+    # Validate relation type
+    try:
+        relation = ParentRelationship(payload.relation_type.upper())
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid relation type. Must be one of: FATHER, MOTHER, GUARDIAN"
+        )
+
+    # Check if link already exists
+    existing = db.query(StudentParent).filter(
+        StudentParent.student_id == payload.student_id,
+        StudentParent.parent_id == payload.parent_id,
+    ).first()
+
+    if existing:
+        raise HTTPException(
+            status_code=400,
+            detail="This parent-student link already exists"
+        )
+
+    # Create link
+    link = StudentParent(
+        student_id=payload.student_id,
+        parent_id=payload.parent_id,
+        relation_type=relation.value,
+        is_primary=payload.is_primary,
+    )
+    db.add(link)
+    db.commit()
+
+    return {
+        "status": "linked",
+        "parent_id": payload.parent_id,
+        "parent_name": parent.name,
+        "student_id": payload.student_id,
+        "student_name": student.name,
+        "relation_type": relation.value,
+    }
+
+
+@router.delete("/parent-student/unlink")
+def unlink_parent_from_student(
+    parent_id: int,
+    student_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_role_at_least(Role.ADMIN)),
+):
+    """
+    [ADMIN] Remove a parent-student link.
+    """
+    from app.models.student_parent import StudentParent
+
+    link = db.query(StudentParent).filter(
+        StudentParent.parent_id == parent_id,
+        StudentParent.student_id == student_id,
+    ).first()
+
+    if not link:
+        raise HTTPException(status_code=404, detail="Link not found")
+
+    db.delete(link)
+    db.commit()
+
+    return {
+        "status": "unlinked",
+        "parent_id": parent_id,
+        "student_id": student_id,
+    }
+
+
+@router.get("/parent/{parent_id}/children")
+def get_parent_children(
+    parent_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_role_at_least(Role.ADMIN)),
+):
+    """
+    [ADMIN] Get all students linked to a parent.
+    """
+    from app.models.people import Parent
+    from app.models.student_parent import StudentParent
+
+    parent = db.get(Parent, parent_id)
+    if not parent:
+        raise HTTPException(status_code=404, detail="Parent not found")
+
+    links = db.query(StudentParent).filter(
+        StudentParent.parent_id == parent_id
+    ).all()
+
+    return {
+        "parent_id": parent_id,
+        "parent_name": parent.name,
+        "children": [
+            {
+                "student_id": link.student.id,
+                "student_name": link.student.name,
+                "relation_type": link.relation_type,
+                "is_primary": link.is_primary,
+                "father_name": link.student.father_name,
+                "mother_name": link.student.mother_name,
+            }
+            for link in links
+        ],
+        "total": len(links),
+    }
+
+
+@router.post("/parent/{parent_id}/auto-link")
+def auto_link_parent_to_children(
+    parent_id: int,
+    parent_name: str,  # The name to match against father_name or mother_name
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_role_at_least(Role.ADMIN)),
+):
+    """
+    [ADMIN] Auto-link a parent to all students with matching parent name.
+
+    This finds all students where:
+    - father_name matches the parent_name (creates FATHER link)
+    - mother_name matches the parent_name (creates MOTHER link)
+
+    Useful for linking a parent to all their children after registration.
+    """
+    from app.models.people import Parent, Student
+    from app.models.student_parent import StudentParent, ParentRelationship
+
+    parent = db.get(Parent, parent_id)
+    if not parent:
+        raise HTTPException(status_code=404, detail="Parent not found")
+
+    # Normalize name for comparison (case-insensitive)
+    name_normalized = parent_name.strip().lower()
+
+    linked_students = []
+    errors = []
+
+    # Find students with matching father_name
+    father_matches = db.query(Student).filter(
+        Student.father_name.ilike(f"%{name_normalized}%")
+    ).all()
+
+    for student in father_matches:
+        # Check if link already exists
+        existing = db.query(StudentParent).filter(
+            StudentParent.student_id == student.id,
+            StudentParent.parent_id == parent_id,
+        ).first()
+
+        if not existing:
+            link = StudentParent(
+                student_id=student.id,
+                parent_id=parent_id,
+                relation_type=ParentRelationship.FATHER.value,
+                is_primary=True,  # Father is usually primary
+            )
+            db.add(link)
+            linked_students.append({
+                "student_id": student.id,
+                "student_name": student.name,
+                "relation_type": "FATHER",
+            })
+
+    # Find students with matching mother_name
+    mother_matches = db.query(Student).filter(
+        Student.mother_name.ilike(f"%{name_normalized}%")
+    ).all()
+
+    for student in mother_matches:
+        # Check if link already exists
+        existing = db.query(StudentParent).filter(
+            StudentParent.student_id == student.id,
+            StudentParent.parent_id == parent_id,
+        ).first()
+
+        if not existing:
+            link = StudentParent(
+                student_id=student.id,
+                parent_id=parent_id,
+                relation_type=ParentRelationship.MOTHER.value,
+                is_primary=False,
+            )
+            db.add(link)
+            linked_students.append({
+                "student_id": student.id,
+                "student_name": student.name,
+                "relation_type": "MOTHER",
+            })
+
+    db.commit()
+
+    return {
+        "status": "auto_link_complete",
+        "parent_id": parent_id,
+        "parent_name": parent.name,
+        "search_name": parent_name,
+        "linked_students": linked_students,
+        "total_linked": len(linked_students),
+        "message": f"Linked parent to {len(linked_students)} student(s)",
+    }
+
+
+@router.get("/student/{student_id}/parents")
+def get_student_parents(
+    student_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_role_at_least(Role.ADMIN)),
+):
+    """
+    [ADMIN] Get all parents linked to a student.
+    """
+    from app.models.people import Student
+    from app.models.student_parent import StudentParent
+
+    student = db.get(Student, student_id)
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    links = db.query(StudentParent).filter(
+        StudentParent.student_id == student_id
+    ).all()
+
+    return {
+        "student_id": student_id,
+        "student_name": student.name,
+        "father_name_on_record": student.father_name,
+        "mother_name_on_record": student.mother_name,
+        "linked_parents": [
+            {
+                "parent_id": link.parent.id,
+                "parent_name": link.parent.name,
+                "parent_phone": link.parent.phone,
+                "relation_type": link.relation_type,
+                "is_primary": link.is_primary,
+            }
+            for link in links
+        ],
+        "total": len(links),
+    }

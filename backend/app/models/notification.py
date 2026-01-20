@@ -40,6 +40,8 @@ class TargetAudience(str, Enum):
     STUDENTS = "STUDENTS"            # All students
     TEACHERS = "TEACHERS"            # All teachers
     CLASS_SPECIFIC = "CLASS_SPECIFIC"  # Specific class only
+    PUBLIC = "PUBLIC"                # Public homepage (no login required)
+    PUBLIC_AND_REGISTERED = "PUBLIC_AND_REGISTERED"  # Both public and registered users
 
 
 class DeliveryMethod(str, Enum):
@@ -75,6 +77,12 @@ class Notification(Base):
     scheduled_for: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     is_sent: Mapped[bool] = mapped_column(Boolean, default=False)
     sent_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    # Public notice fields
+    is_public: Mapped[bool] = mapped_column(Boolean, default=False)  # Show on public homepage
+    is_published: Mapped[bool] = mapped_column(Boolean, default=False)  # Published status
+    published_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)  # Auto-hide after this time
 
     # Relationships
     target_class = relationship("SchoolClass")

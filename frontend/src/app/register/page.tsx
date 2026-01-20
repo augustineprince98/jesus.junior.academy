@@ -46,6 +46,8 @@ export default function RegisterPage() {
   const [classId, setClassId] = useState<number | null>(null);
   const [dob, setDob] = useState('');
   const [gender, setGender] = useState('');
+  const [fatherName, setFatherName] = useState('');
+  const [motherName, setMotherName] = useState('');
   const [classes, setClasses] = useState<SchoolClass[]>([]);
   const [loadingClasses, setLoadingClasses] = useState(false);
 
@@ -97,9 +99,19 @@ export default function RegisterPage() {
     }
 
     // Additional validation for students
-    if (role === 'STUDENT' && !classId) {
-      setError('Please select your class');
-      return;
+    if (role === 'STUDENT') {
+      if (!classId) {
+        setError('Please select your class');
+        return;
+      }
+      if (!fatherName.trim()) {
+        setError("Father's name is required");
+        return;
+      }
+      if (!motherName.trim()) {
+        setError("Mother's name is required");
+        return;
+      }
     }
 
     try {
@@ -113,6 +125,8 @@ export default function RegisterPage() {
         class_id: role === 'STUDENT' ? classId || undefined : undefined,
         dob: role === 'STUDENT' && dob ? dob : undefined,
         gender: role === 'STUDENT' && gender ? gender : undefined,
+        father_name: role === 'STUDENT' ? fatherName.trim() : undefined,
+        mother_name: role === 'STUDENT' ? motherName.trim() : undefined,
       });
       setStep('success');
     } catch (err: any) {
@@ -363,6 +377,30 @@ export default function RegisterPage() {
                           </option>
                         ))}
                       </select>
+                    </div>
+
+                    {/* Father's Name */}
+                    <div className="relative">
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        type="text"
+                        value={fatherName}
+                        onChange={(e) => setFatherName(e.target.value)}
+                        placeholder="Father's Name *"
+                        className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    {/* Mother's Name */}
+                    <div className="relative">
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        type="text"
+                        value={motherName}
+                        onChange={(e) => setMotherName(e.target.value)}
+                        placeholder="Mother's Name *"
+                        className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      />
                     </div>
 
                     {/* Date of Birth */}
