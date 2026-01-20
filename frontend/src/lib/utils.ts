@@ -167,3 +167,40 @@ export function supportsWebGL2(): boolean {
   const gl = canvas.getContext('webgl2');
   return !!gl;
 }
+
+/**
+ * Safely extract error message from API errors
+ * Handles FastAPI validation errors (422) which return arrays/objects
+ */
+export function getErrorMessage(error: any, fallback: string = 'An error occurred'): string {
+  if (!error) return fallback;
+  
+  // If it's already a string, return it
+  if (typeof error === 'string') return error;
+  
+  // Try to get detail from error object
+  if (error.detail) {
+    if (typeof error.detail === 'string') {
+      return error.detail;
+    }
+    // FastAPI validation errors are arrays
+    if (Array.isArray(error.detail)) {
+      return error.detail.map((e: any) => {
+        if (typeof e === 'string') return e;
+        if (e.msg) return `${e.loc?.join('.') || ''}: ${e.msg}`;
+        return JSON.stringify(e);
+      }).join(', ');
+    }
+    // If detail is an object, try to extract message
+    if (typeof error.detail === 'object') {
+      return error.detail.message || error.detail.error || JSON.stringify(error.detail);
+    }
+  }
+  
+  // Try error.message
+  if (error.message && typeof error.message === 'string') {
+    return error.message;
+  }
+  
+  return fallback;
+}
