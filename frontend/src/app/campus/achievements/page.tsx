@@ -50,7 +50,8 @@ export default function AchievementsPage() {
       setLoading(true);
       setError(null);
       const data = await achievementsApi.getPublic(undefined, false, 50);
-      setAchievements((data as any).achievements || []);
+      // Ensure achievements is always an array
+      setAchievements(Array.isArray((data as any)?.achievements) ? (data as any).achievements : []);
     } catch (err: any) {
       setError('Failed to load achievements');
     } finally {
@@ -90,13 +91,15 @@ export default function AchievementsPage() {
     return colors[category] || 'bg-gray-100 text-gray-700';
   };
 
-  const categories = ['all', ...Array.from(new Set(achievements.map(a => a.category)))];
+  // Ensure achievements is always an array before filtering
+  const achievementsArray = Array.isArray(achievements) ? achievements : [];
+  const categories = ['all', ...Array.from(new Set(achievementsArray.map(a => a.category)))];
 
   const filteredAchievements = selectedCategory === 'all'
-    ? achievements
-    : achievements.filter(a => a.category === selectedCategory);
+    ? achievementsArray
+    : achievementsArray.filter(a => a.category === selectedCategory);
 
-  const featuredAchievements = achievements.filter(a => a.is_featured);
+  const featuredAchievements = achievementsArray.filter(a => a.is_featured);
 
   if (!isAuthenticated || !user) return null;
 

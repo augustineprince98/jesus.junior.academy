@@ -108,7 +108,8 @@ export default function HomeworkPage() {
         setError(null);
 
         const data = await homeworkApi.getForStudent(token, user.student_id, false);
-        setHomework((data as any).homework || []);
+        // Ensure homework is always an array
+        setHomework(Array.isArray((data as any)?.homework) ? (data as any).homework : []);
       } catch (err: any) {
         setError(err.detail || 'Failed to load homework');
       } finally {
@@ -243,7 +244,9 @@ export default function HomeworkPage() {
     return `${diff} days left`;
   };
 
-  const filteredHomework = homework.filter(hw => {
+  // Ensure homework is always an array before filtering
+  const homeworkArray = Array.isArray(homework) ? homework : [];
+  const filteredHomework = homeworkArray.filter(hw => {
     if (filter === 'all') return true;
     if (filter === 'pending') return !hw.is_completed && !isOverdue(hw.due_date);
     if (filter === 'submitted') return hw.is_completed;
@@ -252,10 +255,10 @@ export default function HomeworkPage() {
   });
 
   const stats = {
-    total: homework.length,
-    pending: homework.filter(h => !h.is_completed && !isOverdue(h.due_date)).length,
-    submitted: homework.filter(h => h.is_completed).length,
-    overdue: homework.filter(h => !h.is_completed && isOverdue(h.due_date)).length,
+    total: homeworkArray.length,
+    pending: homeworkArray.filter(h => !h.is_completed && !isOverdue(h.due_date)).length,
+    submitted: homeworkArray.filter(h => h.is_completed).length,
+    overdue: homeworkArray.filter(h => !h.is_completed && isOverdue(h.due_date)).length,
   };
 
   if (!isAuthenticated || !user) return null;

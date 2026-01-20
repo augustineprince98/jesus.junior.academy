@@ -185,7 +185,10 @@ export default function ModernCampusPage() {
     },
   ];
 
-  const userCards = cards.filter((card) => user?.role && card.roles.includes(user.role));
+  // Ensure cards is always an array and user has a role before filtering
+  const userCards = Array.isArray(cards) && user?.role 
+    ? cards.filter((card) => card.roles.includes(user.role))
+    : [];
 
   const handleLogout = () => {
     logout();

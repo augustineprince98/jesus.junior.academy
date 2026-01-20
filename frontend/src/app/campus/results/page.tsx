@@ -65,20 +65,25 @@ export default function ResultsPage() {
         resultsApi.getMyResult(token),
       ]);
 
-      setMarks(marksData.marks as Mark[]);
-      setResult(resultData as Result);
+      // Ensure marks is always an array
+      setMarks(Array.isArray(marksData?.marks) ? marksData.marks : []);
+      setResult(resultData as Result || null);
     } catch (err: any) {
       setError(err.detail || 'Failed to load results');
+      setMarks([]); // Set empty array on error
+      setResult(null);
     } finally {
       setLoading(false);
     }
   };
 
+  // Ensure marks is always an array before filtering
+  const marksArray = Array.isArray(marks) ? marks : [];
   const filteredMarks = selectedExamType === 'all'
-    ? marks
-    : marks.filter(m => m.exam_type === selectedExamType);
+    ? marksArray
+    : marksArray.filter(m => m.exam_type === selectedExamType);
 
-  const examTypes = Array.from(new Set(marks.map(m => m.exam_type)));
+  const examTypes = Array.from(new Set(marksArray.map(m => m.exam_type)));
 
   if (!isAuthenticated || !user) return null;
 

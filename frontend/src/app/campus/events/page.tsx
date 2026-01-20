@@ -55,14 +55,16 @@ export default function EventsPage() {
       setLoading(true);
       setError(null);
       const data = await eventsApi.getUpcoming(token, 90);
-      setEvents((data as any).events || []);
+      // Ensure events is always an array
+      setEvents(Array.isArray((data as any)?.events) ? (data as any).events : []);
     } catch (err: any) {
       // Fallback to public API
       try {
         const publicData = await eventsApi.getPublic(undefined, true, 50);
-        setEvents((publicData as any).events || []);
+        setEvents(Array.isArray((publicData as any)?.events) ? (publicData as any).events : []);
       } catch {
         setError('Failed to load events');
+        setEvents([]); // Set empty array on error
       }
     } finally {
       setLoading(false);
@@ -102,9 +104,11 @@ export default function EventsPage() {
 
   const eventTypes = ['all', ...Array.from(new Set(events.map(e => e.event_type)))];
 
+  // Ensure events is always an array before filtering
+  const eventsArray = Array.isArray(events) ? events : [];
   const filteredEvents = selectedType === 'all'
-    ? events
-    : events.filter(e => e.event_type === selectedType);
+    ? eventsArray
+    : eventsArray.filter(e => e.event_type === selectedType);
 
   if (!isAuthenticated || !user) return null;
 

@@ -51,7 +51,8 @@ export default function NotificationsPage() {
       setLoading(true);
       setError(null);
       const data = await notificationsApi.getMy(token, false);
-      setNotifications((data as any).notifications || []);
+      // Ensure notifications is always an array
+      setNotifications(Array.isArray((data as any)?.notifications) ? (data as any).notifications : []);
     } catch (err: any) {
       setError(err.detail || 'Failed to load notifications');
     } finally {
@@ -137,11 +138,13 @@ export default function NotificationsPage() {
     return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
   };
 
+  // Ensure notifications is always an array before filtering
+  const notificationsArray = Array.isArray(notifications) ? notifications : [];
   const filteredNotifications = filter === 'unread'
-    ? notifications.filter(n => !n.is_read)
-    : notifications;
+    ? notificationsArray.filter(n => !n.is_read)
+    : notificationsArray;
 
-  const unreadCount = notifications.filter(n => !n.is_read).length;
+  const unreadCount = notificationsArray.filter(n => !n.is_read).length;
 
   if (!isAuthenticated || !user) return null;
 
