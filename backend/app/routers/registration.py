@@ -20,6 +20,9 @@ from app.models.enrollment import Enrollment
 from app.models.school_class import SchoolClass
 from app.models.academic_year import AcademicYear
 from datetime import date
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/register", tags=["Registration"])
 
@@ -149,8 +152,17 @@ async def register_user(
         )
         db.add(enrollment)
 
-    db.commit()
-    db.refresh(new_user)
+    try:
+        db.commit()
+        db.refresh(new_user)
+        logger.info(f"New user registered: {new_user.id} ({new_user.phone})")
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Registration failed during commit: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Registration failed due to database error",
+        )
 
     # TODO: Send SMS/notification to admins about new registration
 

@@ -64,9 +64,11 @@ export default function RegisterPage() {
     try {
       setLoadingClasses(true);
       const result = await registrationApi.getClasses();
-      setClasses(result.classes || []);
+      // Ensure classes is always an array
+      setClasses(Array.isArray(result?.classes) ? result.classes : []);
     } catch (err) {
       console.error('Failed to load classes:', err);
+      setClasses([]); // Set empty array on error
     } finally {
       setLoadingClasses(false);
     }

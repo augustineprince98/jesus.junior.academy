@@ -25,26 +25,39 @@ def get_classes_public(
     db: Session = Depends(get_db),
 ):
     """[PUBLIC] Get list of classes for registration dropdown."""
-    # Get current academic year
-    current_year = db.query(AcademicYear).filter(AcademicYear.is_active == True).first()
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        # Get current academic year
+        current_year = db.query(AcademicYear).filter(AcademicYear.is_active == True).first()
 
-    if not current_year:
-        return {"classes": [], "academic_year": None}
+        if not current_year:
+            logger.info("No active academic year found")
+            return {"classes": [], "academic_year": None}
 
-    classes = db.query(SchoolClass).filter(
-        SchoolClass.academic_year_id == current_year.id
-    ).order_by(SchoolClass.name).all()
+        classes = db.query(SchoolClass).filter(
+            SchoolClass.academic_year_id == current_year.id
+        ).order_by(SchoolClass.name).all()
 
-    return {
-        "classes": [
-            {"id": c.id, "name": c.name}
-            for c in classes
-        ],
-        "academic_year": {
-            "id": current_year.id,
-            "name": current_year.name,
+        result = {
+            "classes": [
+                {"id": c.id, "name": c.name}
+                for c in classes
+            ],
+            "academic_year": {
+                "id": current_year.id,
+                "name": current_year.year,  # FIXED: Use 'year' field, not 'name'
+            }
         }
-    }
+        
+        logger.info(f"Returning {len(result['classes'])} classes for academic year {current_year.year}")
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error in get_classes_public: {str(e)}", exc_info=True)
+        # Return empty result instead of raising exception for public endpoint
+        return {"classes": [], "academic_year": None}
 
 
 @router.get("/academic-years")
@@ -52,14 +65,21 @@ def get_academic_years(
     db: Session = Depends(get_db),
 ):
     """[PUBLIC] Get list of academic years."""
-    years = db.query(AcademicYear).order_by(AcademicYear.id.desc()).all()
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        years = db.query(AcademicYear).order_by(AcademicYear.id.desc()).all()
 
-    return {
-        "academic_years": [
-            {"id": y.id, "name": y.name, "is_current": y.is_active}
-            for y in years
-        ]
-    }
+        return {
+            "academic_years": [
+                {"id": y.id, "name": y.year, "is_current": y.is_active}  # FIXED: Use 'year' field
+                for y in years
+            ]
+        }
+    except Exception as e:
+        logger.error(f"Error in get_academic_years: {str(e)}", exc_info=True)
+        return {"academic_years": []}
 
 
 # ==================== ADMIN ENDPOINTS ====================

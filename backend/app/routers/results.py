@@ -10,7 +10,7 @@ This router handles:
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from datetime import date, datetime
 from typing import List
 
@@ -366,7 +366,9 @@ def get_class_results_summary(
         raise HTTPException(status_code=404, detail="Academic year not found")
 
     # Get all results
-    results = db.query(StudentResult).filter(
+    results = db.query(StudentResult).options(
+        joinedload(StudentResult.student)
+    ).filter(
         StudentResult.class_id == class_id,
         StudentResult.academic_year_id == academic_year_id
     ).order_by(StudentResult.final_score.desc()).all()

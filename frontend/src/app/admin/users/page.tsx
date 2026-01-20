@@ -83,9 +83,11 @@ export default function UsersPage() {
     try {
       setLoading(true);
       const data = await adminApi.listUsers(token!);
-      setUsers(data as User[]);
+      // Ensure data is always an array
+      setUsers(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to load users:', error);
+      setUsers([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -94,9 +96,11 @@ export default function UsersPage() {
   const loadClasses = async () => {
     try {
       const result = await enrollmentApi.getClasses(token!);
-      setClasses(result.classes || []);
+      // Ensure classes is always an array
+      setClasses(Array.isArray(result?.classes) ? result.classes : []);
     } catch (error) {
       console.error('Failed to load classes:', error);
+      setClasses([]); // Set empty array on error
     }
   };
 

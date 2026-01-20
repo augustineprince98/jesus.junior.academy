@@ -110,9 +110,10 @@ export default function AdminClassesPage() {
         enrollmentApi.getAcademicYears(token),
       ]);
 
-      setClasses((classesData as any).classes || []);
-      setSubjects(subjectsData);
-      setAcademicYears(yearsData.academic_years || []);
+      // Ensure all data is always an array
+      setClasses(Array.isArray((classesData as any)?.classes) ? (classesData as any).classes : []);
+      setSubjects(Array.isArray(subjectsData) ? subjectsData : []);
+      setAcademicYears(Array.isArray(yearsData?.academic_years) ? yearsData.academic_years : []);
     } catch (err: any) {
       setError(err.detail || 'Failed to load data');
     } finally {
