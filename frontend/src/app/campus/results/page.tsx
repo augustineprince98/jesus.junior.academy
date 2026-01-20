@@ -69,7 +69,10 @@ export default function ResultsPage() {
       setMarks(Array.isArray(marksData?.marks) ? marksData.marks : []);
       setResult(resultData as Result || null);
     } catch (err: any) {
-      setError(err.detail || 'Failed to load results');
+      const errorMessage = typeof err.detail === 'string' ? err.detail : 
+                          err.message || 
+                          'Failed to load results';
+      setError(errorMessage);
       setMarks([]); // Set empty array on error
       setResult(null);
     } finally {

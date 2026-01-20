@@ -111,7 +111,10 @@ export default function HomeworkPage() {
         // Ensure homework is always an array
         setHomework(Array.isArray((data as any)?.homework) ? (data as any).homework : []);
       } catch (err: any) {
-        setError(err.detail || 'Failed to load homework');
+        const errorMessage = typeof err.detail === 'string' ? err.detail : 
+                            err.message || 
+                            'Failed to load homework';
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }

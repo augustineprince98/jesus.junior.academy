@@ -116,7 +116,10 @@ export default function RegisterPage() {
       });
       setStep('success');
     } catch (err: any) {
-      setError(err.detail || 'Registration failed. Please try again.');
+      const errorMessage = typeof err.detail === 'string' ? err.detail : 
+                          err.message || 
+                          'Registration failed. Please try again.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -137,7 +140,10 @@ export default function RegisterPage() {
       const result = await registrationApi.checkStatus(checkPhone.trim());
       setStatusResult(result);
     } catch (err: any) {
-      setError(err.detail || 'Could not find registration');
+      const errorMessage = typeof err.detail === 'string' ? err.detail : 
+                          err.message || 
+                          'Could not find registration';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

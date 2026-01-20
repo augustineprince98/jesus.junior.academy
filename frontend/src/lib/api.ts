@@ -56,7 +56,26 @@ async function request<T>(endpoint: string, options: ApiOptions = {}): Promise<T
   // Handle errors
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
-    throw new ApiError(response.status, error.detail || 'Request failed');
+    
+    // Handle FastAPI validation errors (422) - detail can be an array or object
+    let errorMessage = 'Request failed';
+    if (error.detail) {
+      if (Array.isArray(error.detail)) {
+        // Validation errors are arrays of objects
+        errorMessage = error.detail.map((e: any) => {
+          if (typeof e === 'string') return e;
+          if (e.msg) return `${e.loc?.join('.') || ''}: ${e.msg}`;
+          return JSON.stringify(e);
+        }).join(', ');
+      } else if (typeof error.detail === 'string') {
+        errorMessage = error.detail;
+      } else if (typeof error.detail === 'object') {
+        // Try to extract a meaningful message
+        errorMessage = error.detail.message || error.detail.error || JSON.stringify(error.detail);
+      }
+    }
+    
+    throw new ApiError(response.status, errorMessage);
   }
 
   return response.json();

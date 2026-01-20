@@ -72,10 +72,14 @@ export default function ApprovalsPage() {
         approvalApi.getApprovalStats(token),
       ]);
 
-      setPendingUsers(pendingData.pending_users);
-      setStats(statsData);
+      // Ensure arrays are always initialized
+      setPendingUsers(Array.isArray(pendingData?.pending_users) ? pendingData.pending_users : []);
+      setStats(statsData || null);
     } catch (err: any) {
-      setError(err.detail || 'Failed to load approval data');
+      setError(getErrorMessage(err, 'Failed to load approval data'));
+      // Set empty defaults on error
+      setPendingUsers([]);
+      setStats(null);
     } finally {
       setLoading(false);
     }
@@ -94,7 +98,7 @@ export default function ApprovalsPage() {
         approved: prev.approved + 1,
       } : null);
     } catch (err: any) {
-      setError(err.detail || 'Failed to approve user');
+      setError(getErrorMessage(err, 'Failed to approve user'));
     } finally {
       setActionLoading(null);
     }
@@ -115,7 +119,7 @@ export default function ApprovalsPage() {
       setRejectModal(null);
       setRejectReason('');
     } catch (err: any) {
-      setError(err.detail || 'Failed to reject user');
+      setError(getErrorMessage(err, 'Failed to reject user'));
     } finally {
       setActionLoading(null);
     }
