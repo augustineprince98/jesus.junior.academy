@@ -102,10 +102,10 @@ export default function EventsPage() {
     return colors[type] || 'bg-gray-100 text-gray-700';
   };
 
-  const eventTypes = ['all', ...Array.from(new Set(events.map(e => e.event_type)))];
-
   // Ensure events is always an array before filtering
   const eventsArray = Array.isArray(events) ? events : [];
+  const eventTypes = ['all', ...Array.from(new Set(eventsArray.map(e => e.event_type)))];
+  
   const filteredEvents = selectedType === 'all'
     ? eventsArray
     : eventsArray.filter(e => e.event_type === selectedType);
