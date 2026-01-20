@@ -39,6 +39,8 @@ from app.routers import (
     registration_router,
     # File uploads
     uploads_router,
+    # Academic year management
+    academic_year_router,
 )
 from app.core.config import settings
 from app.services.scheduler_service import start_scheduler, stop_scheduler
