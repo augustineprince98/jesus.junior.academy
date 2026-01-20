@@ -153,6 +153,8 @@ app.include_router(users_router)
 app.include_router(registration_router)
 # File uploads
 app.include_router(uploads_router)
+# Academic year management
+app.include_router(academic_year_router)
 
 # Mount static files for uploads
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "uploads")

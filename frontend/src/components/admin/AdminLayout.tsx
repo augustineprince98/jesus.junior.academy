@@ -25,6 +25,7 @@ import {
   Wallet,
   Bus,
   BookOpenCheck,
+  GraduationCap,
 } from 'lucide-react';
 
 interface AdminLayoutProps {
