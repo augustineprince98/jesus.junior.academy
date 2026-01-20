@@ -30,18 +30,36 @@ def create_admission_enquiry(
     payload: AdmissionEnquiryCreate,
     db: Session = Depends(get_db),
 ):
-    enquiry = AdmissionEnquiry(
-        parent_name=payload.parent_name,
-        child_name=payload.child_name,
-        seeking_class=payload.seeking_class,
-        contact_number=payload.contact_number,
-    )
+    """Public endpoint for submitting admission enquiries."""
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        enquiry = AdmissionEnquiry(
+            parent_name=payload.parent_name,
+            child_name=payload.child_name,
+            seeking_class=payload.seeking_class,
+            contact_number=payload.contact_number,
+        )
 
-    db.add(enquiry)
-    db.commit()
-    db.refresh(enquiry)
-
-    return enquiry
+        db.add(enquiry)
+        db.flush()  # Get the ID without committing
+        
+        logger.info(f"Admission enquiry created (ID: {enquiry.id}) for {payload.child_name}")
+        
+        db.commit()
+        db.refresh(enquiry)
+        
+        logger.info(f"Admission enquiry committed successfully (ID: {enquiry.id})")
+        
+        return enquiry
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to create admission enquiry: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to submit enquiry. Please try again later."
+        )
 
 
 @router.get(

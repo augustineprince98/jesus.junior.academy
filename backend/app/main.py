@@ -72,10 +72,20 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS Configuration - Update origins for production
+# CORS Configuration - Use settings from environment
+from app.core.config import settings
+
+# Parse CORS origins from environment variable
+cors_origins = settings.CORS_ORIGINS
+if cors_origins == "*":
+    allow_origins = ["*"]
+else:
+    # Split comma-separated origins
+    allow_origins = [origin.strip() for origin in cors_origins.split(",")]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # TODO: Restrict to specific origins in production
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -174,24 +184,50 @@ def health():
     Production-ready health check endpoint.
     Returns server status and basic diagnostics.
     """
-    from app.core.database import engine
+    from app.core.database import engine, SessionLocal
     from sqlalchemy import text
 
     health_status = {
         "status": "healthy",
         "version": "2.0.0",
         "database": "disconnected",
+        "pool_size": None,
+        "pool_checked_out": None,
     }
 
-    # Check database connectivity
+    # Check database connectivity with more details
     try:
+        # Test basic connection
         with engine.connect() as conn:
-            conn.execute(text("SELECT 1"))
-        health_status["database"] = "connected"
+            result = conn.execute(text("SELECT 1 as test"))
+            test_value = result.scalar()
+            if test_value != 1:
+                raise Exception("Database query returned unexpected result")
+        
+        # Get pool statistics
+        pool = engine.pool
+        health_status["pool_size"] = pool.size()
+        health_status["pool_checked_out"] = pool.checkedout()
+        health_status["pool_overflow"] = pool.overflow()
+        
+        # Test a transaction
+        db = SessionLocal()
+        try:
+            db.execute(text("SELECT 1"))
+            db.commit()
+            health_status["database"] = "connected"
+        except Exception as e:
+            logger.error(f"Health check - Transaction test failed: {str(e)}")
+            health_status["database"] = "transaction_error"
+            health_status["status"] = "unhealthy"
+        finally:
+            db.close()
+            
     except Exception as e:
-        logger.error(f"Health check - Database error: {str(e)}")
+        logger.error(f"Health check - Database error: {str(e)}", exc_info=True)
         health_status["status"] = "unhealthy"
         health_status["database"] = "error"
+        health_status["error"] = str(e)
 
     return health_status
 
