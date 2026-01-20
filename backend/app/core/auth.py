@@ -98,10 +98,18 @@ def require_role_at_least(minimum_role: Role) -> Callable:
             )
 
         # Check if user's role level is >= minimum required
-        if ROLE_HIERARCHY.get(user_role, 0) < ROLE_HIERARCHY.get(minimum_role, 0):
+        try:
+            user_level = ROLE_HIERARCHY.index(user_role)
+            min_level = ROLE_HIERARCHY.index(minimum_role)
+            if user_level > min_level:  # Higher index = lower privilege
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Insufficient permissions",
+                )
+        except ValueError:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Insufficient permissions",
+                detail="Invalid role configuration",
             )
 
         return user
