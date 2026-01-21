@@ -66,6 +66,8 @@ export default function UsersPage() {
     password: '',
     email: '',
     role: 'STUDENT',
+    father_name: '',
+    mother_name: '',
   });
   const [addingUser, setAddingUser] = useState(false);
   const [addError, setAddError] = useState('');
@@ -142,7 +144,7 @@ export default function UsersPage() {
   };
 
   const openAddModal = () => {
-    setNewUser({ name: '', phone: '', password: '', email: '', role: 'STUDENT' });
+    setNewUser({ name: '', phone: '', password: '', email: '', role: 'STUDENT', father_name: '', mother_name: '' });
     setAddError('');
     setShowAddModal(true);
   };
@@ -163,6 +165,8 @@ export default function UsersPage() {
         password: newUser.password,
         role: newUser.role,
         email: newUser.email || undefined,
+        father_name: newUser.role === 'STUDENT' && newUser.father_name ? newUser.father_name : undefined,
+        mother_name: newUser.role === 'STUDENT' && newUser.mother_name ? newUser.mother_name : undefined,
       });
       setShowAddModal(false);
       loadUsers(); // Refresh users list
@@ -492,6 +496,37 @@ export default function UsersPage() {
                     {newUser.role === 'ADMIN' && 'Full system access'}
                   </p>
                 </div>
+
+                {/* Parent Names - Only for STUDENT role */}
+                {newUser.role === 'STUDENT' && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">
+                        Father's Name
+                      </label>
+                      <input
+                        type="text"
+                        value={newUser.father_name}
+                        onChange={(e) => setNewUser({ ...newUser, father_name: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                        placeholder="Enter father's name"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">
+                        Mother's Name
+                      </label>
+                      <input
+                        type="text"
+                        value={newUser.mother_name}
+                        onChange={(e) => setNewUser({ ...newUser, mother_name: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                        placeholder="Enter mother's name"
+                      />
+                    </div>
+                  </>
+                )}
 
                 {/* Actions */}
                 <div className="flex gap-3 pt-4">

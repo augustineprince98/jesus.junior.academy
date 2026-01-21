@@ -28,6 +28,10 @@ class UserCreate(BaseModel):
     student_id: Optional[int] = None
     parent_id: Optional[int] = None
     teacher_id: Optional[int] = None
+    # Additional fields for auto-creating Student/Parent records
+    father_name: Optional[str] = None  # For STUDENT role
+    mother_name: Optional[str] = None  # For STUDENT role
+    child_name: Optional[str] = None   # For PARENT role (optional, for display)
 
 
 class UserRoleUpdate(BaseModel):
@@ -54,11 +58,15 @@ def create_user(
     """
     [ADMIN] Create a new user account.
 
+    For STUDENT role: Can optionally provide father_name, mother_name to auto-create Student record.
+    For PARENT role: Can optionally provide child_name (will auto-create Parent record).
+    For TEACHER role: Will auto-create Teacher record if teacher_id not provided.
+
     Rules:
     - ADMIN: No entity link required
-    - TEACHER/CLASS_TEACHER: Must provide teacher_id
-    - PARENT: Must provide parent_id
-    - STUDENT: Must provide student_id
+    - TEACHER/CLASS_TEACHER: Auto-creates teacher record if not provided
+    - PARENT: Auto-creates parent record if not provided
+    - STUDENT: Auto-creates student record if not provided
     """
     user = user_service.create_user(
         db,
@@ -70,6 +78,8 @@ def create_user(
         student_id=payload.student_id,
         parent_id=payload.parent_id,
         teacher_id=payload.teacher_id,
+        father_name=payload.father_name,
+        mother_name=payload.mother_name,
     )
 
     return {

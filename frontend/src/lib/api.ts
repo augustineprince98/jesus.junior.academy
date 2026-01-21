@@ -598,6 +598,8 @@ export const adminApi = {
       student_id?: number;
       parent_id?: number;
       teacher_id?: number;
+      father_name?: string;  // For STUDENT role
+      mother_name?: string;  // For STUDENT role
     }
   ) =>
     request('/users/create', { method: 'POST', token, body: data }),

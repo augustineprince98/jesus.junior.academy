@@ -10,11 +10,14 @@ Handles user creation, role assignment, and entity linking.
 from typing import Optional
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
+import logging
 
 from app.core.security import hash_password
 from app.core.roles import Role
-from app.models.user import User
+from app.models.user import User, ApprovalStatus
 from app.models.people import Student, Parent, Teacher
+
+logger = logging.getLogger(__name__)
 
 
 def create_user(
@@ -28,20 +31,32 @@ def create_user(
     student_id: Optional[int] = None,
     parent_id: Optional[int] = None,
     teacher_id: Optional[int] = None,
+    father_name: Optional[str] = None,
+    mother_name: Optional[str] = None,
 ) -> User:
     """
     Create a new user with specified role and entity linking.
 
+    Users created by admin are automatically approved (no approval needed).
+
+    Auto-creates Student/Parent/Teacher records if not provided:
+    - STUDENT: Creates Student record with father_name/mother_name
+    - PARENT: Creates Parent record
+    - TEACHER: Creates Teacher record
+
     Rules:
     - ADMIN: No entity link required
-    - TEACHER/CLASS_TEACHER: Must link to teacher_id
-    - PARENT: Must link to parent_id
-    - STUDENT: Must link to student_id
+    - TEACHER/CLASS_TEACHER: Auto-creates teacher record if not provided
+    - PARENT: Auto-creates parent record if not provided
+    - STUDENT: Auto-creates student record if not provided
     """
+    logger.info(f"Admin creating user: name={name}, phone={phone}, role={role}")
+
     # Validate role
     try:
         role_enum = Role(role)
     except ValueError:
+        logger.error(f"Invalid role provided: {role}")
         raise HTTPException(
             status_code=400,
             detail=f"Invalid role. Use: {[r.value for r in Role]}"
@@ -50,46 +65,64 @@ def create_user(
     # Check phone uniqueness
     existing = db.query(User).filter(User.phone == phone).first()
     if existing:
-        raise HTTPException(status_code=400, detail="Phone number already registered")
+        logger.warning(f"Phone {phone} already exists: user_id={existing.id}, status={existing.approval_status}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Phone number already registered"
+        )
 
     # Check email uniqueness if provided
     if email:
         existing_email = db.query(User).filter(User.email == email).first()
         if existing_email:
+            logger.warning(f"Email {email} already exists: user_id={existing_email.id}")
             raise HTTPException(status_code=400, detail="Email already registered")
 
-    # Validate entity linking based on role
+    # Auto-create entity records based on role if not provided
     if role_enum in (Role.TEACHER, Role.CLASS_TEACHER):
-        if not teacher_id:
-            raise HTTPException(
-                status_code=400,
-                detail="Teacher/Class Teacher must be linked to a teacher record"
-            )
-        teacher = db.get(Teacher, teacher_id)
-        if not teacher:
-            raise HTTPException(status_code=404, detail="Teacher record not found")
+        if teacher_id:
+            teacher = db.get(Teacher, teacher_id)
+            if not teacher:
+                raise HTTPException(status_code=404, detail="Teacher record not found")
+        else:
+            # Auto-create Teacher record
+            teacher = Teacher(name=name, phone=phone, email=email)
+            db.add(teacher)
+            db.flush()  # Get the ID
+            teacher_id = teacher.id
+            logger.info(f"Auto-created Teacher record: id={teacher_id}")
 
     elif role_enum == Role.PARENT:
-        if not parent_id:
-            raise HTTPException(
-                status_code=400,
-                detail="Parent must be linked to a parent record"
-            )
-        parent = db.get(Parent, parent_id)
-        if not parent:
-            raise HTTPException(status_code=404, detail="Parent record not found")
+        if parent_id:
+            parent = db.get(Parent, parent_id)
+            if not parent:
+                raise HTTPException(status_code=404, detail="Parent record not found")
+        else:
+            # Auto-create Parent record
+            parent = Parent(name=name, phone=phone, email=email)
+            db.add(parent)
+            db.flush()  # Get the ID
+            parent_id = parent.id
+            logger.info(f"Auto-created Parent record: id={parent_id}")
 
     elif role_enum == Role.STUDENT:
-        if not student_id:
-            raise HTTPException(
-                status_code=400,
-                detail="Student must be linked to a student record"
+        if student_id:
+            student = db.get(Student, student_id)
+            if not student:
+                raise HTTPException(status_code=404, detail="Student record not found")
+        else:
+            # Auto-create Student record with father_name/mother_name
+            student = Student(
+                name=name,
+                father_name=father_name,
+                mother_name=mother_name,
             )
-        student = db.get(Student, student_id)
-        if not student:
-            raise HTTPException(status_code=404, detail="Student record not found")
+            db.add(student)
+            db.flush()  # Get the ID
+            student_id = student.id
+            logger.info(f"Auto-created Student record: id={student_id}, father={father_name}, mother={mother_name}")
 
-    # Create user
+    # Create user - AUTOMATICALLY APPROVED since created by admin
     user = User(
         name=name,
         phone=phone,
@@ -97,14 +130,25 @@ def create_user(
         password_hash=hash_password(password),
         role=role_enum.value,
         is_active=True,
+        is_approved=True,  # Auto-approved when created by admin
+        approval_status=ApprovalStatus.APPROVED,  # Auto-approved when created by admin
         student_id=student_id if role_enum == Role.STUDENT else None,
         parent_id=parent_id if role_enum == Role.PARENT else None,
         teacher_id=teacher_id if role_enum in (Role.TEACHER, Role.CLASS_TEACHER) else None,
     )
 
-    db.add(user)
-    db.commit()
-    db.refresh(user)
+    try:
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        logger.info(f"User created successfully: id={user.id}, phone={phone}, role={role}")
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to create user: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Database error while creating user: {str(e)}"
+        )
 
     return user
 
