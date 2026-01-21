@@ -78,7 +78,7 @@ export default function UsersPage() {
   // Assign class teacher modal state
   const [showClassTeacherModal, setShowClassTeacherModal] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState<User | null>(null);
-  const [selectedTeacherClassId, setSelectedTeacherClassId] = useState<number | null>(null);
+  const [selectedTeacherClassIds, setSelectedTeacherClassIds] = useState<number[]>([]);
   const [assigningClassTeacher, setAssigningClassTeacher] = useState(false);
 
   useEffect(() => {
@@ -160,18 +160,30 @@ export default function UsersPage() {
 
   const openClassTeacherModal = (u: User) => {
     setSelectedTeacher(u);
-    setSelectedTeacherClassId(null);
+    setSelectedTeacherClassIds([]);
     setShowClassTeacherModal(true);
   };
 
+  const toggleClassSelection = (classId: number) => {
+    setSelectedTeacherClassIds(prev =>
+      prev.includes(classId)
+        ? prev.filter(id => id !== classId)
+        : [...prev, classId]
+    );
+  };
+
   const handleAssignClassTeacher = async () => {
-    if (!selectedTeacher || !selectedTeacherClassId) return;
+    if (!selectedTeacher || selectedTeacherClassIds.length === 0) return;
 
     try {
       setAssigningClassTeacher(true);
-      await adminApi.assignClassTeacher(token!, selectedTeacher.id, selectedTeacherClassId);
+      // Assign teacher to all selected classes
+      for (const classId of selectedTeacherClassIds) {
+        await adminApi.assignClassTeacher(token!, selectedTeacher.id, classId);
+      }
       setShowClassTeacherModal(false);
       loadUsers(); // Refresh users list
+      alert(`Successfully assigned ${selectedTeacher.name} as class teacher for ${selectedTeacherClassIds.length} class(es)`);
     } catch (error: any) {
       console.error('Failed to assign class teacher:', error);
       alert(error.detail || 'Failed to assign class teacher');
@@ -618,26 +630,33 @@ export default function UsersPage() {
                   </p>
                 </div>
 
-                {/* Class Selection */}
+                {/* Class Selection - Multi-select with checkboxes */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Select Class to Assign
+                    Select Classes to Assign ({selectedTeacherClassIds.length} selected)
                   </label>
-                  <select
-                    value={selectedTeacherClassId || ''}
-                    onChange={(e) => setSelectedTeacherClassId(Number(e.target.value) || null)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  >
-                    <option value="">-- Select Class --</option>
+                  <div className="max-h-60 overflow-y-auto border border-gray-300 rounded-lg p-3 space-y-2">
                     {classes.map((cls) => (
-                      <option key={cls.id} value={cls.id}>
-                        {cls.name}
-                      </option>
+                      <label
+                        key={cls.id}
+                        className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${
+                          selectedTeacherClassIds.includes(cls.id)
+                            ? 'bg-indigo-50 border border-indigo-200'
+                            : 'hover:bg-gray-50'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedTeacherClassIds.includes(cls.id)}
+                          onChange={() => toggleClassSelection(cls.id)}
+                          className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                        />
+                        <span className="text-sm font-medium text-gray-700">{cls.name}</span>
+                      </label>
                     ))}
-                  </select>
+                  </div>
                   <p className="text-xs text-gray-500 mt-2">
-                    This will assign the teacher as the class teacher for the selected class.
-                    Their role will be updated to CLASS_TEACHER.
+                    Select one or more classes. The teacher will be assigned as class teacher for all selected classes.
                   </p>
                 </div>
 
@@ -652,11 +671,11 @@ export default function UsersPage() {
                   </button>
                   <button
                     onClick={handleAssignClassTeacher}
-                    disabled={!selectedTeacherClassId || assigningClassTeacher}
+                    disabled={selectedTeacherClassIds.length === 0 || assigningClassTeacher}
                     className="flex-1 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
                   >
                     <UserCheck className="w-5 h-5" />
-                    {assigningClassTeacher ? 'Assigning...' : 'Assign'}
+                    {assigningClassTeacher ? 'Assigning...' : `Assign to ${selectedTeacherClassIds.length} Class(es)`}
                   </button>
                 </div>
               </div>
