@@ -191,6 +191,236 @@ def list_users(
     }
 
 
+# ==================== STATIC ROUTES (must come before /{user_id}) ====================
+
+@router.get("/roles/list")
+def get_available_roles():
+    """Get list of available roles."""
+    return {
+        "roles": [
+            {"value": r.value, "description": _get_role_description(r)}
+            for r in Role
+        ]
+    }
+
+
+def _get_role_description(role: Role) -> str:
+    descriptions = {
+        Role.ADMIN: "Full system access - manage everything",
+        Role.CLASS_TEACHER: "Teacher + class management + attendance",
+        Role.TEACHER: "Subject teaching + marks entry",
+        Role.PARENT: "View child's progress + fees + notifications",
+        Role.STUDENT: "View own results + attendance + homework",
+    }
+    return descriptions.get(role, "")
+
+
+@router.get("/pending-approvals")
+def list_pending_approvals(
+    limit: int = 50,
+    offset: int = 0,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_role_at_least(Role.ADMIN)),
+):
+    """[ADMIN] List all users pending approval."""
+    users = (
+        db.query(User)
+        .filter(User.approval_status == ApprovalStatus.PENDING)
+        .order_by(User.created_at.desc())
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+
+    total = db.query(User).filter(
+        User.approval_status == ApprovalStatus.PENDING
+    ).count()
+
+    return {
+        "pending_users": [
+            {
+                "id": u.id,
+                "name": u.name,
+                "phone": u.phone,
+                "email": u.email,
+                "role": u.role,
+                "created_at": u.created_at.isoformat() if u.created_at else None,
+            }
+            for u in users
+        ],
+        "count": len(users),
+        "total": total,
+    }
+
+
+@router.get("/approval-stats")
+def get_approval_stats(
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_role_at_least(Role.ADMIN)),
+):
+    """[ADMIN] Get approval statistics."""
+    pending = db.query(User).filter(
+        User.approval_status == ApprovalStatus.PENDING
+    ).count()
+
+    approved = db.query(User).filter(
+        User.approval_status == ApprovalStatus.APPROVED
+    ).count()
+
+    rejected = db.query(User).filter(
+        User.approval_status == ApprovalStatus.REJECTED
+    ).count()
+
+    return {
+        "pending": pending,
+        "approved": approved,
+        "rejected": rejected,
+        "total": pending + approved + rejected,
+    }
+
+
+@router.get("/dashboard-stats")
+def get_dashboard_stats(
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_role_at_least(Role.ADMIN)),
+):
+    """
+    [ADMIN] Get comprehensive dashboard statistics.
+
+    Returns counts for users, pending approvals, achievements, events, etc.
+    """
+    from app.models.event import Event
+    from app.models.achievement import Achievement
+    from datetime import date
+
+    # User counts
+    total_users = db.query(User).filter(User.is_active == True).count()
+    pending_approvals = db.query(User).filter(
+        User.approval_status == ApprovalStatus.PENDING
+    ).count()
+
+    # User counts by role
+    student_count = db.query(User).filter(
+        User.role == Role.STUDENT.value,
+        User.is_active == True,
+    ).count()
+
+    parent_count = db.query(User).filter(
+        User.role == Role.PARENT.value,
+        User.is_active == True,
+    ).count()
+
+    teacher_count = db.query(User).filter(
+        User.role.in_([Role.TEACHER.value, Role.CLASS_TEACHER.value]),
+        User.is_active == True,
+    ).count()
+
+    # Achievements count
+    try:
+        total_achievements = db.query(Achievement).count()
+    except:
+        total_achievements = 0
+
+    # Upcoming events count
+    try:
+        upcoming_events = db.query(Event).filter(
+            Event.event_date >= date.today()
+        ).count()
+    except:
+        upcoming_events = 0
+
+    return {
+        "totalUsers": total_users,
+        "pendingAdmissions": pending_approvals,
+        "totalAchievements": total_achievements,
+        "upcomingEvents": upcoming_events,
+        "byRole": {
+            "students": student_count,
+            "parents": parent_count,
+            "teachers": teacher_count,
+        },
+    }
+
+
+@router.get("/parent/{parent_id}/children")
+def get_parent_children(
+    parent_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_role_at_least(Role.ADMIN)),
+):
+    """
+    [ADMIN] Get all students linked to a parent.
+    """
+    from app.models.people import Parent
+    from app.models.student_parent import StudentParent
+
+    parent = db.get(Parent, parent_id)
+    if not parent:
+        raise HTTPException(status_code=404, detail="Parent not found")
+
+    links = db.query(StudentParent).filter(
+        StudentParent.parent_id == parent_id
+    ).all()
+
+    return {
+        "parent_id": parent_id,
+        "parent_name": parent.name,
+        "children": [
+            {
+                "student_id": link.student.id,
+                "student_name": link.student.name,
+                "relation_type": link.relation_type,
+                "is_primary": link.is_primary,
+                "father_name": link.student.father_name,
+                "mother_name": link.student.mother_name,
+            }
+            for link in links
+        ],
+        "total": len(links),
+    }
+
+
+@router.get("/student/{student_id}/parents")
+def get_student_parents(
+    student_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_role_at_least(Role.ADMIN)),
+):
+    """
+    [ADMIN] Get all parents linked to a student.
+    """
+    from app.models.people import Student
+    from app.models.student_parent import StudentParent
+
+    student = db.get(Student, student_id)
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    links = db.query(StudentParent).filter(
+        StudentParent.student_id == student_id
+    ).all()
+
+    return {
+        "student_id": student_id,
+        "student_name": student.name,
+        "father_name_on_record": student.father_name,
+        "mother_name_on_record": student.mother_name,
+        "linked_parents": [
+            {
+                "parent_id": link.parent.id,
+                "parent_name": link.parent.name,
+                "parent_phone": link.parent.phone,
+                "relation_type": link.relation_type,
+                "is_primary": link.is_primary,
+            }
+            for link in links
+        ],
+        "total": len(links),
+    }
+
+
+# ==================== DYNAMIC ROUTES (/{user_id} must come after static routes) ====================
+
 @router.get("/{user_id}")
 def get_user(
     user_id: int,
@@ -269,71 +499,11 @@ def permanently_delete_user(
     }
 
 
-@router.get("/roles/list")
-def get_available_roles():
-    """Get list of available roles."""
-    return {
-        "roles": [
-            {"value": r.value, "description": _get_role_description(r)}
-            for r in Role
-        ]
-    }
-
-
-def _get_role_description(role: Role) -> str:
-    descriptions = {
-        Role.ADMIN: "Full system access - manage everything",
-        Role.CLASS_TEACHER: "Teacher + class management + attendance",
-        Role.TEACHER: "Subject teaching + marks entry",
-        Role.PARENT: "View child's progress + fees + notifications",
-        Role.STUDENT: "View own results + attendance + homework",
-    }
-    return descriptions.get(role, "")
-
-
 # ==================== APPROVAL MANAGEMENT ====================
 
 class ApprovalAction(BaseModel):
     """Request body for approval/rejection actions"""
     reason: Optional[str] = None
-
-
-@router.get("/pending-approvals")
-def list_pending_approvals(
-    limit: int = 50,
-    offset: int = 0,
-    db: Session = Depends(get_db),
-    admin: User = Depends(require_role_at_least(Role.ADMIN)),
-):
-    """[ADMIN] List all users pending approval."""
-    users = (
-        db.query(User)
-        .filter(User.approval_status == ApprovalStatus.PENDING)
-        .order_by(User.created_at.desc())
-        .offset(offset)
-        .limit(limit)
-        .all()
-    )
-
-    total = db.query(User).filter(
-        User.approval_status == ApprovalStatus.PENDING
-    ).count()
-
-    return {
-        "pending_users": [
-            {
-                "id": u.id,
-                "name": u.name,
-                "phone": u.phone,
-                "email": u.email,
-                "role": u.role,
-                "created_at": u.created_at.isoformat() if u.created_at else None,
-            }
-            for u in users
-        ],
-        "count": len(users),
-        "total": total,
-    }
 
 
 @router.post("/{user_id}/approve")
@@ -404,97 +574,6 @@ def reject_user(
         "user_id": user.id,
         "message": f"User {user.name} registration has been rejected",
         "reason": payload.reason,
-    }
-
-
-@router.get("/approval-stats")
-def get_approval_stats(
-    db: Session = Depends(get_db),
-    admin: User = Depends(require_role_at_least(Role.ADMIN)),
-):
-    """[ADMIN] Get approval statistics."""
-    pending = db.query(User).filter(
-        User.approval_status == ApprovalStatus.PENDING
-    ).count()
-
-    approved = db.query(User).filter(
-        User.approval_status == ApprovalStatus.APPROVED
-    ).count()
-
-    rejected = db.query(User).filter(
-        User.approval_status == ApprovalStatus.REJECTED
-    ).count()
-
-    return {
-        "pending": pending,
-        "approved": approved,
-        "rejected": rejected,
-        "total": pending + approved + rejected,
-    }
-
-
-# ==================== DASHBOARD STATISTICS ====================
-
-@router.get("/dashboard-stats")
-def get_dashboard_stats(
-    db: Session = Depends(get_db),
-    admin: User = Depends(require_role_at_least(Role.ADMIN)),
-):
-    """
-    [ADMIN] Get comprehensive dashboard statistics.
-
-    Returns counts for users, pending approvals, achievements, events, etc.
-    """
-    from app.models.event import Event
-    from app.models.achievement import Achievement
-    from datetime import date
-
-    # User counts
-    total_users = db.query(User).filter(User.is_active == True).count()
-    pending_approvals = db.query(User).filter(
-        User.approval_status == ApprovalStatus.PENDING
-    ).count()
-
-    # User counts by role
-    student_count = db.query(User).filter(
-        User.role == Role.STUDENT.value,
-        User.is_active == True,
-    ).count()
-
-    parent_count = db.query(User).filter(
-        User.role == Role.PARENT.value,
-        User.is_active == True,
-    ).count()
-
-    teacher_count = db.query(User).filter(
-        User.role.in_([Role.TEACHER.value, Role.CLASS_TEACHER.value]),
-        User.is_active == True,
-    ).count()
-
-    # Achievements count
-    try:
-        total_achievements = db.query(Achievement).count()
-    except:
-        total_achievements = 0
-
-    # Upcoming events count
-    try:
-        upcoming_events = db.query(Event).filter(
-            Event.event_date >= date.today()
-        ).count()
-    except:
-        upcoming_events = 0
-
-    return {
-        "totalUsers": total_users,
-        "pendingAdmissions": pending_approvals,
-        "totalAchievements": total_achievements,
-        "upcomingEvents": upcoming_events,
-        "byRole": {
-            "students": student_count,
-            "parents": parent_count,
-            "teachers": teacher_count,
-        },
     }
 
 
@@ -603,44 +682,6 @@ def unlink_parent_from_student(
     }
 
 
-@router.get("/parent/{parent_id}/children")
-def get_parent_children(
-    parent_id: int,
-    db: Session = Depends(get_db),
-    admin: User = Depends(require_role_at_least(Role.ADMIN)),
-):
-    """
-    [ADMIN] Get all students linked to a parent.
-    """
-    from app.models.people import Parent
-    from app.models.student_parent import StudentParent
-
-    parent = db.get(Parent, parent_id)
-    if not parent:
-        raise HTTPException(status_code=404, detail="Parent not found")
-
-    links = db.query(StudentParent).filter(
-        StudentParent.parent_id == parent_id
-    ).all()
-
-    return {
-        "parent_id": parent_id,
-        "parent_name": parent.name,
-        "children": [
-            {
-                "student_id": link.student.id,
-                "student_name": link.student.name,
-                "relation_type": link.relation_type,
-                "is_primary": link.is_primary,
-                "father_name": link.student.father_name,
-                "mother_name": link.student.mother_name,
-            }
-            for link in links
-        ],
-        "total": len(links),
-    }
-
-
 @router.post("/parent/{parent_id}/auto-link")
 def auto_link_parent_to_children(
     parent_id: int,
@@ -732,43 +773,4 @@ def auto_link_parent_to_children(
         "linked_students": linked_students,
         "total_linked": len(linked_students),
         "message": f"Linked parent to {len(linked_students)} student(s)",
-    }
-
-
-@router.get("/student/{student_id}/parents")
-def get_student_parents(
-    student_id: int,
-    db: Session = Depends(get_db),
-    admin: User = Depends(require_role_at_least(Role.ADMIN)),
-):
-    """
-    [ADMIN] Get all parents linked to a student.
-    """
-    from app.models.people import Student
-    from app.models.student_parent import StudentParent
-
-    student = db.get(Student, student_id)
-    if not student:
-        raise HTTPException(status_code=404, detail="Student not found")
-
-    links = db.query(StudentParent).filter(
-        StudentParent.student_id == student_id
-    ).all()
-
-    return {
-        "student_id": student_id,
-        "student_name": student.name,
-        "father_name_on_record": student.father_name,
-        "mother_name_on_record": student.mother_name,
-        "linked_parents": [
-            {
-                "parent_id": link.parent.id,
-                "parent_name": link.parent.name,
-                "parent_phone": link.parent.phone,
-                "relation_type": link.relation_type,
-                "is_primary": link.is_primary,
-            }
-            for link in links
-        ],
-        "total": len(links),
     }
