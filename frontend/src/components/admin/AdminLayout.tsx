@@ -100,9 +100,15 @@ export default function AdminLayout({ children, activeSection }: AdminLayoutProp
       href: '/admin/users',
     },
     {
+      id: 'teachers',
+      label: 'Teachers',
+      icon: GraduationCap,
+      href: '/admin/teachers',
+    },
+    {
       id: 'classes',
       label: 'Classes',
-      icon: GraduationCap,
+      icon: BookOpenCheck,
       href: '/admin/classes',
     },
     {
