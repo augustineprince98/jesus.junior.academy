@@ -33,7 +33,8 @@ class Parent(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(100))
-    phone: Mapped[str] = mapped_column(String(15), unique=True)
+    phone: Mapped[Optional[str]] = mapped_column(String(15), nullable=True)
+    email: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
 
 
 class Teacher(Base):
@@ -41,4 +42,5 @@ class Teacher(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(100))
-    phone: Mapped[str] = mapped_column(String(15), unique=True)
+    phone: Mapped[Optional[str]] = mapped_column(String(15), nullable=True)
+    email: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
