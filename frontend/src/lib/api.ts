@@ -51,6 +51,7 @@ async function request<T>(endpoint: string, options: ApiOptions = {}): Promise<T
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,
+    credentials: 'include',
   });
 
   // Handle errors
@@ -655,6 +656,7 @@ export const uploadsApi = {
         'Authorization': `Bearer ${token}`,
       },
       body: formData,
+      credentials: 'include',
     });
 
     if (!response.ok) {
@@ -676,6 +678,7 @@ export const uploadsApi = {
         'Authorization': `Bearer ${token}`,
       },
       body: formData,
+      credentials: 'include',
     });
 
     if (!response.ok) {
@@ -698,6 +701,7 @@ export const uploadsApi = {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
+      credentials: 'include',
     });
 
     if (!response.ok) {

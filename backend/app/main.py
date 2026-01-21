@@ -78,7 +78,13 @@ from app.core.config import settings
 # Parse CORS origins from environment variable
 cors_origins = settings.CORS_ORIGINS
 if cors_origins == "*":
-    allow_origins = ["*"]
+    # When using "*" with credentials, we need to specify actual origins
+    # Browsers reject allow_origins=["*"] with allow_credentials=True
+    allow_origins = [
+        "https://jesus-junior-academy.vercel.app",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
 else:
     # Split comma-separated origins
     allow_origins = [origin.strip() for origin in cors_origins.split(",")]
