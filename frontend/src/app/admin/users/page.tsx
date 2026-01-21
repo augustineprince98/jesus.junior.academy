@@ -93,7 +93,7 @@ export default function UsersPage() {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      const data = await adminApi.listUsers(token!);
+      const data = await adminApi.listUsers(token!) as { users: User[]; count: number };
       // Backend returns { users: [], count: number }
       setUsers(Array.isArray(data?.users) ? data.users : []);
     } catch (error) {
