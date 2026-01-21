@@ -86,13 +86,28 @@ async def register_user(
     - Account requires admin approval before login is allowed
     - Duplicate phone numbers are not allowed
     """
+    logger.info(f"Registration attempt: phone={payload.phone}, role={payload.role}")
+
     # Check for existing phone
     existing = db.query(User).filter(User.phone == payload.phone).first()
     if existing:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Phone number already registered",
-        )
+        logger.warning(f"Registration failed: Phone {payload.phone} already registered (status: {existing.approval_status})")
+        # Provide helpful message based on existing user's status
+        if existing.approval_status == ApprovalStatus.PENDING:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Phone number already registered and pending approval. Please wait for admin approval or contact the school office.",
+            )
+        elif existing.approval_status == ApprovalStatus.REJECTED:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Phone number was previously registered but rejected. Please contact the school office.",
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Phone number already registered. Please login instead.",
+            )
 
     # Check for existing email if provided
     if payload.email:
@@ -107,13 +122,17 @@ async def register_user(
     school_class = None
     academic_year = None
     if payload.role == Role.STUDENT.value:
+        logger.info(f"Student registration: class_id={payload.class_id}, father={payload.father_name}, mother={payload.mother_name}")
+
         # Father's name and mother's name are required for students
         if not payload.father_name or not payload.father_name.strip():
+            logger.warning(f"Registration failed: Missing father's name for {payload.phone}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Father's name is required for student registration",
             )
         if not payload.mother_name or not payload.mother_name.strip():
+            logger.warning(f"Registration failed: Missing mother's name for {payload.phone}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Mother's name is required for student registration",
@@ -122,12 +141,16 @@ async def register_user(
         if payload.class_id:
             school_class = db.get(SchoolClass, payload.class_id)
             if not school_class:
+                logger.warning(f"Registration failed: Invalid class_id={payload.class_id}")
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Invalid class selected",
                 )
             # Get current academic year
             academic_year = db.query(AcademicYear).filter(AcademicYear.is_current == True).first()
+            if not academic_year:
+                logger.error("Registration issue: No current academic year found in database")
+                # Don't block registration, but log the issue
 
     # Create new user with pending approval
     new_user = User(
@@ -188,6 +211,47 @@ async def register_user(
         message="Registration successful! Your account is pending admin approval. You will be notified once approved.",
         user_id=new_user.id,
     )
+
+
+@router.get("/diagnostics")
+def registration_diagnostics(
+    db: Session = Depends(get_db),
+):
+    """
+    Public diagnostic endpoint to check if registration system is properly configured.
+
+    Returns information about:
+    - Current academic year status
+    - Available classes for student registration
+    """
+    # Check for current academic year
+    academic_year = db.query(AcademicYear).filter(AcademicYear.is_current == True).first()
+
+    # Get available classes
+    classes = db.query(SchoolClass).filter(SchoolClass.is_active == True).all()
+
+    return {
+        "registration_enabled": True,
+        "academic_year": {
+            "configured": academic_year is not None,
+            "name": academic_year.name if academic_year else None,
+            "id": academic_year.id if academic_year else None,
+        } if True else None,
+        "classes": {
+            "count": len(classes),
+            "available": [
+                {"id": c.id, "name": c.name, "section": c.section}
+                for c in classes
+            ],
+        },
+        "student_registration_ready": academic_year is not None and len(classes) > 0,
+        "issues": [
+            issue for issue in [
+                "No current academic year configured" if not academic_year else None,
+                "No active classes available" if len(classes) == 0 else None,
+            ] if issue is not None
+        ],
+    }
 
 
 @router.get("/status/{phone}")

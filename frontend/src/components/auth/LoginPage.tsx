@@ -25,23 +25,32 @@ export default function AccessGate() {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [verifying, setVerifying] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (verifying) return;
 
     setVerifying(true);
-    setFailed(false);
+    setErrorMessage(null);
 
     try {
       const res = await authApi.login(phone, password);
       login(res.user as any, res.access_token);
       // Redirect to campus after successful login
       router.push('/campus');
-    } catch {
-      // Silent failure — no blame, no drama
-      setFailed(true);
+    } catch (err: any) {
+      // Show helpful error message based on server response
+      const detail = err?.detail || err?.message || '';
+      if (detail.includes('pending approval')) {
+        setErrorMessage('Account pending approval. Please wait for admin approval.');
+      } else if (detail.includes('rejected')) {
+        setErrorMessage('Account was rejected. Please contact the school office.');
+      } else if (detail.includes('deactivated')) {
+        setErrorMessage('Account has been deactivated. Please contact admin.');
+      } else {
+        setErrorMessage('Invalid phone number or password.');
+      }
       setVerifying(false);
     }
   };
@@ -89,10 +98,10 @@ export default function AccessGate() {
             />
           </div>
 
-          {/* Silent failure message */}
-          {failed && (
-            <p className="text-xs text-gray-500 pt-2">
-              Access could not be verified.
+          {/* Error message */}
+          {errorMessage && (
+            <p className="text-xs text-red-400 pt-2">
+              {errorMessage}
             </p>
           )}
 
@@ -115,8 +124,18 @@ export default function AccessGate() {
           </button>
         </form>
 
+        {/* Forgot Password Link */}
+        <div className="mt-6 text-center">
+          <a
+            href="/forgot-password"
+            className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+          >
+            Forgot your password?
+          </a>
+        </div>
+
         {/* Registration link */}
-        <div className="mt-8 text-center border-t border-gray-800 pt-6">
+        <div className="mt-6 text-center border-t border-gray-800 pt-6">
           <p className="text-xs text-gray-500 mb-2">
             New to the academy?
           </p>

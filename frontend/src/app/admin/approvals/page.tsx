@@ -18,6 +18,7 @@ import {
   Calendar,
   AlertCircle,
   RefreshCw,
+  Trash2,
 } from 'lucide-react';
 
 interface PendingUser {
@@ -46,6 +47,7 @@ export default function ApprovalsPage() {
   const [error, setError] = useState<string | null>(null);
   const [rejectModal, setRejectModal] = useState<{ userId: number; name: string } | null>(null);
   const [rejectReason, setRejectReason] = useState('');
+  const [deleteModal, setDeleteModal] = useState<{ userId: number; name: string } | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -121,6 +123,26 @@ export default function ApprovalsPage() {
       setRejectReason('');
     } catch (err: any) {
       setError(getErrorMessage(err, 'Failed to reject user'));
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!token || !deleteModal) return;
+
+    try {
+      setActionLoading(deleteModal.userId);
+      await approvalApi.deleteUserPermanently(token, deleteModal.userId);
+      setPendingUsers(prev => prev.filter(u => u.id !== deleteModal.userId));
+      setStats(prev => prev ? {
+        ...prev,
+        pending: prev.pending - 1,
+        total: prev.total - 1,
+      } : null);
+      setDeleteModal(null);
+    } catch (err: any) {
+      setError(getErrorMessage(err, 'Failed to delete user'));
     } finally {
       setActionLoading(null);
     }
@@ -301,6 +323,14 @@ export default function ApprovalsPage() {
                       <UserX className="w-4 h-4" />
                       Reject
                     </button>
+                    <button
+                      onClick={() => setDeleteModal({ userId: pendingUser.id, name: pendingUser.name })}
+                      disabled={actionLoading === pendingUser.id}
+                      className="flex items-center gap-2 px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
+                      title="Permanently delete this registration"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
               </motion.div>
@@ -351,6 +381,47 @@ export default function ApprovalsPage() {
                 className="flex-1 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
               >
                 {actionLoading === rejectModal.userId ? 'Rejecting...' : 'Reject'}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 className="w-5 h-5 text-red-600" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">Delete Registration</h3>
+            </div>
+
+            <p className="text-gray-600 mb-2">
+              Are you sure you want to permanently delete <strong>{deleteModal.name}</strong>'s registration?
+            </p>
+            <p className="text-sm text-red-600 mb-4">
+              This action cannot be undone. The user will need to register again.
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteModal(null)}
+                className="flex-1 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={actionLoading === deleteModal.userId}
+                className="flex-1 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+              >
+                {actionLoading === deleteModal.userId ? 'Deleting...' : 'Delete Permanently'}
               </button>
             </div>
           </motion.div>

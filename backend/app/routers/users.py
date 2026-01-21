@@ -230,6 +230,45 @@ def deactivate_user(
     }
 
 
+@router.delete("/{user_id}/permanent")
+def permanently_delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_role_at_least(Role.ADMIN)),
+):
+    """
+    [ADMIN] Permanently delete a user from the database.
+
+    WARNING: This action cannot be undone. Use with caution.
+    - Does not delete linked Student/Parent/Teacher records
+    - Only removes the user account (login credentials)
+    """
+    user = db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Prevent deleting yourself
+    if user.id == admin.id:
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot delete your own account"
+        )
+
+    user_name = user.name
+    user_phone = user.phone
+
+    db.delete(user)
+    db.commit()
+
+    return {
+        "status": "user_permanently_deleted",
+        "user_id": user_id,
+        "deleted_user_name": user_name,
+        "deleted_user_phone": user_phone,
+        "message": "User has been permanently removed from the database",
+    }
+
+
 @router.get("/roles/list")
 def get_available_roles():
     """Get list of available roles."""

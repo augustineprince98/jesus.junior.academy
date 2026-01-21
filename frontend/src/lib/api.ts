@@ -576,6 +576,12 @@ export const approvalApi = {
       '/users/approval-stats',
       { token }
     ),
+
+  deleteUserPermanently: (token: string, userId: number) =>
+    request<{ status: string; user_id: number; message: string }>(
+      `/users/${userId}/permanent`,
+      { method: 'DELETE', token }
+    ),
 };
 
 export const adminApi = {
