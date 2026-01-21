@@ -112,10 +112,11 @@ def create_user(
                 raise HTTPException(status_code=404, detail="Student record not found")
         else:
             # Auto-create Student record with father_name/mother_name
+            # dob and gender are optional - user can complete profile later
             student = Student(
                 name=name,
-                father_name=father_name,
-                mother_name=mother_name,
+                father_name=father_name or "",
+                mother_name=mother_name or "",
             )
             db.add(student)
             db.flush()  # Get the ID

@@ -11,8 +11,8 @@ class Student(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(100))
-    dob: Mapped[date] = mapped_column(Date)
-    gender: Mapped[str] = mapped_column(String(10))
+    dob: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    gender: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
 
     # Parent information (required for registration)
     father_name: Mapped[str] = mapped_column(String(100), nullable=False, default="")
