@@ -100,6 +100,18 @@ export default function AdminLayout({ children, activeSection }: AdminLayoutProp
       href: '/admin/users',
     },
     {
+      id: 'classes',
+      label: 'Classes',
+      icon: GraduationCap,
+      href: '/admin/classes',
+    },
+    {
+      id: 'academic-year',
+      label: 'Academic Year',
+      icon: Calendar,
+      href: '/admin/academic-year',
+    },
+    {
       id: 'settings',
       label: 'Settings',
       icon: Settings,

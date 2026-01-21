@@ -33,7 +33,7 @@ router = APIRouter(
 
 class AcademicYearCreate(BaseModel):
     year: str  # Format: "2025-2026"
-    is_active: bool = False
+    is_current: bool = False
 
     @validator('year')
     def validate_year_format(cls, v):
@@ -64,7 +64,7 @@ class AcademicYearCreate(BaseModel):
 
 class AcademicYearUpdate(BaseModel):
     year: Optional[str] = None
-    is_active: Optional[bool] = None
+    is_current: Optional[bool] = None
 
     @validator('year')
     def validate_year_format(cls, v):
@@ -76,7 +76,7 @@ class AcademicYearUpdate(BaseModel):
 class AcademicYearResponse(BaseModel):
     id: int
     year: str
-    is_active: bool
+    is_current: bool
     classes_count: int = 0
     enrollments_count: int = 0
 
@@ -94,7 +94,7 @@ def create_academic_year(
     """
     [ADMIN] Create a new academic year.
 
-    If is_active=True, it will deactivate all other years first.
+    If is_current=True, it will deactivate all other years first.
     """
     # Check if year already exists
     existing = db.query(AcademicYear).filter(AcademicYear.year == payload.year).first()
@@ -182,7 +182,7 @@ def update_academic_year(
     """
     [ADMIN] Update an academic year.
 
-    If setting is_active=True, it will deactivate all other years.
+    If setting is_current=True, it will deactivate all other years.
     Cannot change year if it has associated data.
     """
     academic_year = db.get(AcademicYear, year_id)

@@ -1,364 +1,346 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import AdminLayout from "@/components/admin/AdminLayout";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
-import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
-import { toast } from "sonner";
-import { Plus, Edit, Trash2, CheckCircle, XCircle, Calendar } from "lucide-react";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/store/useStore';
+import AdminLayout from '@/components/admin/AdminLayout';
+import {
+  Calendar,
+  Plus,
+  CheckCircle,
+  XCircle,
+  Edit,
+  Trash2,
+  X,
+  Save,
+} from 'lucide-react';
 
 interface AcademicYear {
   id: number;
   year: string;
-  is_active: boolean;
+  is_current: boolean;
   classes_count: number;
   enrollments_count: number;
 }
 
-export default function AcademicYearManagement() {
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://jja-backend.onrender.com';
+
+export default function AcademicYearPage() {
+  const router = useRouter();
+  const { user, isAuthenticated, token } = useAuthStore();
   const [years, setYears] = useState<AcademicYear[]>([]);
   const [loading, setLoading] = useState(true);
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [selectedYear, setSelectedYear] = useState<AcademicYear | null>(null);
-  const [formData, setFormData] = useState({
-    year: "",
-    is_active: false,
-  });
+  const [error, setError] = useState('');
+
+  // Modal state
+  const [showModal, setShowModal] = useState(false);
+  const [editingYear, setEditingYear] = useState<AcademicYear | null>(null);
+  const [formData, setFormData] = useState({ year: '', is_current: false });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetchYears();
-  }, []);
+    if (!isAuthenticated || user?.role !== 'ADMIN') {
+      router.push('/login');
+      return;
+    }
+    loadYears();
+  }, [isAuthenticated, user, router]);
 
-  const fetchYears = async () => {
+  const loadYears = async () => {
     try {
-      const response = await fetch("/api/academic-years/", {
+      setLoading(true);
+      const response = await fetch(`${API_BASE}/academic-years/`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
+        credentials: 'include',
       });
 
       if (response.ok) {
         const data = await response.json();
-        setYears(data);
+        setYears(Array.isArray(data) ? data : []);
       } else {
-        toast.error("Failed to fetch academic years");
+        setError('Failed to load academic years');
       }
-    } catch (error) {
-      toast.error("Error fetching academic years");
+    } catch (err) {
+      console.error('Failed to load academic years:', err);
+      setError('Failed to load academic years');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCreate = async () => {
+  const openCreateModal = () => {
+    setEditingYear(null);
+    setFormData({ year: '', is_current: false });
+    setShowModal(true);
+  };
+
+  const openEditModal = (year: AcademicYear) => {
+    setEditingYear(year);
+    setFormData({ year: year.year, is_current: year.is_current });
+    setShowModal(true);
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.year) {
+      setError('Please enter a year');
+      return;
+    }
+
     try {
-      const response = await fetch("/api/academic-years/", {
-        method: "POST",
+      setSaving(true);
+      setError('');
+
+      const url = editingYear
+        ? `${API_BASE}/academic-years/${editingYear.id}`
+        : `${API_BASE}/academic-years/`;
+
+      const response = await fetch(url, {
+        method: editingYear ? 'PUT' : 'POST',
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
+        credentials: 'include',
         body: JSON.stringify(formData),
       });
 
       if (response.ok) {
-        toast.success("Academic year created successfully");
-        setCreateDialogOpen(false);
-        setFormData({ year: "", is_active: false });
-        fetchYears();
+        setShowModal(false);
+        loadYears();
       } else {
-        const error = await response.json();
-        toast.error(error.detail || "Failed to create academic year");
+        const data = await response.json();
+        setError(data.detail || 'Failed to save academic year');
       }
-    } catch (error) {
-      toast.error("Error creating academic year");
-    }
-  };
-
-  const handleUpdate = async () => {
-    if (!selectedYear) return;
-
-    try {
-      const response = await fetch(`/api/academic-years/${selectedYear.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        toast.success("Academic year updated successfully");
-        setEditDialogOpen(false);
-        setSelectedYear(null);
-        setFormData({ year: "", is_active: false });
-        fetchYears();
-      } else {
-        const error = await response.json();
-        toast.error(error.detail || "Failed to update academic year");
-      }
-    } catch (error) {
-      toast.error("Error updating academic year");
-    }
-  };
-
-  const handleDelete = async (yearId: number) => {
-    try {
-      const response = await fetch(`/api/academic-years/${yearId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-
-      if (response.ok) {
-        toast.success("Academic year deleted successfully");
-        fetchYears();
-      } else {
-        const error = await response.json();
-        toast.error(error.detail || "Failed to delete academic year");
-      }
-    } catch (error) {
-      toast.error("Error deleting academic year");
+    } catch (err) {
+      console.error('Failed to save academic year:', err);
+      setError('Failed to save academic year');
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleSetActive = async (yearId: number) => {
     try {
-      const response = await fetch(`/api/academic-years/${yearId}/set-active`, {
-        method: "POST",
+      const response = await fetch(`${API_BASE}/academic-years/${yearId}/set-active`, {
+        method: 'POST',
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
+        credentials: 'include',
       });
 
       if (response.ok) {
-        toast.success("Academic year set as active");
-        fetchYears();
+        loadYears();
       } else {
-        const error = await response.json();
-        toast.error(error.detail || "Failed to set active year");
+        const data = await response.json();
+        setError(data.detail || 'Failed to set active year');
       }
-    } catch (error) {
-      toast.error("Error setting active year");
+    } catch (err) {
+      console.error('Failed to set active year:', err);
+      setError('Failed to set active year');
     }
   };
 
-  const openEditDialog = (year: AcademicYear) => {
-    setSelectedYear(year);
-    setFormData({
-      year: year.year,
-      is_active: year.is_active,
-    });
-    setEditDialogOpen(true);
+  const handleDelete = async (yearId: number) => {
+    if (!confirm('Are you sure you want to delete this academic year?')) return;
+
+    try {
+      const response = await fetch(`${API_BASE}/academic-years/${yearId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        loadYears();
+      } else {
+        const data = await response.json();
+        setError(data.detail || 'Failed to delete academic year');
+      }
+    } catch (err) {
+      console.error('Failed to delete academic year:', err);
+      setError('Failed to delete academic year');
+    }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+  if (!isAuthenticated || user?.role !== 'ADMIN') return null;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Academic Year Management</h1>
-          <p className="text-muted-foreground">
-            Manage academic years, set the current active year, and track usage statistics.
-          </p>
+    <AdminLayout activeSection="academic-year">
+      <div className="max-w-5xl">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800 mb-2">Academic Year Management</h1>
+            <p className="text-gray-600">Manage academic years and set the current active year</p>
+          </div>
+          <button
+            onClick={openCreateModal}
+            className="flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+          >
+            <Plus className="w-5 h-5" />
+            Add Academic Year
+          </button>
         </div>
 
-        <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Academic Year
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create Academic Year</DialogTitle>
-              <DialogDescription>
-                Add a new academic year. Format: YYYY-YYYY (e.g., 2025-2026)
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="year" className="text-right">
-                  Year
-                </Label>
-                <Input
-                  id="year"
-                  placeholder="2025-2026"
-                  className="col-span-3"
-                  value={formData.year}
-                  onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="is_active" className="text-right">
-                  Set as Active
-                </Label>
-                <input
-                  id="is_active"
-                  type="checkbox"
-                  className="col-span-3"
-                  checked={formData.is_active}
-                  onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button onClick={handleCreate}>Create Year</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+            {error}
+          </div>
+        )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Academic Years
-          </CardTitle>
-          <CardDescription>
-            View and manage all academic years in the system.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Year</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Classes</TableHead>
-                <TableHead>Enrollments</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {years.map((year) => (
-                <TableRow key={year.id}>
-                  <TableCell className="font-medium">{year.year}</TableCell>
-                  <TableCell>
-                    <Badge variant={year.is_active ? "default" : "secondary"}>
-                      {year.is_active ? (
-                        <>
-                          <CheckCircle className="mr-1 h-3 w-3" />
+        {loading ? (
+          <div className="flex justify-center items-center py-20">
+            <div className="w-16 h-16 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin" />
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Year</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Classes</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Enrollments</th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {years.map((year) => (
+                  <tr key={year.id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-5 h-5 text-primary-600" />
+                        <span className="font-semibold text-gray-800">{year.year}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      {year.is_current ? (
+                        <span className="flex items-center gap-1 text-green-600">
+                          <CheckCircle className="w-4 h-4" />
                           Active
-                        </>
+                        </span>
                       ) : (
-                        <>
-                          <XCircle className="mr-1 h-3 w-3" />
+                        <span className="flex items-center gap-1 text-gray-400">
+                          <XCircle className="w-4 h-4" />
                           Inactive
-                        </>
+                        </span>
                       )}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{year.classes_count}</TableCell>
-                  <TableCell>{year.enrollments_count}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      {!year.is_active && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleSetActive(year.id)}
+                    </td>
+                    <td className="px-6 py-4 text-gray-600">{year.classes_count}</td>
+                    <td className="px-6 py-4 text-gray-600">{year.enrollments_count}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-center gap-2">
+                        {!year.is_current && (
+                          <button
+                            onClick={() => handleSetActive(year.id)}
+                            className="px-3 py-1.5 text-sm bg-green-100 text-green-700 rounded-lg hover:bg-green-200 font-medium"
+                          >
+                            Set Active
+                          </button>
+                        )}
+                        <button
+                          onClick={() => openEditModal(year)}
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
                         >
-                          Set Active
-                        </Button>
-                      )}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openEditDialog(year)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      {year.classes_count === 0 && year.enrollments_count === 0 && (
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="outline" size="sm">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Academic Year</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to delete the academic year "{year.year}"?
-                                This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDelete(year.id)}>
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        {year.classes_count === 0 && year.enrollments_count === 0 && !year.is_current && (
+                          <button
+                            onClick={() => handleDelete(year.id)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
 
-      {/* Edit Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Academic Year</DialogTitle>
-            <DialogDescription>
-              Update the academic year details.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-year" className="text-right">
-                Year
-              </Label>
-              <Input
-                id="edit-year"
-                placeholder="2025-2026"
-                className="col-span-3"
-                value={formData.year}
-                onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-is_active" className="text-right">
-                Set as Active
-              </Label>
-              <input
-                id="edit-is_active"
-                type="checkbox"
-                className="col-span-3"
-                checked={formData.is_active}
-                onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-              />
+            {years.length === 0 && (
+              <div className="text-center py-12 text-gray-500">
+                <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                <p>No academic years found</p>
+                <p className="text-sm mt-1">Click "Add Academic Year" to create one</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Create/Edit Modal */}
+        {showModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl max-w-md w-full">
+              <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+                <h2 className="text-xl font-bold text-gray-800">
+                  {editingYear ? 'Edit Academic Year' : 'Add Academic Year'}
+                </h2>
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSave} className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Year <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.year}
+                    onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    placeholder="2025-2026"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Format: YYYY-YYYY (e.g., 2025-2026)</p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="is_current"
+                    checked={formData.is_current}
+                    onChange={(e) => setFormData({ ...formData, is_current: e.target.checked })}
+                    className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                  />
+                  <label htmlFor="is_current" className="text-sm font-medium text-gray-700">
+                    Set as current active year
+                  </label>
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowModal(false)}
+                    className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="flex-1 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    <Save className="w-5 h-5" />
+                    {saving ? 'Saving...' : 'Save'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
-          <DialogFooter>
-            <Button onClick={handleUpdate}>Update Year</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+        )}
+      </div>
+    </AdminLayout>
   );
 }

@@ -223,6 +223,7 @@ def registration_diagnostics(
     Returns information about:
     - Current academic year status
     - Available classes for student registration
+    - Database user count
     """
     # Check for current academic year
     academic_year = db.query(AcademicYear).filter(AcademicYear.is_current == True).first()
@@ -230,8 +231,32 @@ def registration_diagnostics(
     # Get available classes
     classes = db.query(SchoolClass).filter(SchoolClass.is_active == True).all()
 
+    # Get user counts for debugging
+    total_users = db.query(User).count()
+    pending_users = db.query(User).filter(User.approval_status == ApprovalStatus.PENDING).count()
+    approved_users = db.query(User).filter(User.approval_status == ApprovalStatus.APPROVED).count()
+
+    # Get list of all phones (masked) for debugging
+    all_users = db.query(User).all()
+    user_list = [
+        {
+            "id": u.id,
+            "phone_masked": u.phone[-4:].rjust(len(u.phone), "*") if u.phone else "N/A",
+            "role": u.role,
+            "status": u.approval_status,
+            "is_active": u.is_active,
+        }
+        for u in all_users
+    ]
+
     return {
         "registration_enabled": True,
+        "database_status": {
+            "total_users": total_users,
+            "pending_users": pending_users,
+            "approved_users": approved_users,
+            "user_list": user_list,
+        },
         "academic_year": {
             "configured": academic_year is not None,
             "name": academic_year.name if academic_year else None,
@@ -249,8 +274,48 @@ def registration_diagnostics(
             issue for issue in [
                 "No current academic year configured" if not academic_year else None,
                 "No active classes available" if len(classes) == 0 else None,
+                "No users in database" if total_users == 0 else None,
             ] if issue is not None
         ],
+    }
+
+
+@router.get("/check-phone/{phone}")
+def check_phone_exists(
+    phone: str,
+    db: Session = Depends(get_db),
+):
+    """
+    Debug endpoint to check if a phone number exists in the database.
+
+    Returns detailed information about the user if found.
+    """
+    # Clean phone number
+    clean_phone = re.sub(r"\D", "", phone)
+    logger.info(f"Checking phone existence: {clean_phone}")
+
+    user = db.query(User).filter(User.phone == clean_phone).first()
+
+    if not user:
+        logger.info(f"Phone {clean_phone} NOT found in database")
+        return {
+            "exists": False,
+            "phone": clean_phone,
+            "message": "Phone number NOT found in database",
+        }
+
+    logger.info(f"Phone {clean_phone} FOUND: user_id={user.id}, status={user.approval_status}")
+    return {
+        "exists": True,
+        "phone": clean_phone,
+        "user_id": user.id,
+        "name": user.name,
+        "role": user.role,
+        "approval_status": user.approval_status,
+        "is_approved": user.is_approved,
+        "is_active": user.is_active,
+        "created_at": user.created_at.isoformat() if user.created_at else None,
+        "message": f"Phone number found - User ID: {user.id}, Status: {user.approval_status}",
     }
 
 
