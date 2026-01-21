@@ -235,7 +235,7 @@ export default function AdminClassesPage() {
               >
                 <option value="">All Academic Years</option>
                 {academicYears.map(year => (
-                  <option key={year.id} value={year.id}>{year.name}</option>
+                  <option key={year.id} value={year.id}>{year.year || year.name}</option>
                 ))}
               </select>
             </div>
@@ -431,7 +431,7 @@ export default function AdminClassesPage() {
                 >
                   <option value={0}>Select Academic Year</option>
                   {academicYears.map(year => (
-                    <option key={year.id} value={year.id}>{year.name}</option>
+                    <option key={year.id} value={year.id}>{year.year || year.name}</option>
                   ))}
                 </select>
               </div>
