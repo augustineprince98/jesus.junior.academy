@@ -50,8 +50,8 @@ export default function ClassesPage() {
       return;
     }
 
-    // Only teachers can access this page
-    if (user?.role !== 'TEACHER' && user?.role !== 'CLASS_TEACHER') {
+    // Only teachers and admin can access this page
+    if (user?.role !== 'TEACHER' && user?.role !== 'CLASS_TEACHER' && user?.role !== 'ADMIN') {
       router.push('/campus');
       return;
     }

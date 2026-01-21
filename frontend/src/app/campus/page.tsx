@@ -168,7 +168,7 @@ export default function ModernCampusPage() {
       description: 'Send announcements to class parents',
       icon: Bell,
       color: 'from-orange-500 to-red-600',
-      href: '/campus/notifications',
+      href: '/admin/notifications',
       roles: ['CLASS_TEACHER', 'ADMIN'],
     },
     {

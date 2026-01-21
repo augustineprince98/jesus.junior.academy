@@ -53,7 +53,7 @@ export default function MarkAttendancePage() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
-    if (!isAuthenticated || (user?.role !== 'TEACHER' && user?.role !== 'CLASS_TEACHER')) {
+    if (!isAuthenticated || (user?.role !== 'TEACHER' && user?.role !== 'CLASS_TEACHER' && user?.role !== 'ADMIN')) {
       router.push('/login');
       return;
     }

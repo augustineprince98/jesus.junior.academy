@@ -27,6 +27,7 @@ import {
   BookOpenCheck,
   GraduationCap,
   ClipboardCheck,
+  Bell,
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -117,6 +118,12 @@ export default function AdminLayout({ children, activeSection }: AdminLayoutProp
       label: 'Academic Year',
       icon: Calendar,
       href: '/admin/academic-year',
+    },
+    {
+      id: 'notifications',
+      label: 'Notifications',
+      icon: Bell,
+      href: '/admin/notifications',
     },
     {
       id: 'settings',
