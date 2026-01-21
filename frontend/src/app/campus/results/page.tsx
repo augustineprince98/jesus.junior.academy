@@ -66,7 +66,7 @@ export default function ResultsPage() {
       ]);
 
       // Ensure marks is always an array
-      setMarks(Array.isArray(marksData?.marks) ? marksData.marks : []);
+      setMarks(Array.isArray(marksData?.marks) ? (marksData.marks as Mark[]) : []);
       setResult(resultData as Result || null);
     } catch (err: any) {
       const errorMessage = typeof err.detail === 'string' ? err.detail : 

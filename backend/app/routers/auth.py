@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from datetime import datetime
 from typing import Optional
+from pydantic import BaseModel
 import jwt
 
 from app.core.database import get_db
