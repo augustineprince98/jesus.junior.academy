@@ -102,7 +102,7 @@ export default function ModernCampusPage() {
       icon: Calendar,
       color: 'from-purple-500 to-violet-600',
       href: '/campus/attendance',
-      roles: ['STUDENT', 'TEACHER', 'CLASS_TEACHER'],
+      roles: ['STUDENT', 'TEACHER', 'CLASS_TEACHER', 'ADMIN'],
     },
 
     // PARENT Cards
@@ -125,15 +125,15 @@ export default function ModernCampusPage() {
       roles: ['PARENT'],
     },
 
-    // TEACHER Cards
+    // TEACHER Cards (ADMIN also has access to all teacher features)
     {
       id: 'my-classes',
-      title: 'My Classes',
-      description: 'Manage your classes and students',
+      title: 'Manage Classes',
+      description: 'Manage classes and students',
       icon: Users,
       color: 'from-indigo-500 to-purple-600',
       href: '/campus/classes',
-      roles: ['TEACHER', 'CLASS_TEACHER'],
+      roles: ['TEACHER', 'CLASS_TEACHER', 'ADMIN'],
     },
     {
       id: 'assign-homework',
@@ -141,8 +141,8 @@ export default function ModernCampusPage() {
       description: 'Create and publish homework assignments',
       icon: BookOpen,
       color: 'from-green-500 to-emerald-600',
-      href: '/campus/homework/assign',
-      roles: ['TEACHER', 'CLASS_TEACHER'],
+      href: '/campus/homework',
+      roles: ['TEACHER', 'CLASS_TEACHER', 'ADMIN'],
     },
     {
       id: 'mark-attendance',
@@ -150,8 +150,8 @@ export default function ModernCampusPage() {
       description: 'Take roll call and mark student attendance',
       icon: Clock,
       color: 'from-pink-500 to-rose-600',
-      href: '/campus/attendance',
-      roles: ['TEACHER', 'CLASS_TEACHER'],
+      href: '/campus/attendance/mark',
+      roles: ['TEACHER', 'CLASS_TEACHER', 'ADMIN'],
     },
     {
       id: 'upload-marks',
@@ -160,16 +160,16 @@ export default function ModernCampusPage() {
       icon: FileText,
       color: 'from-teal-500 to-cyan-600',
       href: '/campus/results',
-      roles: ['TEACHER', 'CLASS_TEACHER'],
+      roles: ['TEACHER', 'CLASS_TEACHER', 'ADMIN'],
     },
     {
       id: 'class-notice',
       title: 'Send Notice',
-      description: 'Send announcements to your class parents',
+      description: 'Send announcements to class parents',
       icon: Bell,
       color: 'from-orange-500 to-red-600',
-      href: '/campus/notices/create',
-      roles: ['CLASS_TEACHER'],
+      href: '/campus/notifications',
+      roles: ['CLASS_TEACHER', 'ADMIN'],
     },
     {
       id: 'leave-request',

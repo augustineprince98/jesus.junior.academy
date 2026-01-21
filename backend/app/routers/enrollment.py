@@ -214,7 +214,7 @@ def assign_user_to_class(
         "student_id": student.id,
         "class_id": payload.class_id,
         "class_name": school_class.name,
-        "academic_year": academic_year.name,
+        "academic_year": academic_year.year,
     }
 
 
@@ -253,6 +253,6 @@ def get_user_class(
             "id": enrollment.school_class.id,
             "name": enrollment.school_class.name,
         },
-        "academic_year": current_year.name,
+        "academic_year": current_year.year,
         "roll_number": enrollment.roll_number,
     }

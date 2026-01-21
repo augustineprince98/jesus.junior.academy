@@ -81,11 +81,15 @@ def set_subject_max_marks(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    if user.role != Role.CLASS_TEACHER:
-        raise HTTPException(status_code=403, detail="Class teachers only")
+    if user.role not in [Role.CLASS_TEACHER.value, Role.ADMIN.value]:
+        raise HTTPException(status_code=403, detail="Class teachers or admin only")
 
     school_class = db.get(SchoolClass, payload.class_id)
-    if not school_class or school_class.class_teacher_id != user.id:
+    if not school_class:
+        raise HTTPException(status_code=404, detail="Class not found")
+
+    # Admin can set max marks for any class, class teacher only for their class
+    if user.role != Role.ADMIN.value and school_class.class_teacher_id != user.teacher_id:
         raise HTTPException(status_code=403, detail="Not your class")
 
     existing = (

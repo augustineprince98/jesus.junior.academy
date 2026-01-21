@@ -228,8 +228,11 @@ def registration_diagnostics(
     # Check for current academic year
     academic_year = db.query(AcademicYear).filter(AcademicYear.is_current == True).first()
 
-    # Get available classes
-    classes = db.query(SchoolClass).filter(SchoolClass.is_active == True).all()
+    # Get available classes for current academic year
+    if academic_year:
+        classes = db.query(SchoolClass).filter(SchoolClass.academic_year_id == academic_year.id).all()
+    else:
+        classes = []
 
     # Get user counts for debugging
     total_users = db.query(User).count()
@@ -259,7 +262,7 @@ def registration_diagnostics(
         },
         "academic_year": {
             "configured": academic_year is not None,
-            "name": academic_year.name if academic_year else None,
+            "name": academic_year.year if academic_year else None,
             "id": academic_year.id if academic_year else None,
         } if True else None,
         "classes": {

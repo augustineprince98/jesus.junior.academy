@@ -17,6 +17,7 @@ import {
   Save,
   Search,
   Filter,
+  UserCheck,
 } from 'lucide-react';
 
 interface User {
@@ -27,6 +28,8 @@ interface User {
   role: string;
   is_active: boolean;
   student_id?: number;
+  parent_id?: number;
+  teacher_id?: number;
 }
 
 interface SchoolClass {
@@ -72,6 +75,12 @@ export default function UsersPage() {
   const [addingUser, setAddingUser] = useState(false);
   const [addError, setAddError] = useState('');
 
+  // Assign class teacher modal state
+  const [showClassTeacherModal, setShowClassTeacherModal] = useState(false);
+  const [selectedTeacher, setSelectedTeacher] = useState<User | null>(null);
+  const [selectedTeacherClassId, setSelectedTeacherClassId] = useState<number | null>(null);
+  const [assigningClassTeacher, setAssigningClassTeacher] = useState(false);
+
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'ADMIN') {
       router.push('/login');
@@ -85,8 +94,8 @@ export default function UsersPage() {
     try {
       setLoading(true);
       const data = await adminApi.listUsers(token!);
-      // Ensure data is always an array
-      setUsers(Array.isArray(data) ? data : []);
+      // Backend returns { users: [], count: number }
+      setUsers(Array.isArray(data?.users) ? data.users : []);
     } catch (error) {
       console.error('Failed to load users:', error);
       setUsers([]); // Set empty array on error
@@ -147,6 +156,28 @@ export default function UsersPage() {
     setNewUser({ name: '', phone: '', password: '', email: '', role: 'STUDENT', father_name: '', mother_name: '' });
     setAddError('');
     setShowAddModal(true);
+  };
+
+  const openClassTeacherModal = (u: User) => {
+    setSelectedTeacher(u);
+    setSelectedTeacherClassId(null);
+    setShowClassTeacherModal(true);
+  };
+
+  const handleAssignClassTeacher = async () => {
+    if (!selectedTeacher || !selectedTeacherClassId) return;
+
+    try {
+      setAssigningClassTeacher(true);
+      await adminApi.assignClassTeacher(token!, selectedTeacher.id, selectedTeacherClassId);
+      setShowClassTeacherModal(false);
+      loadUsers(); // Refresh users list
+    } catch (error: any) {
+      console.error('Failed to assign class teacher:', error);
+      alert(error.detail || 'Failed to assign class teacher');
+    } finally {
+      setAssigningClassTeacher(false);
+    }
   };
 
   const handleAddUser = async (e: React.FormEvent) => {
@@ -299,6 +330,15 @@ export default function UsersPage() {
                         >
                           <BookOpen className="w-4 h-4" />
                           Assign Class
+                        </button>
+                      )}
+                      {(u.role === 'TEACHER' || u.role === 'CLASS_TEACHER') && (
+                        <button
+                          onClick={() => openClassTeacherModal(u)}
+                          className="px-3 py-1.5 text-sm bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition-colors font-medium inline-flex items-center gap-1"
+                        >
+                          <UserCheck className="w-4 h-4" />
+                          Assign as Class Teacher
                         </button>
                       )}
                     </td>
@@ -547,6 +587,79 @@ export default function UsersPage() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Assign Class Teacher Modal */}
+        {showClassTeacherModal && selectedTeacher && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl max-w-md w-full">
+              <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+                <h2 className="text-xl font-bold text-gray-800">Assign as Class Teacher</h2>
+                <button
+                  onClick={() => setShowClassTeacherModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-5">
+                {/* Teacher Info */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-sm text-gray-600">
+                    Teacher: <span className="font-semibold text-gray-800">{selectedTeacher.name}</span>
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Current Role: <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getRoleBadge(selectedTeacher.role)}`}>
+                      {selectedTeacher.role}
+                    </span>
+                  </p>
+                </div>
+
+                {/* Class Selection */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Select Class to Assign
+                  </label>
+                  <select
+                    value={selectedTeacherClassId || ''}
+                    onChange={(e) => setSelectedTeacherClassId(Number(e.target.value) || null)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  >
+                    <option value="">-- Select Class --</option>
+                    {classes.map((cls) => (
+                      <option key={cls.id} value={cls.id}>
+                        {cls.name}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-2">
+                    This will assign the teacher as the class teacher for the selected class.
+                    Their role will be updated to CLASS_TEACHER.
+                  </p>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowClassTeacherModal(false)}
+                    className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleAssignClassTeacher}
+                    disabled={!selectedTeacherClassId || assigningClassTeacher}
+                    className="flex-1 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    <UserCheck className="w-5 h-5" />
+                    {assigningClassTeacher ? 'Assigning...' : 'Assign'}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}

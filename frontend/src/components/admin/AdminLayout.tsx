@@ -26,6 +26,7 @@ import {
   Bus,
   BookOpenCheck,
   GraduationCap,
+  ClipboardCheck,
 } from 'lucide-react';
 
 interface AdminLayoutProps {

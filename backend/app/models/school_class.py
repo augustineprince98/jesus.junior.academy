@@ -8,8 +8,9 @@ class SchoolClass(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)  # e.g. "CLASS_1", "LEVEL_II"
-    academic_year_id = Column(Integer, ForeignKey("academic_years.id"))  # FIXED: Added
-    class_teacher_id = Column(Integer, ForeignKey("users.id"))
+    section = Column(String, nullable=True)  # e.g. "A", "B"
+    academic_year_id = Column(Integer, ForeignKey("academic_years.id"))
+    class_teacher_id = Column(Integer, ForeignKey("teachers.id"), nullable=True)
 
     # FIXED: Added missing relationships
     academic_year = relationship("AcademicYear", back_populates="classes")

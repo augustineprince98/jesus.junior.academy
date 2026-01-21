@@ -411,6 +411,7 @@ class ClassTeacherNoticeRequest(BaseModel):
     priority: str = "NORMAL"
     scheduled_for: Optional[datetime] = None
     is_public: bool = False
+    class_id: Optional[int] = None  # Optional for class teachers, required for admin
 
 
 @router.post("/class-notice")
@@ -420,9 +421,10 @@ def create_class_notice(
     user: User = Depends(require_role_at_least(Role.CLASS_TEACHER)),
 ):
     """
-    [CLASS_TEACHER] Create a notice for their assigned class.
+    [ADMIN/CLASS_TEACHER] Create a notice for a class.
 
-    Class teachers can only send notifications to their own class.
+    - Admin can send to any class by specifying class_id
+    - Class teachers can only send to their own class
     """
     from app.models.academic_year import AcademicYear
     from app.models.school_class import SchoolClass
@@ -432,17 +434,25 @@ def create_class_notice(
     if not current_year:
         raise HTTPException(status_code=400, detail="No current academic year found")
 
-    # Find the class where this teacher is class teacher
-    assigned_class = db.query(SchoolClass).filter(
-        SchoolClass.class_teacher_id == user.teacher_id,
-        SchoolClass.academic_year_id == current_year.id,
-    ).first()
+    # Admin can specify any class, class teacher uses their assigned class
+    if user.role == Role.ADMIN.value:
+        if not payload.class_id:
+            raise HTTPException(status_code=400, detail="Admin must specify class_id")
+        assigned_class = db.get(SchoolClass, payload.class_id)
+        if not assigned_class:
+            raise HTTPException(status_code=404, detail="Class not found")
+    else:
+        # Find the class where this teacher is class teacher
+        assigned_class = db.query(SchoolClass).filter(
+            SchoolClass.class_teacher_id == user.teacher_id,
+            SchoolClass.academic_year_id == current_year.id,
+        ).first()
 
-    if not assigned_class:
-        raise HTTPException(
-            status_code=403,
-            detail="You are not assigned as class teacher to any class"
-        )
+        if not assigned_class:
+            raise HTTPException(
+                status_code=403,
+                detail="You are not assigned as class teacher to any class"
+            )
 
     try:
         notification_type = NotificationType(payload.notification_type)
