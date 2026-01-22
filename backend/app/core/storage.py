@@ -3,19 +3,25 @@ File Storage Service
 
 Handles file uploads and storage for images and documents.
 Supports local storage with optional S3 integration for production.
+Optimized for memory efficiency with chunked file processing.
 """
 
 import os
 import uuid
-import shutil
+import logging
 from pathlib import Path
 from datetime import datetime
 from typing import Optional
 from fastapi import UploadFile, HTTPException
+import aiofiles
+
+logger = logging.getLogger(__name__)
 
 # Configuration
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "uploads")
 MAX_FILE_SIZE = int(os.getenv("MAX_FILE_SIZE", 5 * 1024 * 1024))  # 5MB default
+MAX_DOCUMENT_SIZE = int(os.getenv("MAX_DOCUMENT_SIZE", 10 * 1024 * 1024))  # 10MB for documents
+CHUNK_SIZE = 64 * 1024  # 64KB chunks for memory-efficient streaming
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp"}
 ALLOWED_DOCUMENT_TYPES = {"application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"}
 
@@ -41,7 +47,10 @@ def generate_filename(original_filename: str, prefix: str = "") -> str:
 
 
 def validate_file(file: UploadFile, allowed_types: set, max_size: int = MAX_FILE_SIZE) -> None:
-    """Validate file type and size"""
+    """
+    Validate file type and size.
+    Uses efficient size checking without loading file into memory.
+    """
     # Check content type
     if file.content_type not in allowed_types:
         raise HTTPException(
@@ -49,15 +58,26 @@ def validate_file(file: UploadFile, allowed_types: set, max_size: int = MAX_FILE
             detail=f"File type not allowed. Allowed types: {', '.join(allowed_types)}"
         )
 
-    # Check file size by reading content
-    file.file.seek(0, 2)  # Seek to end
-    size = file.file.tell()
-    file.file.seek(0)  # Reset to beginning
+    # Check file size efficiently by seeking to end
+    try:
+        file.file.seek(0, 2)  # Seek to end
+        size = file.file.tell()
+        file.file.seek(0)  # Reset to beginning
+    except Exception as e:
+        logger.warning(f"Could not determine file size: {e}")
+        # If we can't check size, proceed but log warning
+        return
 
     if size > max_size:
         raise HTTPException(
             status_code=400,
-            detail=f"File too large. Maximum size: {max_size / (1024*1024):.1f}MB"
+            detail=f"File too large ({size / (1024*1024):.1f}MB). Maximum size: {max_size / (1024*1024):.1f}MB"
+        )
+
+    if size == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Empty file not allowed"
         )
 
 
@@ -67,7 +87,7 @@ async def save_image(
     prefix: str = ""
 ) -> str:
     """
-    Save an uploaded image file.
+    Save an uploaded image file with optimized chunked streaming.
 
     Args:
         file: The uploaded file
@@ -86,11 +106,17 @@ async def save_image(
     # Construct path
     save_path = Path(UPLOAD_DIR) / category / filename
 
-    # Save file
+    # Save file using async chunked streaming for memory efficiency
     try:
-        with open(save_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        async with aiofiles.open(save_path, "wb") as buffer:
+            while chunk := await file.read(CHUNK_SIZE):
+                await buffer.write(chunk)
+        logger.info(f"Saved image: {save_path}")
     except Exception as e:
+        # Clean up partial file on failure
+        if save_path.exists():
+            save_path.unlink()
+        logger.error(f"Failed to save image: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to save file: {str(e)}")
 
     # Return relative path for storage in database
@@ -103,7 +129,7 @@ async def save_document(
     prefix: str = ""
 ) -> str:
     """
-    Save an uploaded document file.
+    Save an uploaded document file with optimized chunked streaming.
 
     Args:
         file: The uploaded file
@@ -114,15 +140,22 @@ async def save_document(
         The relative path to the saved file
     """
     ensure_upload_dir()
-    validate_file(file, ALLOWED_DOCUMENT_TYPES, max_size=10 * 1024 * 1024)  # 10MB for documents
+    validate_file(file, ALLOWED_DOCUMENT_TYPES, max_size=MAX_DOCUMENT_SIZE)
 
     filename = generate_filename(file.filename or "document.pdf", prefix)
     save_path = Path(UPLOAD_DIR) / category / filename
 
+    # Save file using async chunked streaming for memory efficiency
     try:
-        with open(save_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        async with aiofiles.open(save_path, "wb") as buffer:
+            while chunk := await file.read(CHUNK_SIZE):
+                await buffer.write(chunk)
+        logger.info(f"Saved document: {save_path}")
     except Exception as e:
+        # Clean up partial file on failure
+        if save_path.exists():
+            save_path.unlink()
+        logger.error(f"Failed to save document: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to save file: {str(e)}")
 
     return f"/{UPLOAD_DIR}/{category}/{filename}"

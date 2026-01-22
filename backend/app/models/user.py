@@ -88,3 +88,4 @@ class User(Base):
     parent = relationship("Parent", foreign_keys=[parent_id], backref="user_account")
     teacher = relationship("Teacher", foreign_keys=[teacher_id], backref="user_account")
     approved_by = relationship("User", remote_side=[id], foreign_keys=[approved_by_id])
+    push_subscriptions = relationship("PushSubscription", back_populates="user", cascade="all, delete-orphan")

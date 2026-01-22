@@ -1,0 +1,54 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv
+venv
+env
+ENV
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Testing
+.pytest_cache
+.coverage
+htmlcov
+tests
+
+# Documentation
+*.md
+!README.md
+
+# Local env files
+.env
+.env.local
+.env.development
+
+# Logs
+*.log
+
+# Temp files
+tmp
+temp
+*.tmp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Alembic versions (keep structure, not migrations for clean deploy)
+# alembic/versions/*.py
+
+# Uploads (will be mounted as volume in production)
+uploads/*
+!uploads/.gitkeep

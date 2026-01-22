@@ -1,0 +1,38 @@
+# Fly.io Configuration for Jesus Junior Academy Backend
+# Deploy with: fly launch --no-deploy && fly deploy
+
+app = "jja-backend"
+primary_region = "bom"  # Mumbai, India - closest to users
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8000"
+  APP_ENV = "production"
+  LOG_LEVEL = "INFO"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = false  # Keep running, no cold starts
+  auto_start_machines = true
+  min_machines_running = 1    # Always have 1 instance
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 100
+    soft_limit = 80
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 512  # 512MB RAM
+
+# Health check
+[http_service.checks]
+  [http_service.checks.health]
+    interval = "30s"
+    timeout = "5s"
+    path = "/health"

@@ -5,6 +5,9 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.exc import SQLAlchemyError
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from pathlib import Path
 import logging
 import time
@@ -41,6 +44,8 @@ from app.routers import (
     uploads_router,
     # Academic year management
     academic_year_router,
+    # Push notifications
+    push_subscriptions_router,
 )
 from app.core.config import settings
 from app.services.scheduler_service import start_scheduler, stop_scheduler
@@ -72,29 +77,41 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS Configuration - Use settings from environment
-from app.core.config import settings
+# Rate Limiting Configuration
+# Uses client IP for rate limit tracking
+limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# Parse CORS origins from environment variable
-cors_origins = settings.CORS_ORIGINS
+# CORS Configuration - Production-safe defaults
+# Parse CORS origins from environment variable (comma-separated)
+cors_origins = settings.CORS_ORIGINS.strip()
+
+# Never allow wildcard "*" with credentials - explicitly list allowed origins
 if cors_origins == "*":
-    # When using "*" with credentials, we need to specify actual origins
-    # Browsers reject allow_origins=["*"] with allow_credentials=True
+    logger.warning("CORS_ORIGINS is set to '*' - using restricted defaults for security")
     allow_origins = [
         "https://jesus-junior-academy.vercel.app",
         "http://localhost:3000",
-        "http://127.0.0.1:3000",
     ]
 else:
-    # Split comma-separated origins
-    allow_origins = [origin.strip() for origin in cors_origins.split(",")]
+    # Split comma-separated origins and filter empty strings
+    allow_origins = [origin.strip() for origin in cors_origins.split(",") if origin.strip()]
+
+# Log configured origins for debugging
+logger.info(f"CORS allowed origins: {allow_origins}")
+
+# In production, only allow specific methods and headers
+is_production = settings.APP_ENV == "production"
+allowed_methods = ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"] if is_production else ["*"]
+allowed_headers = ["Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"] if is_production else ["*"]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allow_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=allowed_methods,
+    allow_headers=allowed_headers,
 )
 
 
@@ -173,6 +190,8 @@ app.include_router(registration_router)
 app.include_router(uploads_router)
 # Academic year management
 app.include_router(academic_year_router)
+# Push notifications
+app.include_router(push_subscriptions_router)
 
 # Mount static files for uploads
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "uploads")

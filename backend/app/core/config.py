@@ -8,8 +8,10 @@ logger = logging.getLogger(__name__)
 class Settings(BaseSettings):
     DATABASE_URL: str
     JWT_SECRET: str
-    CORS_ORIGINS: str = "*"  # Default to allow all, can be overridden
+    # Production-safe CORS defaults - only allow known origins
+    CORS_ORIGINS: str = "https://jesus-junior-academy.vercel.app,http://localhost:3000"
     SECRET_KEY: str = ""  # Optional, for additional security
+    APP_ENV: str = "development"  # development, staging, production
 
     class Config:
         env_file = ".env"

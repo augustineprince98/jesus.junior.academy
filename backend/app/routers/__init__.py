@@ -38,3 +38,6 @@ from .academic_year import router as academic_year_router
 
 # Admin management
 from .classes import router as classes_router
+
+# Push notifications
+from .push_subscriptions import router as push_subscriptions_router

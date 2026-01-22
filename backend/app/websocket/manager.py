@@ -151,6 +151,37 @@ class ConnectionManager:
         """Check if a user is currently connected."""
         return user_id in self.active_connections
 
+    def get_connected_users_by_role(self, role: str) -> set:
+        """Get set of user IDs connected with a specific role."""
+        return self.role_groups.get(role, set()).copy()
+
+    def get_stats(self) -> dict:
+        """Get connection statistics."""
+        return {
+            "total_connections": len(self.active_connections),
+            "by_role": {role: len(users) for role, users in self.role_groups.items()},
+            "class_subscriptions": len(self.class_groups),
+        }
+
+    async def broadcast_to_users(self, user_ids: list, message: dict) -> int:
+        """Send a message to a list of specific users."""
+        sent_count = 0
+        disconnected = []
+
+        for user_id in user_ids:
+            if user_id in self.active_connections:
+                try:
+                    await self.active_connections[user_id].send_json(message)
+                    sent_count += 1
+                except Exception as e:
+                    logger.error(f"Failed to send to user {user_id}: {e}")
+                    disconnected.append(user_id)
+
+        for user_id in disconnected:
+            self.disconnect(user_id)
+
+        return sent_count
+
 
 # Singleton instance
 manager = ConnectionManager()
