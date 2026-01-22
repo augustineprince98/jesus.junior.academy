@@ -118,8 +118,8 @@ export default function HomeworkPage() {
       } finally {
         setLoading(false);
       }
-    } else if (user?.role === 'TEACHER' || user?.role === 'CLASS_TEACHER') {
-      // For teachers, just hide loading state
+    } else if (user?.role === 'TEACHER' || user?.role === 'CLASS_TEACHER' || user?.role === 'ADMIN') {
+      // For teachers and admin, just hide loading state
       setLoading(false);
     } else {
       setLoading(false);
@@ -288,7 +288,7 @@ export default function HomeworkPage() {
               </div>
             </div>
 
-            {(user.role === 'TEACHER' || user.role === 'CLASS_TEACHER') && (
+            {(user.role === 'TEACHER' || user.role === 'CLASS_TEACHER' || user.role === 'ADMIN') && (
               <button
                 onClick={openModal}
                 className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"

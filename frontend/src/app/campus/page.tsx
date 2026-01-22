@@ -133,7 +133,16 @@ export default function ModernCampusPage() {
       icon: Users,
       color: 'from-indigo-500 to-purple-600',
       href: '/campus/classes',
-      roles: ['TEACHER', 'CLASS_TEACHER', 'ADMIN'],
+      roles: ['TEACHER', 'CLASS_TEACHER'],
+    },
+    {
+      id: 'admin-classes',
+      title: 'Class Management',
+      description: 'Manage classes, subjects, and exams',
+      icon: Users,
+      color: 'from-indigo-500 to-purple-600',
+      href: '/admin/classes',
+      roles: ['ADMIN'],
     },
     {
       id: 'assign-homework',

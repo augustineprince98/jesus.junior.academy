@@ -96,25 +96,27 @@ export default function MarkAttendancePage() {
     if (!token || !selectedClass) return;
 
     try {
-      // For now, we'll use a mock list. In real implementation, we'd need an API endpoint
-      // to get students enrolled in a class
-      const mockStudents: Student[] = [
-        { id: 1, name: 'John Doe', roll_number: '001', enrollment_id: 1 },
-        { id: 2, name: 'Jane Smith', roll_number: '002', enrollment_id: 2 },
-        { id: 3, name: 'Bob Johnson', roll_number: '003', enrollment_id: 3 },
-        { id: 4, name: 'Alice Brown', roll_number: '004', enrollment_id: 4 },
-        { id: 5, name: 'Charlie Wilson', roll_number: '005', enrollment_id: 5 },
-      ];
-      setStudents(mockStudents);
+      setError(null);
+      const data = await enrollmentApi.getClassStudents(token, selectedClass.class_id, selectedClass.academic_year_id);
+
+      const studentList: Student[] = data.students.map(s => ({
+        id: s.id,
+        name: s.name,
+        roll_number: s.roll_number || undefined,
+        enrollment_id: s.enrollment_id,
+      }));
+
+      setStudents(studentList);
 
       // Initialize attendance as all present
       const initialAttendance: Record<number, boolean> = {};
-      mockStudents.forEach(student => {
+      studentList.forEach(student => {
         initialAttendance[student.id] = true;
       });
       setAttendance(initialAttendance);
     } catch (err: any) {
-      setError('Failed to load students');
+      setError(err.detail || 'Failed to load students');
+      setStudents([]);
     }
   };
 
@@ -168,7 +170,7 @@ export default function MarkAttendancePage() {
     return { present, absent, total: students.length };
   };
 
-  if (!isAuthenticated || (user?.role !== 'TEACHER' && user?.role !== 'CLASS_TEACHER')) return null;
+  if (!isAuthenticated || (user?.role !== 'TEACHER' && user?.role !== 'CLASS_TEACHER' && user?.role !== 'ADMIN')) return null;
 
   const stats = getAttendanceStats();
 

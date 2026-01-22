@@ -218,6 +218,62 @@ def assign_user_to_class(
     }
 
 
+@router.get("/class/{class_id}/students")
+def get_class_students(
+    class_id: int,
+    academic_year_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role_at_least(Role.TEACHER)),
+):
+    """
+    [TEACHER+] Get students enrolled in a class for attendance/marks entry.
+
+    Returns list of students with their enrollment details.
+    """
+    # Get academic year (use specified or current)
+    if academic_year_id:
+        academic_year = db.get(AcademicYear, academic_year_id)
+    else:
+        academic_year = db.query(AcademicYear).filter(AcademicYear.is_current == True).first()
+
+    if not academic_year:
+        raise HTTPException(status_code=400, detail="No academic year found")
+
+    # Verify the class exists
+    school_class = db.get(SchoolClass, class_id)
+    if not school_class:
+        raise HTTPException(status_code=404, detail="Class not found")
+
+    # Get enrollments for this class and academic year
+    enrollments = db.query(Enrollment).filter(
+        Enrollment.class_id == class_id,
+        Enrollment.academic_year_id == academic_year.id,
+        Enrollment.status == "ACTIVE",
+    ).all()
+
+    students = []
+    for enrollment in enrollments:
+        student = enrollment.student
+        students.append({
+            "id": student.id,
+            "name": student.name,
+            "roll_number": str(enrollment.roll_number) if enrollment.roll_number else None,
+            "enrollment_id": enrollment.id,
+        })
+
+    # Sort by roll number or name
+    students.sort(key=lambda x: (x["roll_number"] or "", x["name"]))
+
+    return {
+        "class_id": class_id,
+        "class_name": school_class.name,
+        "academic_year_id": academic_year.id,
+        "academic_year": academic_year.year,
+        "students": students,
+        "total": len(students),
+    }
+
+
 @router.get("/user/{user_id}/class")
 def get_user_class(
     user_id: int,

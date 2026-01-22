@@ -543,6 +543,17 @@ export const enrollmentApi = {
     request<{
       academic_years: { id: number; name: string; is_current: boolean }[];
     }>('/enrollment/academic-years', { token }),
+
+  // Get students enrolled in a class (for attendance/marks)
+  getClassStudents: (token: string, classId: number, academicYearId?: number) =>
+    request<{
+      class_id: number;
+      class_name: string;
+      academic_year_id: number;
+      academic_year: string;
+      students: { id: number; name: string; roll_number: string | null; enrollment_id: number }[];
+      total: number;
+    }>(`/enrollment/class/${classId}/students`, { token, params: { academic_year_id: academicYearId } }),
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

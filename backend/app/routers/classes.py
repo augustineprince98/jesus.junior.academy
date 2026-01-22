@@ -115,7 +115,7 @@ def list_classes(
             "name": cls.name,
             "section": cls.section,
             "academic_year_id": cls.academic_year_id,
-            "academic_year_name": cls.academic_year.name,
+            "academic_year_name": cls.academic_year.year,
             "class_teacher_name": class_teacher_name,
         })
 
@@ -192,7 +192,7 @@ def get_class_subjects(
             "subject_id": assignment.subject_id,
             "subject_name": assignment.subject.name,
             "academic_year_id": assignment.academic_year_id,
-            "academic_year_name": assignment.academic_year.name,
+            "academic_year_name": assignment.academic_year.year,
         })
 
     return {"subjects": result, "total": len(result)}
@@ -255,7 +255,7 @@ def get_class_exams(
             "id": exam.id,
             "name": exam.name,
             "exam_type": exam.exam_type,
-            "academic_year_name": exam.academic_year.name,
+            "academic_year_name": exam.academic_year.year,
             "exam_date": exam.exam_date,
             "class_name": exam.school_class.name,
         })
