@@ -769,3 +769,666 @@ def bulk_update_transport(
         "total_requested": len(updates),
         "errors": errors if errors else None
     }
+
+
+# ========================================
+# ADMIN FEE STRUCTURE MANAGEMENT
+# ========================================
+
+from pydantic import BaseModel
+from typing import List as TypeList, Optional as OptionalType
+from datetime import datetime as dt
+
+
+class FeeStructureCreate(BaseModel):
+    class_id: int
+    academic_year_id: int
+    annual_charges: int
+    monthly_fee: int
+
+
+class FeeStructureUpdate(BaseModel):
+    annual_charges: OptionalType[int] = None
+    monthly_fee: OptionalType[int] = None
+
+
+class StudentFeeProfileCreate(BaseModel):
+    student_id: int
+    fee_structure_id: int
+    transport_charges: OptionalType[int] = 0
+    concession_amount: OptionalType[int] = 0
+    concession_reason: OptionalType[str] = None
+
+
+class StudentFeeProfileUpdate(BaseModel):
+    transport_charges: OptionalType[int] = None
+    transport_locked: OptionalType[bool] = None
+    concession_amount: OptionalType[int] = None
+    concession_reason: OptionalType[str] = None
+    is_locked: OptionalType[bool] = None
+
+
+class BulkFeeProfileCreate(BaseModel):
+    fee_structure_id: int
+    student_ids: TypeList[int]
+    default_transport_charges: OptionalType[int] = 0
+    default_concession: OptionalType[int] = 0
+
+
+class CashPaymentRecord(BaseModel):
+    student_fee_profile_id: int
+    amount_paid: int
+    payment_frequency: str
+    receipt_number: OptionalType[str] = None
+    paid_at: OptionalType[str] = None
+    remarks: OptionalType[str] = None
+
+
+class PaymentVerify(BaseModel):
+    is_verified: bool
+    remarks: OptionalType[str] = None
+
+
+@router.post("/structure")
+def create_fee_structure(
+    payload: FeeStructureCreate,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_user)
+):
+    """
+    [ADMIN] Create a fee structure for a class and academic year.
+    """
+    if admin.role != Role.ADMIN.value:
+        raise HTTPException(status_code=403, detail="Only admins can create fee structures")
+
+    from app.models.school_class import SchoolClass
+
+    # Verify class exists
+    school_class = db.get(SchoolClass, payload.class_id)
+    if not school_class:
+        raise HTTPException(status_code=404, detail="Class not found")
+
+    # Verify academic year exists
+    academic_year = db.get(AcademicYear, payload.academic_year_id)
+    if not academic_year:
+        raise HTTPException(status_code=404, detail="Academic year not found")
+
+    # Check if fee structure already exists
+    existing = db.query(FeeStructure).filter(
+        FeeStructure.class_id == payload.class_id,
+        FeeStructure.academic_year_id == payload.academic_year_id
+    ).first()
+
+    if existing:
+        raise HTTPException(
+            status_code=400,
+            detail="Fee structure already exists for this class and academic year"
+        )
+
+    fee_structure = FeeStructure(
+        class_id=payload.class_id,
+        academic_year_id=payload.academic_year_id,
+        annual_charges=payload.annual_charges,
+        monthly_fee=payload.monthly_fee,
+    )
+    db.add(fee_structure)
+    db.commit()
+    db.refresh(fee_structure)
+
+    return {
+        "status": "fee_structure_created",
+        "id": fee_structure.id,
+        "class_id": fee_structure.class_id,
+        "academic_year_id": fee_structure.academic_year_id,
+        "annual_charges": fee_structure.annual_charges,
+        "monthly_fee": fee_structure.monthly_fee,
+        "yearly_tuition": fee_structure.monthly_fee * 12,
+    }
+
+
+@router.get("/structure/{structure_id}")
+def get_fee_structure(
+    structure_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    """
+    Get a fee structure by ID.
+    """
+    fee_structure = db.get(FeeStructure, structure_id)
+    if not fee_structure:
+        raise HTTPException(status_code=404, detail="Fee structure not found")
+
+    return {
+        "id": fee_structure.id,
+        "class_id": fee_structure.class_id,
+        "class_name": fee_structure.school_class.name,
+        "academic_year_id": fee_structure.academic_year_id,
+        "academic_year_name": fee_structure.academic_year.year,
+        "annual_charges": fee_structure.annual_charges,
+        "monthly_fee": fee_structure.monthly_fee,
+        "yearly_tuition": fee_structure.monthly_fee * 12,
+        "created_at": fee_structure.created_at.isoformat(),
+    }
+
+
+@router.get("/structure/class/{class_id}/year/{academic_year_id}")
+def get_fee_structure_by_class_year(
+    class_id: int,
+    academic_year_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    """
+    Get fee structure for a specific class and academic year.
+    """
+    fee_structure = db.query(FeeStructure).filter(
+        FeeStructure.class_id == class_id,
+        FeeStructure.academic_year_id == academic_year_id
+    ).first()
+
+    if not fee_structure:
+        raise HTTPException(status_code=404, detail="Fee structure not found for this class and year")
+
+    return {
+        "id": fee_structure.id,
+        "class_id": fee_structure.class_id,
+        "class_name": fee_structure.school_class.name,
+        "academic_year_id": fee_structure.academic_year_id,
+        "academic_year_name": fee_structure.academic_year.year,
+        "annual_charges": fee_structure.annual_charges,
+        "monthly_fee": fee_structure.monthly_fee,
+        "yearly_tuition": fee_structure.monthly_fee * 12,
+        "created_at": fee_structure.created_at.isoformat(),
+    }
+
+
+@router.put("/structure/{structure_id}")
+def update_fee_structure(
+    structure_id: int,
+    payload: FeeStructureUpdate,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_user)
+):
+    """
+    [ADMIN] Update a fee structure.
+    """
+    if admin.role != Role.ADMIN.value:
+        raise HTTPException(status_code=403, detail="Only admins can update fee structures")
+
+    fee_structure = db.get(FeeStructure, structure_id)
+    if not fee_structure:
+        raise HTTPException(status_code=404, detail="Fee structure not found")
+
+    if payload.annual_charges is not None:
+        fee_structure.annual_charges = payload.annual_charges
+    if payload.monthly_fee is not None:
+        fee_structure.monthly_fee = payload.monthly_fee
+
+    # Update all student profiles that use this structure
+    for profile in fee_structure.student_fee_profiles:
+        profile.total_yearly_fee = (
+            fee_structure.annual_charges +
+            (fee_structure.monthly_fee * 12) +
+            profile.transport_charges -
+            profile.concession_amount
+        )
+
+    db.commit()
+    db.refresh(fee_structure)
+
+    return {
+        "status": "fee_structure_updated",
+        "id": fee_structure.id,
+        "annual_charges": fee_structure.annual_charges,
+        "monthly_fee": fee_structure.monthly_fee,
+        "yearly_tuition": fee_structure.monthly_fee * 12,
+        "profiles_updated": len(fee_structure.student_fee_profiles),
+    }
+
+
+@router.post("/profile")
+def create_student_fee_profile(
+    payload: StudentFeeProfileCreate,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_user)
+):
+    """
+    [ADMIN] Create a fee profile for a student.
+    """
+    if admin.role != Role.ADMIN.value:
+        raise HTTPException(status_code=403, detail="Only admins can create fee profiles")
+
+    from app.models.people import Student
+
+    # Verify student exists
+    student = db.get(Student, payload.student_id)
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    # Verify fee structure exists
+    fee_structure = db.get(FeeStructure, payload.fee_structure_id)
+    if not fee_structure:
+        raise HTTPException(status_code=404, detail="Fee structure not found")
+
+    # Check if profile already exists
+    existing = db.query(StudentFeeProfile).filter(
+        StudentFeeProfile.student_id == payload.student_id,
+        StudentFeeProfile.fee_structure_id == payload.fee_structure_id
+    ).first()
+
+    if existing:
+        raise HTTPException(status_code=400, detail="Fee profile already exists for this student")
+
+    # Calculate total fee
+    total_yearly_fee = (
+        fee_structure.annual_charges +
+        (fee_structure.monthly_fee * 12) +
+        payload.transport_charges -
+        payload.concession_amount
+    )
+
+    profile = StudentFeeProfile(
+        student_id=payload.student_id,
+        fee_structure_id=payload.fee_structure_id,
+        transport_charges=payload.transport_charges,
+        concession_amount=payload.concession_amount,
+        concession_reason=payload.concession_reason,
+        total_yearly_fee=total_yearly_fee,
+    )
+    db.add(profile)
+    db.commit()
+    db.refresh(profile)
+
+    return {
+        "status": "fee_profile_created",
+        "id": profile.id,
+        "student_id": profile.student_id,
+        "student_name": student.name,
+        "total_yearly_fee": profile.total_yearly_fee,
+    }
+
+
+@router.post("/profile/bulk")
+def bulk_create_fee_profiles(
+    payload: BulkFeeProfileCreate,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_user)
+):
+    """
+    [ADMIN] Create fee profiles for multiple students at once.
+    """
+    if admin.role != Role.ADMIN.value:
+        raise HTTPException(status_code=403, detail="Only admins can create fee profiles")
+
+    # Verify fee structure exists
+    fee_structure = db.get(FeeStructure, payload.fee_structure_id)
+    if not fee_structure:
+        raise HTTPException(status_code=404, detail="Fee structure not found")
+
+    created_count = 0
+    skipped_count = 0
+    errors = []
+
+    for student_id in payload.student_ids:
+        try:
+            # Check if profile already exists
+            existing = db.query(StudentFeeProfile).filter(
+                StudentFeeProfile.student_id == student_id,
+                StudentFeeProfile.fee_structure_id == payload.fee_structure_id
+            ).first()
+
+            if existing:
+                skipped_count += 1
+                continue
+
+            # Calculate total fee
+            total_yearly_fee = (
+                fee_structure.annual_charges +
+                (fee_structure.monthly_fee * 12) +
+                payload.default_transport_charges -
+                payload.default_concession
+            )
+
+            profile = StudentFeeProfile(
+                student_id=student_id,
+                fee_structure_id=payload.fee_structure_id,
+                transport_charges=payload.default_transport_charges,
+                concession_amount=payload.default_concession,
+                total_yearly_fee=total_yearly_fee,
+            )
+            db.add(profile)
+            created_count += 1
+
+        except Exception as e:
+            errors.append({"student_id": student_id, "error": str(e)})
+
+    db.commit()
+
+    return {
+        "status": "bulk_create_completed",
+        "created": created_count,
+        "skipped": skipped_count,
+        "errors": errors if errors else None,
+    }
+
+
+@router.get("/profile/student/{student_id}/year/{academic_year_id}")
+def get_student_fee_profile(
+    student_id: int,
+    academic_year_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    """
+    Get a student's fee profile for a specific academic year.
+    """
+    profile = db.query(StudentFeeProfile).join(FeeStructure).filter(
+        StudentFeeProfile.student_id == student_id,
+        FeeStructure.academic_year_id == academic_year_id
+    ).first()
+
+    if not profile:
+        raise HTTPException(status_code=404, detail="Fee profile not found")
+
+    paid = calculate_total_paid(db, profile.id)
+    pending = profile.total_yearly_fee - paid
+
+    return {
+        "id": profile.id,
+        "student_id": profile.student_id,
+        "student_name": profile.student.name,
+        "fee_structure_id": profile.fee_structure_id,
+        "class_name": profile.fee_structure.school_class.name,
+        "academic_year": profile.fee_structure.academic_year.year,
+        "fee_breakdown": {
+            "annual_charges": profile.fee_structure.annual_charges,
+            "monthly_fee": profile.fee_structure.monthly_fee,
+            "yearly_tuition": profile.fee_structure.monthly_fee * 12,
+            "transport_charges": profile.transport_charges,
+            "scholarship_amount": profile.concession_amount,
+            "scholarship_reason": profile.concession_reason,
+        },
+        "total_yearly_fee": profile.total_yearly_fee,
+        "paid": paid,
+        "pending": pending,
+        "payment_status": "PAID" if pending == 0 else "PENDING" if paid == 0 else "PARTIAL",
+        "is_locked": profile.is_locked,
+    }
+
+
+@router.put("/profile/{profile_id}")
+def update_student_fee_profile(
+    profile_id: int,
+    payload: StudentFeeProfileUpdate,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_user)
+):
+    """
+    [ADMIN] Update a student's fee profile (transport, scholarship, etc.).
+    """
+    if admin.role != Role.ADMIN.value:
+        raise HTTPException(status_code=403, detail="Only admins can update fee profiles")
+
+    profile = db.get(StudentFeeProfile, profile_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Fee profile not found")
+
+    if profile.is_locked and admin.role != Role.ADMIN.value:
+        raise HTTPException(status_code=403, detail="This fee profile is locked")
+
+    if payload.transport_charges is not None:
+        profile.transport_charges = payload.transport_charges
+    if payload.transport_locked is not None:
+        profile.transport_locked = payload.transport_locked
+    if payload.concession_amount is not None:
+        profile.concession_amount = payload.concession_amount
+    if payload.concession_reason is not None:
+        profile.concession_reason = payload.concession_reason
+    if payload.is_locked is not None:
+        profile.is_locked = payload.is_locked
+
+    # Recalculate total
+    fee_structure = profile.fee_structure
+    profile.total_yearly_fee = (
+        fee_structure.annual_charges +
+        (fee_structure.monthly_fee * 12) +
+        profile.transport_charges -
+        profile.concession_amount
+    )
+
+    db.commit()
+    db.refresh(profile)
+
+    return {
+        "status": "fee_profile_updated",
+        "id": profile.id,
+        "student_id": profile.student_id,
+        "transport_charges": profile.transport_charges,
+        "scholarship_amount": profile.concession_amount,
+        "scholarship_reason": profile.concession_reason,
+        "total_yearly_fee": profile.total_yearly_fee,
+    }
+
+
+@router.post("/payment/cash")
+def record_cash_payment(
+    payload: CashPaymentRecord,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_user)
+):
+    """
+    [ADMIN] Record a cash payment for a student.
+    """
+    if admin.role != Role.ADMIN.value:
+        raise HTTPException(status_code=403, detail="Only admins can record cash payments")
+
+    profile = db.get(StudentFeeProfile, payload.student_fee_profile_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Fee profile not found")
+
+    # Validate frequency
+    try:
+        freq = PaymentFrequency[payload.payment_frequency.upper()]
+    except KeyError:
+        raise HTTPException(status_code=400, detail="Invalid payment frequency")
+
+    # Validate payment amount
+    is_valid, error_msg = validate_payment_amount(
+        payload.amount_paid, freq, profile.total_yearly_fee
+    )
+    if not is_valid:
+        raise HTTPException(status_code=400, detail=error_msg)
+
+    payment = FeePayment(
+        student_fee_profile_id=payload.student_fee_profile_id,
+        amount_paid=payload.amount_paid,
+        payment_mode=PaymentMode.CASH,
+        payment_frequency=freq,
+        receipt_number=payload.receipt_number,
+        marked_by_admin_id=admin.id,
+        paid_at=dt.fromisoformat(payload.paid_at) if payload.paid_at else dt.utcnow(),
+        is_verified=True,
+        verified_by_admin_id=admin.id,
+        verified_at=dt.utcnow(),
+        remarks=payload.remarks,
+    )
+    db.add(payment)
+    db.commit()
+    db.refresh(payment)
+
+    return {
+        "status": "payment_recorded",
+        "payment_id": payment.id,
+        "student_id": profile.student_id,
+        "amount_paid": payment.amount_paid,
+        "receipt_number": payment.receipt_number,
+    }
+
+
+@router.get("/payment/history/{profile_id}")
+def get_payment_history(
+    profile_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    """
+    Get payment history for a fee profile.
+    """
+    profile = db.get(StudentFeeProfile, profile_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Fee profile not found")
+
+    payments = db.query(FeePayment).filter(
+        FeePayment.student_fee_profile_id == profile_id
+    ).order_by(FeePayment.paid_at.desc()).all()
+
+    return {
+        "profile_id": profile_id,
+        "student_id": profile.student_id,
+        "student_name": profile.student.name,
+        "payments": [
+            {
+                "id": p.id,
+                "amount_paid": p.amount_paid,
+                "payment_mode": p.payment_mode.value,
+                "payment_frequency": p.payment_frequency.value,
+                "receipt_number": p.receipt_number,
+                "paid_at": p.paid_at.isoformat(),
+                "is_verified": p.is_verified,
+                "remarks": p.remarks,
+            }
+            for p in payments
+        ],
+        "total_paid": sum(p.amount_paid for p in payments if p.is_verified),
+    }
+
+
+@router.put("/payment/{payment_id}/verify")
+def verify_payment(
+    payment_id: int,
+    payload: PaymentVerify,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_user)
+):
+    """
+    [ADMIN] Verify or unverify a payment.
+    """
+    if admin.role != Role.ADMIN.value:
+        raise HTTPException(status_code=403, detail="Only admins can verify payments")
+
+    payment = db.get(FeePayment, payment_id)
+    if not payment:
+        raise HTTPException(status_code=404, detail="Payment not found")
+
+    payment.is_verified = payload.is_verified
+    if payload.is_verified:
+        payment.verified_by_admin_id = admin.id
+        payment.verified_at = dt.utcnow()
+    else:
+        payment.verified_by_admin_id = None
+        payment.verified_at = None
+
+    if payload.remarks:
+        payment.remarks = payload.remarks
+
+    db.commit()
+
+    return {
+        "status": "payment_verification_updated",
+        "payment_id": payment.id,
+        "is_verified": payment.is_verified,
+    }
+
+
+@router.get("/summary/class/{class_id}/year/{academic_year_id}")
+def get_class_fee_summary(
+    class_id: int,
+    academic_year_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    """
+    Get fee summary for a class - total expected, collected, pending.
+    """
+    from app.models.school_class import SchoolClass
+    from app.models.enrollment import Enrollment
+
+    # Verify class and year
+    school_class = db.get(SchoolClass, class_id)
+    if not school_class:
+        raise HTTPException(status_code=404, detail="Class not found")
+
+    academic_year = db.get(AcademicYear, academic_year_id)
+    if not academic_year:
+        raise HTTPException(status_code=404, detail="Academic year not found")
+
+    # Get fee structure
+    fee_structure = db.query(FeeStructure).filter(
+        FeeStructure.class_id == class_id,
+        FeeStructure.academic_year_id == academic_year_id
+    ).first()
+
+    if not fee_structure:
+        return {
+            "class_id": class_id,
+            "class_name": school_class.name,
+            "academic_year": academic_year.year,
+            "class_summary": {
+                "total_students": 0,
+                "total_expected": 0,
+                "total_collected": 0,
+                "total_pending": 0,
+                "collection_percentage": 0,
+            },
+            "students": [],
+        }
+
+    # Get all student fee profiles for this class
+    profiles = db.query(StudentFeeProfile).filter(
+        StudentFeeProfile.fee_structure_id == fee_structure.id
+    ).all()
+
+    students_data = []
+    total_expected = 0
+    total_collected = 0
+
+    for profile in profiles:
+        paid = calculate_total_paid(db, profile.id)
+        pending = profile.total_yearly_fee - paid
+
+        total_expected += profile.total_yearly_fee
+        total_collected += paid
+
+        students_data.append({
+            "student_id": profile.student_id,
+            "student_name": profile.student.name,
+            "fee_profile_id": profile.id,
+            "total_fee": profile.total_yearly_fee,
+            "paid": paid,
+            "pending": pending,
+            "scholarship": profile.concession_amount,
+            "status": "PAID" if pending <= 0 else "PENDING" if paid == 0 else "PARTIAL",
+        })
+
+    total_pending = total_expected - total_collected
+    collection_percentage = (total_collected / total_expected * 100) if total_expected > 0 else 0
+
+    return {
+        "class_id": class_id,
+        "class_name": school_class.name,
+        "academic_year": academic_year.year,
+        "fee_structure": {
+            "id": fee_structure.id,
+            "annual_charges": fee_structure.annual_charges,
+            "monthly_fee": fee_structure.monthly_fee,
+        },
+        "class_summary": {
+            "total_students": len(profiles),
+            "total_expected": total_expected,
+            "total_collected": total_collected,
+            "total_pending": total_pending,
+            "collection_percentage": round(collection_percentage, 2),
+        },
+        "students": students_data,
+    }

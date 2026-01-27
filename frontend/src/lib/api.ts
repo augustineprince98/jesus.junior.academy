@@ -899,16 +899,22 @@ export const adminFeesApi = {
 
 export const schoolApi = {
   getClasses: (token: string) =>
-    request<{ id: number; name: string; section?: string }[]>('/classes/', { token }),
+    request<{ id: number; name: string; section?: string }[]>('/admin/classes/', { token }).then(
+      (data: any) => data.classes || []
+    ),
 
   getAcademicYears: (token: string) =>
-    request<{ id: number; name: string; is_current: boolean }[]>('/academic-years/', { token }),
+    request<{ id: number; year: string; is_current: boolean }[]>('/academic-years/', { token }).then(
+      (data: any) => (data || []).map((y: any) => ({ id: y.id, name: y.year, is_current: y.is_current }))
+    ),
 
   getSubjects: (token: string) =>
     request<{ id: number; name: string }[]>('/subjects/', { token }),
 
   getStudentsByClass: (token: string, classId: number) =>
-    request<{ id: number; name: string; roll_number?: string }[]>(`/students/class/${classId}`, { token }),
+    request<{ students: { id: number; name: string; roll_number?: string }[] }>(`/enrollment/class/${classId}/students`, { token }).then(
+      (data: any) => data.students || []
+    ),
 };
 
 export { ApiError };

@@ -46,6 +46,9 @@ from app.routers import (
     academic_year_router,
     # Push notifications
     push_subscriptions_router,
+    # Class and Subject management
+    classes_router,
+    subjects_router,
 )
 from app.core.config import settings
 from app.services.scheduler_service import start_scheduler, stop_scheduler
@@ -192,6 +195,9 @@ app.include_router(uploads_router)
 app.include_router(academic_year_router)
 # Push notifications
 app.include_router(push_subscriptions_router)
+# Class and Subject management
+app.include_router(classes_router)
+app.include_router(subjects_router)
 
 # Mount static files for uploads
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "uploads")

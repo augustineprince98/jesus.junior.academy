@@ -65,9 +65,11 @@ interface ClassFeeSummary {
   students: {
     student_id: number;
     student_name: string;
+    fee_profile_id: number;
     total_fee: number;
     paid: number;
     pending: number;
+    scholarship: number;
     status: 'PAID' | 'PENDING' | 'PARTIAL';
   }[];
 }
@@ -97,6 +99,7 @@ export default function FeeManagementPage() {
   const [activeTab, setActiveTab] = useState<'structure' | 'students' | 'payments'>('structure');
   const [showStructureModal, setShowStructureModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showScholarshipModal, setShowScholarshipModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
   // Form states
@@ -112,6 +115,13 @@ export default function FeeManagementPage() {
     payment_frequency: 'MONTHLY',
     receipt_number: '',
     remarks: '',
+  });
+
+  const [scholarshipForm, setScholarshipForm] = useState({
+    profile_id: 0,
+    student_name: '',
+    scholarship_amount: 0,
+    scholarship_reason: '',
   });
 
   useEffect(() => {
@@ -262,7 +272,7 @@ export default function FeeManagementPage() {
 
   const openPaymentModal = (student: ClassFeeSummary['students'][0]) => {
     setPaymentForm({
-      student_fee_profile_id: student.student_id,
+      student_fee_profile_id: student.fee_profile_id,
       student_name: student.student_name,
       amount_paid: 0,
       payment_frequency: 'MONTHLY',
@@ -270,6 +280,39 @@ export default function FeeManagementPage() {
       remarks: '',
     });
     setShowPaymentModal(true);
+  };
+
+  const openScholarshipModal = (student: ClassFeeSummary['students'][0]) => {
+    setScholarshipForm({
+      profile_id: student.fee_profile_id,
+      student_name: student.student_name,
+      scholarship_amount: student.scholarship || 0,
+      scholarship_reason: '',
+    });
+    setShowScholarshipModal(true);
+  };
+
+  const handleUpdateScholarship = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) return;
+
+    try {
+      await adminFeesApi.updateStudentFeeProfile(token, scholarshipForm.profile_id, {
+        concession_amount: scholarshipForm.scholarship_amount,
+        concession_reason: scholarshipForm.scholarship_reason || undefined,
+      });
+      setShowScholarshipModal(false);
+      setScholarshipForm({
+        profile_id: 0,
+        student_name: '',
+        scholarship_amount: 0,
+        scholarship_reason: '',
+      });
+      loadFeeData();
+    } catch (error) {
+      console.error('Failed to update scholarship:', error);
+      alert('Failed to update scholarship.');
+    }
   };
 
   const formatCurrency = (amount: number) => {
@@ -549,6 +592,9 @@ export default function FeeManagementPage() {
                                 Total Fee
                               </th>
                               <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">
+                                Scholarship
+                              </th>
+                              <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">
                                 Paid
                               </th>
                               <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">
@@ -558,7 +604,7 @@ export default function FeeManagementPage() {
                                 Status
                               </th>
                               <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
-                                Action
+                                Actions
                               </th>
                             </tr>
                           </thead>
@@ -571,6 +617,15 @@ export default function FeeManagementPage() {
                                 <td className="px-4 py-3 text-right text-gray-600">
                                   {formatCurrency(student.total_fee)}
                                 </td>
+                                <td className="px-4 py-3 text-right">
+                                  {student.scholarship > 0 ? (
+                                    <span className="text-purple-600 font-medium">
+                                      -{formatCurrency(student.scholarship)}
+                                    </span>
+                                  ) : (
+                                    <span className="text-gray-400">-</span>
+                                  )}
+                                </td>
                                 <td className="px-4 py-3 text-right text-green-600 font-medium">
                                   {formatCurrency(student.paid)}
                                 </td>
@@ -581,13 +636,22 @@ export default function FeeManagementPage() {
                                   {getStatusBadge(student.status)}
                                 </td>
                                 <td className="px-4 py-3 text-center">
-                                  <button
-                                    onClick={() => openPaymentModal(student)}
-                                    className="px-3 py-1 text-sm bg-primary-100 text-primary-600 rounded-lg hover:bg-primary-200 transition-colors font-semibold"
-                                  >
-                                    <Receipt className="w-4 h-4 inline mr-1" />
-                                    Record Payment
-                                  </button>
+                                  <div className="flex items-center justify-center gap-2">
+                                    <button
+                                      onClick={() => openScholarshipModal(student)}
+                                      className="px-2 py-1 text-xs bg-purple-100 text-purple-600 rounded hover:bg-purple-200 transition-colors font-semibold"
+                                      title="Edit Scholarship"
+                                    >
+                                      Scholarship
+                                    </button>
+                                    <button
+                                      onClick={() => openPaymentModal(student)}
+                                      className="px-2 py-1 text-xs bg-primary-100 text-primary-600 rounded hover:bg-primary-200 transition-colors font-semibold"
+                                    >
+                                      <Receipt className="w-3 h-3 inline mr-1" />
+                                      Payment
+                                    </button>
+                                  </div>
                                 </td>
                               </tr>
                             ))}
@@ -799,6 +863,84 @@ export default function FeeManagementPage() {
                   >
                     <Save className="w-5 h-5" />
                     Record Payment
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Scholarship Modal */}
+        {showScholarshipModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl max-w-md w-full">
+              <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+                <h2 className="text-xl font-bold text-gray-800">Edit Scholarship</h2>
+                <button
+                  onClick={() => setShowScholarshipModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleUpdateScholarship} className="p-6 space-y-5">
+                <div className="bg-purple-50 rounded-lg p-4">
+                  <p className="text-sm text-purple-600">
+                    Student: <span className="font-semibold text-purple-800">{scholarshipForm.student_name}</span>
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Scholarship Amount
+                  </label>
+                  <div className="relative">
+                    <IndianRupee className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="number"
+                      value={scholarshipForm.scholarship_amount}
+                      onChange={(e) =>
+                        setScholarshipForm({ ...scholarshipForm, scholarship_amount: Number(e.target.value) })
+                      }
+                      min="0"
+                      required
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      placeholder="0"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">This amount will be deducted from the total fee</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Reason for Scholarship
+                  </label>
+                  <textarea
+                    value={scholarshipForm.scholarship_reason}
+                    onChange={(e) =>
+                      setScholarshipForm({ ...scholarshipForm, scholarship_reason: e.target.value })
+                    }
+                    rows={3}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none"
+                    placeholder="e.g., Merit scholarship, Financial assistance, Staff ward..."
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowScholarshipModal(false)}
+                    className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-semibold flex items-center justify-center gap-2"
+                  >
+                    <Save className="w-5 h-5" />
+                    Save Scholarship
                   </button>
                 </div>
               </form>

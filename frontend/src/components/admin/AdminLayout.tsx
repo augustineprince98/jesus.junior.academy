@@ -66,6 +66,18 @@ export default function AdminLayout({ children, activeSection }: AdminLayoutProp
       href: '/admin/events',
     },
     {
+      id: 'attendance',
+      label: 'Attendance',
+      icon: ClipboardCheck,
+      href: '/admin/attendance',
+    },
+    {
+      id: 'homework',
+      label: 'Homework',
+      icon: BookOpenCheck,
+      href: '/admin/homework',
+    },
+    {
       id: 'fees',
       label: 'Fee Management',
       icon: Wallet,
