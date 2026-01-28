@@ -92,7 +92,7 @@ export default function PublicNoticeBoard() {
                                     <h3 className="font-bold text-gray-900 line-clamp-2">{notice.title}</h3>
                                     <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
                                         <Calendar className="w-3 h-3" />
-                                        {format(new Date(notice.event_date), 'MMM d, yyyy')}
+                                        {new Date(notice.event_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                                     </div>
                                 </div>
                             </div>
