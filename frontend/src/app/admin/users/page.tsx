@@ -18,6 +18,7 @@ import {
   Search,
   Filter,
   UserCheck,
+  Trash2,
 } from 'lucide-react';
 
 interface User {
@@ -80,6 +81,32 @@ export default function UsersPage() {
   const [selectedTeacher, setSelectedTeacher] = useState<User | null>(null);
   const [selectedTeacherClassIds, setSelectedTeacherClassIds] = useState<number[]>([]);
   const [assigningClassTeacher, setAssigningClassTeacher] = useState(false);
+
+  // Delete user
+  const handleDeleteUser = async (userId: number, userName: string) => {
+    if (!confirm(`Are you sure you want to permanently delete user "${userName}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://jja-backend.onrender.com'}/users/${userId}/permanent`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        loadUsers();
+        alert('User deleted successfully');
+      } else {
+        const data = await response.json();
+        alert(data.detail || 'Failed to delete user');
+      }
+    } catch (error) {
+      console.error('Failed to delete user:', error);
+      alert('Failed to delete user');
+    }
+  };
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'ADMIN') {
@@ -335,24 +362,36 @@ export default function UsersPage() {
                       )}
                     </td>
                     <td className="px-6 py-4 text-center">
-                      {(u.role === 'STUDENT' || u.role === 'PARENT') && (
-                        <button
-                          onClick={() => openAssignModal(u)}
-                          className="px-3 py-1.5 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors font-medium inline-flex items-center gap-1"
-                        >
-                          <BookOpen className="w-4 h-4" />
-                          Assign Class
-                        </button>
-                      )}
-                      {(u.role === 'TEACHER' || u.role === 'CLASS_TEACHER') && (
-                        <button
-                          onClick={() => openClassTeacherModal(u)}
-                          className="px-3 py-1.5 text-sm bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition-colors font-medium inline-flex items-center gap-1"
-                        >
-                          <UserCheck className="w-4 h-4" />
-                          Assign as Class Teacher
-                        </button>
-                      )}
+                      <div className="flex items-center justify-center gap-2">
+                        {(u.role === 'STUDENT' || u.role === 'PARENT') && (
+                          <button
+                            onClick={() => openAssignModal(u)}
+                            className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors font-medium inline-flex items-center gap-1"
+                          >
+                            <BookOpen className="w-3 h-3" />
+                            Class
+                          </button>
+                        )}
+                        {(u.role === 'TEACHER' || u.role === 'CLASS_TEACHER') && (
+                          <button
+                            onClick={() => openClassTeacherModal(u)}
+                            className="px-2 py-1 text-xs bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200 transition-colors font-medium inline-flex items-center gap-1"
+                          >
+                            <UserCheck className="w-3 h-3" />
+                            Assign
+                          </button>
+                        )}
+                        {u.id !== user?.id && (
+                          <button
+                            onClick={() => handleDeleteUser(u.id, u.name)}
+                            className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors font-medium inline-flex items-center gap-1"
+                            title="Delete User"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                            Delete
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -639,11 +678,10 @@ export default function UsersPage() {
                     {classes.map((cls) => (
                       <label
                         key={cls.id}
-                        className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${
-                          selectedTeacherClassIds.includes(cls.id)
+                        className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${selectedTeacherClassIds.includes(cls.id)
                             ? 'bg-indigo-50 border border-indigo-200'
                             : 'hover:bg-gray-50'
-                        }`}
+                          }`}
                       >
                         <input
                           type="checkbox"

@@ -27,9 +27,26 @@ export default function AccessGate() {
   const [verifying, setVerifying] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const validatePhone = (phoneNumber: string): boolean => {
+    const cleanPhone = phoneNumber.replace(/\D/g, '');
+    return cleanPhone.length === 10;
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+    setPhone(value);
+    if (errorMessage) setErrorMessage(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (verifying) return;
+
+    // Validate phone number
+    if (!validatePhone(phone)) {
+      setErrorMessage('Please enter a valid 10-digit phone number');
+      return;
+    }
 
     setVerifying(true);
     setErrorMessage(null);
@@ -73,14 +90,17 @@ export default function AccessGate() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1">
-              Phone Number
+              Phone Number <span className="text-gray-500">(10 digits)</span>
             </label>
             <input
               type="tel"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={handlePhoneChange}
               className="w-full bg-transparent border-b border-gray-600 py-2 text-sm text-gray-100 focus:outline-none focus:border-gray-300"
               autoComplete="off"
+              placeholder="Enter 10-digit phone number"
+              maxLength={10}
+              pattern="[0-9]{10}"
               required
             />
           </div>

@@ -970,6 +970,7 @@ export const adminNotificationsApi = {
     priority: string;
     target_audience: string;
     target_class_id?: number;
+    target_user_id?: number;
     academic_year_id: number;
     scheduled_for?: string;
   }) =>

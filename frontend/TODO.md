@@ -1,17 +1,21 @@
-# Font Replacement Task - Completed
+# School Website Fixes - TODO List
 
-## Task Summary
-Replace the fallback font "Georgia" with the custom font "X_BAMBI.TTF" for Jesus Junior Academy's website.
+## High Priority
+- [ ] Fix notifications target audience options (add TEACHERS, PUBLIC, PUBLIC_AND_REGISTERED, USER_SPECIFIC)
+- [ ] Create notice board on homepage to display public notices
+- [ ] Fix send notice data not reaching database
+- [ ] Add scroll option in admin navbar/sidebar
+- [ ] Fix campus pages to allow admin access
+- [ ] Make notifications visible on user profile
 
-## Completed Steps
-- [x] Load custom font "X_BAMBI.TTF" in globals.css using @font-face
-- [x] Update tailwind.config.js to use 'X_BAMBI' instead of 'Georgia' for 'bambi' and 'serif' font families
-- [x] Remove TODO comment in tailwind.config.js as font loading is now fixed
+## Completed
+- [x] Phone number validation (already 10-digit enforced)
+- [x] User removal option (already exists in admin/users)
 
-## Files Modified
-- `src/app/globals.css`: Added @font-face declaration for X_BAMBI.TTF
-- `tailwind.config.js`: Replaced 'Georgia' with 'X_BAMBI' in fontFamily settings
-
-## Next Steps
-- Test the website to ensure the custom font loads correctly
-- If issues arise, verify the font file path and format
+## Implementation Plan
+1. Update admin notifications page to show all target audience options
+2. Create NoticeBoard component for homepage
+3. Check and fix send-notice endpoint
+4. Fix admin sidebar scrolling
+5. Verify admin access to campus pages
+6. Create user profile page with notifications

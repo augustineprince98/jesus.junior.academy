@@ -85,8 +85,9 @@ export default function RegisterPage() {
       setError('Please enter your name');
       return;
     }
-    if (!phone.trim() || phone.length < 10) {
-      setError('Please enter a valid phone number');
+    const cleanPhone = phone.replace(/\D/g, '');
+    if (cleanPhone.length !== 10) {
+      setError('Please enter a valid 10-digit phone number');
       return;
     }
     if (password.length < 6) {
@@ -144,8 +145,9 @@ export default function RegisterPage() {
     setError(null);
     setStatusResult(null);
 
-    if (!checkPhone.trim() || checkPhone.length < 10) {
-      setError('Please enter a valid phone number');
+    const cleanPhone = checkPhone.replace(/\D/g, '');
+    if (cleanPhone.length !== 10) {
+      setError('Please enter a valid 10-digit phone number');
       return;
     }
 
@@ -230,10 +232,11 @@ export default function RegisterPage() {
                   <input
                     type="tel"
                     value={checkPhone}
-                    onChange={(e) => setCheckPhone(e.target.value.replace(/\D/g, ''))}
-                    placeholder="Phone Number"
+                    onChange={(e) => setCheckPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    placeholder="10-digit Phone Number"
                     className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    maxLength={15}
+                    maxLength={10}
+                    pattern="[0-9]{10}"
                   />
                 </div>
 
@@ -306,10 +309,11 @@ export default function RegisterPage() {
                   <input
                     type="tel"
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                    placeholder="Phone Number"
+                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    placeholder="10-digit Phone Number"
                     className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    maxLength={15}
+                    maxLength={10}
+                    pattern="[0-9]{10}"
                   />
                 </div>
 

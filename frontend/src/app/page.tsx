@@ -15,6 +15,7 @@
 
 import Navbar from '@/components/public/Navbar';
 import HeroSection from '@/components/public/HeroSection';
+import PublicNoticeBoard from '@/components/public/PublicNoticeBoard';
 import AboutSection from '@/components/public/AboutSection';
 import AchieversSection from '@/components/public/AchieversSection';
 import ActivitiesSection from '@/components/public/ActivitiesSection';
@@ -29,6 +30,9 @@ export default function HomePage() {
 
       {/* Hero Section - Top Fold */}
       <HeroSection />
+
+      {/* Notice Board */}
+      <PublicNoticeBoard />
 
       {/* About the School */}
       <AboutSection />

@@ -35,11 +35,12 @@ class NotificationPriority(str, Enum):
 
 
 class TargetAudience(str, Enum):
-    ALL = "ALL"                      # Everyone
+    ALL = "ALL"                      # Everyone (all registered users)
     PARENTS = "PARENTS"              # All parents
     STUDENTS = "STUDENTS"            # All students
     TEACHERS = "TEACHERS"            # All teachers
-    CLASS_SPECIFIC = "CLASS_SPECIFIC"  # Specific class only
+    CLASS_SPECIFIC = "CLASS_SPECIFIC"  # Parents + students of a specific class
+    USER_SPECIFIC = "USER_SPECIFIC"  # Specific user by ID
     PUBLIC = "PUBLIC"                # Public homepage (no login required)
     PUBLIC_AND_REGISTERED = "PUBLIC_AND_REGISTERED"  # Both public and registered users
 
@@ -66,6 +67,9 @@ class Notification(Base):
     target_audience: Mapped[str] = mapped_column(String(30), nullable=False)
     target_class_id: Mapped[int | None] = mapped_column(
         ForeignKey("school_classes.id", ondelete="SET NULL"), nullable=True
+    )
+    target_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
     academic_year_id: Mapped[int] = mapped_column(
         ForeignKey("academic_years.id", ondelete="CASCADE"), nullable=False

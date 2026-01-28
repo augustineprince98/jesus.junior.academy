@@ -181,12 +181,11 @@ export default function AdminLayout({ children, activeSection }: AdminLayoutProp
     <div className="min-h-screen bg-gray-100 font-nunito">
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full bg-primary-800 text-white transition-all duration-300 z-50 ${
-          sidebarOpen ? 'w-64' : 'w-20'
-        }`}
+        className={`fixed top-0 left-0 h-full bg-primary-800 text-white transition-all duration-300 z-50 flex flex-col ${sidebarOpen ? 'w-64' : 'w-20'
+          }`}
       >
         {/* Header */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-primary-700">
+        <div className="h-16 flex items-center justify-between px-4 border-b border-primary-700 flex-shrink-0">
           {sidebarOpen && (
             <h1 className="font-bambi text-xl">JJA Admin</h1>
           )}
@@ -198,8 +197,8 @@ export default function AdminLayout({ children, activeSection }: AdminLayoutProp
           </button>
         </div>
 
-        {/* Navigation */}
-        <nav className="p-4 space-y-2">
+        {/* Navigation - Scrollable */}
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeSection === item.id;
@@ -208,11 +207,10 @@ export default function AdminLayout({ children, activeSection }: AdminLayoutProp
               <button
                 key={item.id}
                 onClick={() => router.push(item.href)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                  isActive
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive
                     ? 'bg-primary-600 text-white'
                     : 'text-primary-100 hover:bg-primary-700'
-                }`}
+                  }`}
               >
                 <Icon className="w-5 h-5 flex-shrink-0" />
                 {sidebarOpen && (
@@ -227,7 +225,7 @@ export default function AdminLayout({ children, activeSection }: AdminLayoutProp
         </nav>
 
         {/* User Info & Logout */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-primary-700">
+        <div className="p-4 border-t border-primary-700 flex-shrink-0 bg-primary-800">
           {sidebarOpen && (
             <div className="mb-3 px-2">
               <p className="text-sm font-semibold text-white">{user?.name}</p>
@@ -246,9 +244,8 @@ export default function AdminLayout({ children, activeSection }: AdminLayoutProp
 
       {/* Main Content */}
       <main
-        className={`transition-all duration-300 ${
-          sidebarOpen ? 'ml-64' : 'ml-20'
-        }`}
+        className={`transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-20'
+          }`}
       >
         {/* Top Bar */}
         <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">

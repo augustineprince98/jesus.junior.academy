@@ -37,6 +37,7 @@ export default function AdminNotificationsPage() {
   const { user, token, isAuthenticated } = useAuthStore();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [academicYears, setAcademicYears] = useState<any[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -51,6 +52,7 @@ export default function AdminNotificationsPage() {
     priority: 'NORMAL',
     target_audience: 'ALL',
     target_class_id: 0,
+    target_user_id: 0,
     academic_year_id: 0,
     scheduled_for: '',
   });
@@ -80,13 +82,15 @@ export default function AdminNotificationsPage() {
       setError(null);
 
       // Load both notifications and academic years
-      const [notificationsData, yearsData] = await Promise.all([
+      const [notificationsData, yearsData, classesData] = await Promise.all([
         adminNotificationsApi.list(token),
-        enrollmentApi.getAcademicYears(token)
+        enrollmentApi.getAcademicYears(token),
+        enrollmentApi.getClasses(token)
       ]);
 
       setNotifications(notificationsData.notifications || []);
       setAcademicYears(yearsData.academic_years || []);
+      setClasses(Array.isArray(classesData?.classes) ? classesData.classes : []);
     } catch (err: any) {
       setError(err.detail || 'Failed to load data');
     } finally {
@@ -108,6 +112,7 @@ export default function AdminNotificationsPage() {
         priority: 'NORMAL',
         target_audience: 'ALL',
         target_class_id: 0,
+        target_user_id: 0,
         academic_year_id: 0,
         scheduled_for: '',
       });
@@ -422,9 +427,46 @@ export default function AdminNotificationsPage() {
                     <option value="ALL">All Parents & Students</option>
                     <option value="PARENTS">Parents Only</option>
                     <option value="STUDENTS">Students Only</option>
+                    <option value="TEACHERS">Teachers Only</option>
                     <option value="CLASS_SPECIFIC">Specific Class</option>
+                    <option value="USER_SPECIFIC">Specific User</option>
                   </select>
                 </div>
+
+                {formData.target_audience === 'CLASS_SPECIFIC' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Class <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={formData.target_class_id}
+                      onChange={(e) => setFormData({ ...formData, target_class_id: Number(e.target.value) })}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    >
+                      <option value={0}>Select Class</option>
+                      {classes.map(cls => (
+                        <option key={cls.id} value={cls.id}>{cls.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {formData.target_audience === 'USER_SPECIFIC' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      User ID <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.target_user_id || ''}
+                      onChange={(e) => setFormData({ ...formData, target_user_id: Number(e.target.value) })}
+                      placeholder="Enter User ID"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
