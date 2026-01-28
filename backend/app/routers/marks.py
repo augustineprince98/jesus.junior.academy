@@ -30,7 +30,7 @@ def create_exam(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    if user.role != Role.ADMIN:
+    if user.role != Role.ADMIN.value:
         raise HTTPException(status_code=403, detail="Admins only")
 
     exam = Exam(
@@ -49,7 +49,7 @@ def create_subject(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    if user.role != Role.ADMIN:
+    if user.role != Role.ADMIN.value:
         raise HTTPException(status_code=403, detail="Admins only")
 
     subject = Subject(name=payload.name)
@@ -63,7 +63,7 @@ def assign_subject_to_class(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    if user.role != Role.ADMIN:
+    if user.role != Role.ADMIN.value:
         raise HTTPException(status_code=403, detail="Admins only")
 
     mapping = ClassSubject(

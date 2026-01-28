@@ -7,7 +7,7 @@
  * user management, admissions, and settings
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useStore';
 import {
@@ -28,6 +28,7 @@ import {
   GraduationCap,
   ClipboardCheck,
   Bell,
+  FileSpreadsheet,
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -37,13 +38,33 @@ interface AdminLayoutProps {
 
 export default function AdminLayout({ children, activeSection }: AdminLayoutProps) {
   const router = useRouter();
-  const { user, logout } = useAuthStore();
+  const { user, logout, isAuthenticated } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Check if user is admin
-  if (user?.role !== 'ADMIN') {
-    router.push('/campus');
-    return null;
+  // Wait for hydration to complete before checking auth
+  useEffect(() => {
+    // Give zustand persist time to hydrate from localStorage
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Check if user is admin after hydration
+  useEffect(() => {
+    if (!isLoading && (!isAuthenticated || user?.role !== 'ADMIN')) {
+      router.push('/login');
+    }
+  }, [isLoading, isAuthenticated, user, router]);
+
+  // Show loading while checking auth
+  if (isLoading || !isAuthenticated || user?.role !== 'ADMIN') {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="w-16 h-16 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin" />
+      </div>
+    );
   }
 
   const menuItems = [
@@ -124,6 +145,12 @@ export default function AdminLayout({ children, activeSection }: AdminLayoutProp
       label: 'Classes',
       icon: BookOpenCheck,
       href: '/admin/classes',
+    },
+    {
+      id: 'marks',
+      label: 'Upload Marks',
+      icon: FileSpreadsheet,
+      href: '/admin/marks',
     },
     {
       id: 'academic-year',

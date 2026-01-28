@@ -47,15 +47,21 @@ export default function AttendancePage() {
   const [attendance, setAttendance] = useState<Record<number, boolean>>({});
   const [saving, setSaving] = useState(false);
   const [academicYearId, setAcademicYearId] = useState<number | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Wait for hydration
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   useEffect(() => {
+    if (!isHydrated) return;
     if (!isAuthenticated || user?.role !== 'ADMIN') {
-      router.push('/login');
-      return;
+      return; // AdminLayout will handle redirect
     }
     loadClasses();
     loadCurrentAcademicYear();
-  }, [isAuthenticated, user, router]);
+  }, [isHydrated, isAuthenticated, user]);
 
   const loadCurrentAcademicYear = async () => {
     try {
@@ -192,8 +198,6 @@ export default function AttendancePage() {
 
   const presentCount = Object.values(attendance).filter(Boolean).length;
   const absentCount = students.length - presentCount;
-
-  if (!isAuthenticated || user?.role !== 'ADMIN') return null;
 
   return (
     <AdminLayout activeSection="attendance">
