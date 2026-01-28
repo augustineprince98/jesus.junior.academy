@@ -1,9 +1,16 @@
 'use client';
 
+/**
+ * Public Notice Board - Premium Design
+ *
+ * Displays upcoming events and announcements with
+ * elegant animations and refined styling.
+ */
+
 import { useState, useEffect } from 'react';
 import { eventsApi } from '@/lib/api';
 import { motion } from 'framer-motion';
-import { Bell, Calendar, Pin, AlertCircle } from 'lucide-react';
+import { Bell, Calendar, Pin, AlertCircle, ArrowRight } from 'lucide-react';
 
 interface Notice {
     id: number;
@@ -24,19 +31,13 @@ export default function PublicNoticeBoard() {
 
     const loadNotices = async () => {
         try {
-            // Fetch upcoming public events/notices
-            const data = await eventsApi.getPublic(undefined, true, 5);
-            // Backend returns list of events. We can filter if needed, but getPublic is designed for this.
-            // Assuming the API returns { events: [...] } or just [...]
-            // Based on lib/api.ts: request('/events/public') returns correct data structure?
-            // Actually eventsApi.getPublic returns `request(...)`. 
-            // Let's assume it returns { events: Notice[] } or Notice[].
-            // Checking backend routers/events.py would be ideal, but I'll assume standard return.
-            // Usually it's the list or { data: list }.
-            // AdminLayout used Array.isArray checks. I'll do the same.
+            const data = await eventsApi.getPublic(undefined, true, 6);
             const result: any = data;
-            const list = Array.isArray(result) ? result :
-                Array.isArray(result?.events) ? result.events : [];
+            const list = Array.isArray(result)
+                ? result
+                : Array.isArray(result?.events)
+                    ? result.events
+                    : [];
             setNotices(list);
         } catch (err) {
             console.error('Failed to load notices', err);
@@ -45,66 +46,98 @@ export default function PublicNoticeBoard() {
         }
     };
 
+    const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleDateString('en-IN', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+        });
+    };
+
     if (loading) {
         return (
-            <div className="py-12 flex justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-            </div>
+            <section className="section-warm py-16">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex justify-center py-12">
+                        <div className="loading-spinner" />
+                    </div>
+                </div>
+            </section>
         );
     }
 
     if (notices.length === 0) return null;
 
     return (
-        <section className="py-16 bg-gradient-to-br from-amber-50 to-orange-50">
+        <section className="section-warm py-20">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center gap-3 mb-8">
-                    <div className="w-12 h-12 bg-amber-500 rounded-xl flex items-center justify-center text-white">
-                        <Bell className="w-6 h-6" />
+                {/* Header */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-12"
+                >
+                    <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center text-white shadow-lg">
+                            <Bell className="w-7 h-7" />
+                        </div>
+                        <div>
+                            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">Notice Board</h2>
+                            <p className="text-gray-600">Latest Updates & Announcements</p>
+                        </div>
                     </div>
-                    <div>
-                        <h2 className="text-3xl font-bold text-gray-900">Notice Board</h2>
-                        <p className="text-gray-600">Updates and Announcements</p>
-                    </div>
-                </div>
+                    <button className="flex items-center gap-2 text-amber-700 font-semibold hover:text-amber-800 transition-colors group">
+                        View All Notices
+                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                </motion.div>
 
+                {/* Notice Cards Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {notices.map((notice, index) => (
                         <motion.div
                             key={notice.id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
+                            initial={{ opacity: 0, y: 30 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
                             transition={{ delay: index * 0.1 }}
-                            className="bg-white rounded-xl p-6 shadow-sm border border-amber-100 hover:shadow-md transition-shadow relative overflow-hidden"
+                            className="card-notice group cursor-pointer"
                         >
+                            {/* Featured Badge */}
                             {notice.is_featured && (
-                                <div className="absolute top-0 right-0 bg-red-500 text-white text-xs px-3 py-1 rounded-bl-xl font-medium flex items-center gap-1">
+                                <div className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-rose-500 text-white text-xs px-3 py-1.5 rounded-full font-semibold flex items-center gap-1 shadow-lg">
                                     <AlertCircle className="w-3 h-3" />
                                     Important
                                 </div>
                             )}
 
                             <div className="flex items-start gap-4 mb-4">
-                                <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0 text-amber-600">
+                                <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-orange-100 rounded-xl flex items-center justify-center flex-shrink-0 text-amber-600 group-hover:scale-110 transition-transform">
                                     <Pin className="w-5 h-5" />
                                 </div>
-                                <div>
-                                    <h3 className="font-bold text-gray-900 line-clamp-2">{notice.title}</h3>
+                                <div className="flex-1 min-w-0">
+                                    <h3 className="font-bold text-gray-900 line-clamp-2 group-hover:text-amber-700 transition-colors">
+                                        {notice.title}
+                                    </h3>
                                     <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
-                                        <Calendar className="w-3 h-3" />
-                                        {new Date(notice.event_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                        <Calendar className="w-3.5 h-3.5" />
+                                        {formatDate(notice.event_date)}
                                     </div>
                                 </div>
                             </div>
 
-                            <p className="text-gray-600 text-sm line-clamp-3 mb-4">
+                            <p className="text-gray-600 text-sm line-clamp-3 mb-4 leading-relaxed">
                                 {notice.description}
                             </p>
 
-                            {/* Tag */}
-                            <span className="inline-block px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md font-medium">
-                                {notice.type?.replace('_', ' ')}
-                            </span>
+                            {/* Type Tag */}
+                            <div className="flex items-center justify-between">
+                                <span className="inline-block px-3 py-1 bg-gray-100 text-gray-600 text-xs rounded-full font-medium">
+                                    {notice.type?.replace('_', ' ')}
+                                </span>
+                                <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-amber-600 group-hover:translate-x-1 transition-all" />
+                            </div>
                         </motion.div>
                     ))}
                 </div>

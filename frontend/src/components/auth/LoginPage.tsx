@@ -1,22 +1,19 @@
 'use client';
 
 /**
- * ACCESS GATE
+ * ACCESS GATE - Premium Login Experience
  *
- * This is not a login page.
- * This is controlled entry into an institution.
- *
- * Design principles:
- * - Silent authority
- * - Minimal language
- * - No blame on failure
- * - No encouragement, no apology
+ * Modern dark theme with glassmorphism,
+ * elegant animations, and refined input styling.
  */
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useStore';
 import { authApi } from '@/lib/api';
+import { motion } from 'framer-motion';
+import { Eye, EyeOff, ArrowRight, Loader2, GraduationCap } from 'lucide-react';
+import Link from 'next/link';
 
 export default function AccessGate() {
   const router = useRouter();
@@ -24,6 +21,7 @@ export default function AccessGate() {
 
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -42,7 +40,6 @@ export default function AccessGate() {
     e.preventDefault();
     if (verifying) return;
 
-    // Validate phone number
     if (!validatePhone(phone)) {
       setErrorMessage('Please enter a valid 10-digit phone number');
       return;
@@ -54,10 +51,8 @@ export default function AccessGate() {
     try {
       const res = await authApi.login(phone, password);
       login(res.user as any, res.access_token);
-      // Redirect to campus after successful login
       router.push('/campus');
     } catch (err: any) {
-      // Show helpful error message based on server response
       const detail = err?.detail || err?.message || '';
       if (detail.includes('pending approval')) {
         setErrorMessage('Account pending approval. Please wait for admin approval.');
@@ -73,108 +68,137 @@ export default function AccessGate() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-slate-900 text-gray-200">
-      <section className="w-full max-w-sm px-8 py-10 border border-gray-700 bg-slate-900/90">
+    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-4 py-8">
+      {/* Background Pattern */}
+      <div className="fixed inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.03)_1px,transparent_0)] bg-[length:32px_32px]" />
 
-        {/* Institution Identity */}
-        <header className="mb-10 text-center">
-          <h1 className="text-lg font-serif tracking-wide text-gray-100">
-            Jesus Junior Academy
-          </h1>
-          <p className="mt-1 text-xs tracking-widest uppercase text-gray-400">
-            Digital Campus Access
-          </p>
-        </header>
-
-        {/* Access Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1">
-              Phone Number <span className="text-gray-500">(10 digits)</span>
-            </label>
-            <input
-              type="tel"
-              value={phone}
-              onChange={handlePhoneChange}
-              className="w-full bg-transparent border-b border-gray-600 py-2 text-sm text-gray-100 focus:outline-none focus:border-gray-300"
-              autoComplete="off"
-              placeholder="Enter 10-digit phone number"
-              maxLength={10}
-              pattern="[0-9]{10}"
-              required
-            />
+      {/* Login Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="relative w-full max-w-md"
+      >
+        <div className="glass-dark rounded-3xl p-8 md:p-10 shadow-2xl">
+          {/* Header */}
+          <div className="text-center mb-10">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-500/20">
+              <GraduationCap className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="font-bambi text-2xl text-white mb-2">JESUS JUNIOR ACADEMY</h1>
+            <p className="text-gray-400 text-sm tracking-wide">Digital Campus Access</p>
           </div>
 
-          <div>
-            <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1">
-              Access Key
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-transparent border-b border-gray-600 py-2 text-sm text-gray-100 focus:outline-none focus:border-gray-300"
-              required
-            />
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Phone Input */}
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
+                Phone Number
+              </label>
+              <div className="relative">
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={handlePhoneChange}
+                  className="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-4 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                  placeholder="Enter 10-digit phone number"
+                  maxLength={10}
+                  pattern="[0-9]{10}"
+                  required
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-gray-500">
+                  {phone.length}/10
+                </span>
+              </div>
+            </div>
+
+            {/* Password Input */}
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-4 pr-12 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                  placeholder="Enter your password"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Error Message */}
+            {errorMessage && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl"
+              >
+                <p className="text-sm text-red-400">{errorMessage}</p>
+              </motion.div>
+            )}
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={verifying}
+              className={`w-full py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition-all duration-300 ${verifying
+                  ? 'opacity-70 cursor-not-allowed'
+                  : 'hover:from-blue-500 hover:to-blue-600 hover:shadow-lg hover:shadow-blue-500/25 hover:-translate-y-0.5'
+                }`}
+            >
+              {verifying ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Verifying...
+                </>
+              ) : (
+                <>
+                  Enter Campus
+                  <ArrowRight className="w-5 h-5" />
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Forgot Password */}
+          <div className="mt-6 text-center">
+            <Link
+              href="/forgot-password"
+              className="text-sm text-gray-400 hover:text-white transition-colors"
+            >
+              Forgot your password?
+            </Link>
           </div>
 
-          {/* Error message */}
-          {errorMessage && (
-            <p className="text-xs text-red-400 pt-2">
-              {errorMessage}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            disabled={verifying}
-            className={`
-              w-full mt-8 py-3
-              border border-gray-600
-              text-xs tracking-widest uppercase
-              transition-colors
-              ${
-                verifying
-                  ? 'opacity-50 cursor-not-allowed'
-                  : 'hover:border-gray-300'
-              }
-            `}
-          >
-            {verifying ? 'Verifying' : 'Enter'}
-          </button>
-        </form>
-
-        {/* Forgot Password Link */}
-        <div className="mt-6 text-center">
-          <a
-            href="/forgot-password"
-            className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
-          >
-            Forgot your password?
-          </a>
+          {/* Registration Link */}
+          <div className="mt-8 pt-8 border-t border-gray-700/50 text-center">
+            <p className="text-sm text-gray-500 mb-3">New to the academy?</p>
+            <Link
+              href="/register"
+              className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 font-semibold transition-colors group"
+            >
+              Request Access
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
         </div>
 
-        {/* Registration link */}
-        <div className="mt-6 text-center border-t border-gray-800 pt-6">
-          <p className="text-xs text-gray-500 mb-2">
-            New to the academy?
-          </p>
-          <a
-            href="/register"
-            className="text-xs tracking-wider uppercase text-gray-400 hover:text-gray-200 transition-colors"
-          >
-            Request Access
-          </a>
-        </div>
-
-        {/* Footer authority line */}
-        <footer className="mt-8 text-center">
-          <p className="text-[10px] tracking-wide text-gray-500">
-            Access granted by the administration
-          </p>
-        </footer>
-
-      </section>
+        {/* Footer Note */}
+        <p className="text-center text-xs text-gray-500 mt-6">
+          Protected by Jesus Junior Academy Administration
+        </p>
+      </motion.div>
     </main>
   );
 }

@@ -1,14 +1,15 @@
 'use client';
 
 /**
- * Admission Enquiry Section
+ * Admission Enquiry Section - Premium Design
  *
- * Clean design with contact info and enquiry form.
- * Posts to: POST /admissions/enquiry
+ * Elegant admission form with refined styling,
+ * animations, and premium visual hierarchy.
  */
 
-import { Send, Phone, Mail, MapPin, CheckCircle } from 'lucide-react';
+import { Send, Phone, Mail, MapPin, CheckCircle, GraduationCap, Loader2, Users } from 'lucide-react';
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 
 export default function AdmissionSection() {
   const [formData, setFormData] = useState({
@@ -34,25 +35,19 @@ export default function AdmissionSection() {
     setError('');
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/admissions/enquiry`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || 'https://jja-backend.onrender.com'}/admissions/enquiry`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+        }
+      );
 
-      if (!response.ok) {
-        throw new Error('Failed to submit enquiry');
-      }
+      if (!response.ok) throw new Error('Failed to submit enquiry');
 
       setSubmitted(true);
-      setFormData({
-        child_name: '',
-        parent_name: '',
-        contact_number: '',
-        seeking_class: '',
-      });
+      setFormData({ child_name: '', parent_name: '', contact_number: '', seeking_class: '' });
     } catch (err) {
       setError('Failed to submit enquiry. Please try again or contact us directly.');
       console.error('Enquiry submission error:', err);
@@ -61,97 +56,173 @@ export default function AdmissionSection() {
     }
   };
 
-  return (
-    <section id="admission" className="py-16 bg-white">
-      <div className="max-w-6xl mx-auto px-6">
-        {/* Section Header */}
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-blue-900 mb-4">
-            Admission Enquiry
-          </h2>
-          <div className="w-20 h-1 bg-blue-900 mx-auto mb-4" />
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            Take the first step towards your child's bright future
-          </p>
-        </div>
+  const fadeInUp = {
+    initial: { opacity: 0, y: 30 },
+    whileInView: { opacity: 1, y: 0 },
+    viewport: { once: true, margin: '-50px' },
+  };
 
-        <div className="grid lg:grid-cols-2 gap-12">
+  const contactInfo = [
+    {
+      icon: MapPin,
+      title: 'Visit Us',
+      content: (
+        <>
+          Jesus Junior Academy
+          <br />
+          Church House, Near SBI Bank
+          <br />
+          Rewari, Haryana
+        </>
+      ),
+      color: 'bg-blue-500',
+    },
+    {
+      icon: Phone,
+      title: 'Call Us',
+      content: (
+        <a href="tel:+918059589595" className="text-blue-600 hover:text-blue-800 font-semibold">
+          +91-8059589595
+        </a>
+      ),
+      color: 'bg-emerald-500',
+    },
+    {
+      icon: Mail,
+      title: 'Email Us',
+      content: (
+        <a href="mailto:info@jesusja.com" className="text-blue-600 hover:text-blue-800 font-semibold">
+          info@jesusja.com
+        </a>
+      ),
+      color: 'bg-purple-500',
+    },
+  ];
+
+  const classOptions = [
+    'Nursery',
+    'LKG',
+    'UKG',
+    'Class 1',
+    'Class 2',
+    'Class 3',
+    'Class 4',
+    'Class 5',
+    'Class 6',
+    'Class 7',
+    'Class 8',
+  ];
+
+  return (
+    <section id="admission" className="py-20 md:py-28 bg-gradient-to-b from-white to-blue-50 relative overflow-hidden">
+      {/* Decorative Background */}
+      <div className="absolute top-0 left-0 w-full h-full">
+        <div className="absolute top-20 right-20 w-96 h-96 bg-blue-100 rounded-full opacity-30 blur-3xl" />
+        <div className="absolute bottom-20 left-20 w-80 h-80 bg-purple-100 rounded-full opacity-30 blur-3xl" />
+      </div>
+
+      <div className="max-w-6xl mx-auto px-6 relative">
+        {/* Section Header */}
+        <motion.div {...fadeInUp} className="text-center mb-16">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold mb-6">
+            <GraduationCap className="w-4 h-4" />
+            Start Your Journey
+          </div>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+            Admission <span className="text-blue-900">Enquiry</span>
+          </h2>
+          <p className="text-gray-600 max-w-2xl mx-auto text-lg">
+            Take the first step towards your child's bright future with quality education
+          </p>
+        </motion.div>
+
+        <div className="grid lg:grid-cols-2 gap-12 items-start">
           {/* Left: Contact Information */}
-          <div>
-            <h3 className="text-2xl font-semibold text-blue-900 mb-6">
+          <motion.div {...fadeInUp} transition={{ delay: 0.1 }}>
+            <h3 className="text-2xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                <Users className="w-5 h-5 text-blue-700" />
+              </div>
               Get in Touch
             </h3>
 
             {/* Contact Cards */}
             <div className="space-y-4">
-              {/* Address */}
-              <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
-                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <MapPin className="w-5 h-5 text-blue-900" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-800 mb-1">Address</h4>
-                  <p className="text-gray-600 text-sm">
-                    Jesus Junior Academy<br />
-                    Church House, Near SBI Bank<br />
-                    Rewari, Haryana
-                  </p>
-                </div>
-              </div>
-
-              {/* Phone */}
-              <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
-                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Phone className="w-5 h-5 text-blue-900" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-800 mb-1">Phone</h4>
-                  <a href="tel:+918059589595" className="text-blue-900 hover:underline">
-                    +91-8059589595
-                  </a>
-                </div>
-              </div>
-
-              {/* Email */}
-              <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
-                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Mail className="w-5 h-5 text-blue-900" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-800 mb-1">Email</h4>
-                  <a href="mailto:info@jesusja.com" className="text-blue-900 hover:underline">
-                    info@jesusja.com
-                  </a>
-                </div>
-              </div>
+              {contactInfo.map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <motion.div
+                    key={item.title}
+                    {...fadeInUp}
+                    transition={{ delay: 0.2 + index * 0.1 }}
+                    className="flex items-start gap-4 p-5 bg-white rounded-2xl shadow-card hover:shadow-card-hover transition-all duration-300 group"
+                  >
+                    <div
+                      className={`w-12 h-12 ${item.color} rounded-xl flex items-center justify-center flex-shrink-0 text-white group-hover:scale-110 transition-transform`}
+                    >
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-gray-900 mb-1">{item.title}</h4>
+                      <p className="text-gray-600 text-sm leading-relaxed">{item.content}</p>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
-          </div>
+
+            {/* Trust Badges */}
+            <motion.div
+              {...fadeInUp}
+              transition={{ delay: 0.5 }}
+              className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl border border-blue-100"
+            >
+              <h4 className="font-bold text-gray-900 mb-3">Why Choose Us?</h4>
+              <ul className="space-y-2 text-sm text-gray-600">
+                {[
+                  'Experienced & Dedicated Teachers',
+                  'Value-Based Education',
+                  'Safe & Nurturing Environment',
+                  'Modern Teaching Methods',
+                ].map((item, i) => (
+                  <li key={i} className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          </motion.div>
 
           {/* Right: Enquiry Form */}
-          <div>
+          <motion.div {...fadeInUp} transition={{ delay: 0.2 }}>
             {submitted ? (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-8 text-center">
-                <CheckCircle className="w-14 h-14 text-green-600 mx-auto mb-4" />
-                <h3 className="text-2xl font-semibold text-green-800 mb-2">
-                  Thank You!
-                </h3>
-                <p className="text-green-700 mb-6">
-                  We have received your enquiry. We will contact you shortly.
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200 rounded-3xl p-10 text-center"
+              >
+                <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <CheckCircle className="w-10 h-10 text-emerald-600" />
+                </div>
+                <h3 className="text-2xl font-bold text-emerald-800 mb-3">Thank You!</h3>
+                <p className="text-emerald-700 mb-8">
+                  We have received your enquiry. Our team will contact you shortly.
                 </p>
                 <button
                   onClick={() => setSubmitted(false)}
-                  className="px-6 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors"
+                  className="px-8 py-3 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-colors"
                 >
                   Submit Another Enquiry
                 </button>
-              </div>
+              </motion.div>
             ) : (
-              <form onSubmit={handleSubmit} className="bg-gray-50 rounded-lg p-6 md:p-8">
-                <div className="space-y-4">
+              <form onSubmit={handleSubmit} className="bg-white rounded-3xl p-8 shadow-premium">
+                <div className="space-y-5">
                   {/* Student Name */}
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Student Name *
+                      Student Name <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -159,7 +230,7 @@ export default function AdmissionSection() {
                       value={formData.child_name}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="input"
                       placeholder="Enter student's full name"
                     />
                   </div>
@@ -167,7 +238,7 @@ export default function AdmissionSection() {
                   {/* Parent Name */}
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Parent/Guardian Name *
+                      Parent/Guardian Name <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -175,7 +246,7 @@ export default function AdmissionSection() {
                       value={formData.parent_name}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="input"
                       placeholder="Enter parent's name"
                     />
                   </div>
@@ -183,7 +254,7 @@ export default function AdmissionSection() {
                   {/* Phone */}
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Contact Number *
+                      Contact Number <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="tel"
@@ -192,7 +263,7 @@ export default function AdmissionSection() {
                       onChange={handleChange}
                       required
                       pattern="[6-9][0-9]{9}"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="input"
                       placeholder="10-digit mobile number"
                     />
                   </div>
@@ -200,46 +271,47 @@ export default function AdmissionSection() {
                   {/* Desired Class */}
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Class Seeking Admission *
+                      Class Seeking Admission <span className="text-red-500">*</span>
                     </label>
                     <select
                       name="seeking_class"
                       value={formData.seeking_class}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="input"
                     >
                       <option value="">Select a class</option>
-                      <option value="Nursery">Nursery</option>
-                      <option value="LKG">LKG</option>
-                      <option value="UKG">UKG</option>
-                      <option value="Class 1">Class 1</option>
-                      <option value="Class 2">Class 2</option>
-                      <option value="Class 3">Class 3</option>
-                      <option value="Class 4">Class 4</option>
-                      <option value="Class 5">Class 5</option>
-                      <option value="Class 6">Class 6</option>
-                      <option value="Class 7">Class 7</option>
-                      <option value="Class 8">Class 8</option>
+                      {classOptions.map((cls) => (
+                        <option key={cls} value={cls}>
+                          {cls}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
                   {/* Error Message */}
                   {error && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="p-4 bg-red-50 border border-red-200 rounded-xl"
+                    >
                       <p className="text-sm text-red-700">{error}</p>
-                    </div>
+                    </motion.div>
                   )}
 
                   {/* Submit Button */}
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="w-full py-3 bg-blue-900 text-white font-semibold rounded-lg hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className={`w-full py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition-all duration-300 ${submitting
+                        ? 'opacity-70 cursor-not-allowed'
+                        : 'hover:from-blue-500 hover:to-blue-600 hover:shadow-lg hover:shadow-blue-500/25 hover:-translate-y-0.5'
+                      }`}
                   >
                     {submitting ? (
                       <>
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <Loader2 className="w-5 h-5 animate-spin" />
                         Submitting...
                       </>
                     ) : (
@@ -252,7 +324,7 @@ export default function AdmissionSection() {
                 </div>
               </form>
             )}
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>

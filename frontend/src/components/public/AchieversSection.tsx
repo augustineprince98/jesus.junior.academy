@@ -1,17 +1,17 @@
 'use client';
 
 /**
- * Achievers Club Section
+ * Achievers Club Section - Premium Design
  *
- * Clean design showcasing featured student achievements.
- * Connects to backend achievements API.
- * Shows only featured items with "View All" link.
+ * Elegant showcase of student achievements with
+ * animations, refined cards, and visual hierarchy.
  */
 
 import Link from 'next/link';
-import { Trophy, Award, Star, Medal, ArrowRight } from 'lucide-react';
+import { Trophy, Award, Star, Medal, ArrowRight, Sparkles } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { achievementsApi } from '@/lib/api';
+import { motion } from 'framer-motion';
 
 interface Achievement {
   id: number;
@@ -34,7 +34,6 @@ export default function AchieversSection() {
 
   const loadAchievements = async () => {
     try {
-      // Load only featured achievements for homepage (limit to 6)
       const data = await achievementsApi.getPublic(undefined, true, 6);
       setAchievements(data as Achievement[]);
     } catch (error) {
@@ -47,107 +46,157 @@ export default function AchieversSection() {
   const getCategoryIcon = (category: string) => {
     switch (category.toLowerCase()) {
       case 'academic':
-        return <Star className="w-5 h-5" />;
+        return <Star className="w-4 h-4" />;
       case 'sports':
-        return <Trophy className="w-5 h-5" />;
+        return <Trophy className="w-4 h-4" />;
       case 'arts':
       case 'cultural':
-        return <Award className="w-5 h-5" />;
+        return <Award className="w-4 h-4" />;
       default:
-        return <Medal className="w-5 h-5" />;
+        return <Medal className="w-4 h-4" />;
     }
   };
 
-  const getCategoryColor = (category: string) => {
+  const getCategoryStyles = (category: string) => {
     switch (category.toLowerCase()) {
       case 'academic':
-        return 'bg-yellow-100 text-yellow-700';
+        return {
+          badge: 'bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 border-amber-200',
+          icon: 'bg-amber-500',
+        };
       case 'sports':
-        return 'bg-green-100 text-green-700';
+        return {
+          badge: 'bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800 border-emerald-200',
+          icon: 'bg-emerald-500',
+        };
       case 'arts':
       case 'cultural':
-        return 'bg-purple-100 text-purple-700';
+        return {
+          badge: 'bg-gradient-to-r from-purple-100 to-violet-100 text-purple-800 border-purple-200',
+          icon: 'bg-purple-500',
+        };
       default:
-        return 'bg-blue-100 text-blue-700';
+        return {
+          badge: 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border-blue-200',
+          icon: 'bg-blue-500',
+        };
     }
+  };
+
+  const fadeInUp = {
+    initial: { opacity: 0, y: 30 },
+    whileInView: { opacity: 1, y: 0 },
+    viewport: { once: true, margin: '-50px' },
   };
 
   return (
-    <section id="achievers" className="py-16 bg-white">
-      <div className="max-w-6xl mx-auto px-6">
-        {/* Section Header */}
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-blue-900 mb-4">
-            Achievers' Club
-          </h2>
-          <div className="w-20 h-1 bg-blue-900 mx-auto mb-4" />
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            Students excelling in academics and co-curricular activities
-          </p>
-        </div>
+    <section id="achievers" className="py-20 md:py-28 bg-white relative overflow-hidden">
+      {/* Decorative Background */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-amber-50 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
+      <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-blue-50 to-transparent rounded-full translate-y-1/2 -translate-x-1/2" />
 
-        {/* View All Link - Top Right */}
+      <div className="max-w-6xl mx-auto px-6 relative">
+        {/* Section Header */}
+        <motion.div {...fadeInUp} className="text-center mb-16">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-100 text-amber-800 rounded-full text-sm font-semibold mb-6">
+            <Trophy className="w-4 h-4" />
+            Student Excellence
+          </div>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+            Achievers' <span className="text-gradient-gold">Club</span>
+          </h2>
+          <p className="text-gray-600 max-w-2xl mx-auto text-lg">
+            Celebrating students who excel in academics and co-curricular activities
+          </p>
+        </motion.div>
+
+        {/* View All Link */}
         {achievements.length > 0 && (
-          <div className="flex justify-end mb-6">
+          <motion.div {...fadeInUp} transition={{ delay: 0.1 }} className="flex justify-end mb-8">
             <Link
               href="/achievers"
-              className="inline-flex items-center gap-2 text-blue-900 hover:text-blue-700 font-semibold transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-full font-semibold transition-all group"
             >
               View All Achievements
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
-          </div>
+          </motion.div>
         )}
 
         {/* Achievements Grid */}
         {loading ? (
-          <div className="flex justify-center items-center py-16">
-            <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-900 rounded-full animate-spin" />
+          <div className="flex justify-center items-center py-20">
+            <div className="loading-spinner w-12 h-12" />
           </div>
         ) : achievements.length === 0 ? (
-          <div className="text-center py-16">
-            <Trophy className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-xl text-gray-500">
+          <motion.div {...fadeInUp} className="text-center py-20">
+            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Trophy className="w-10 h-10 text-gray-400" />
+            </div>
+            <p className="text-xl text-gray-500 font-medium">
               Achievements will be showcased here soon!
             </p>
-          </div>
+          </motion.div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {achievements.map((achievement) => (
-              <div
-                key={achievement.id}
-                className="bg-white border rounded-lg p-6 hover:shadow-lg transition-shadow"
-              >
-                {/* Category Badge */}
-                <div className="flex items-center gap-2 mb-4">
-                  <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${getCategoryColor(achievement.category)}`}>
-                    {getCategoryIcon(achievement.category)}
-                    {achievement.category}
-                  </span>
-                  <span className="text-sm text-gray-400">
-                    {new Date(achievement.date).toLocaleDateString('en-IN', {
-                      month: 'short',
-                      year: 'numeric',
-                    })}
-                  </span>
-                </div>
+            {achievements.map((achievement, index) => {
+              const styles = getCategoryStyles(achievement.category);
 
-                {/* Student Name */}
-                <h3 className="text-xl font-bold text-blue-900 mb-2">
-                  {achievement.student_name}
-                </h3>
+              return (
+                <motion.div
+                  key={achievement.id}
+                  {...fadeInUp}
+                  transition={{ delay: 0.1 + index * 0.1 }}
+                  className="group bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-xl hover:border-amber-200 transition-all duration-300"
+                >
+                  {/* Category Badge & Date */}
+                  <div className="flex items-center justify-between mb-4">
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border ${styles.badge}`}
+                    >
+                      {getCategoryIcon(achievement.category)}
+                      {achievement.category}
+                    </span>
+                    <span className="text-xs text-gray-400 font-medium">
+                      {new Date(achievement.date).toLocaleDateString('en-IN', {
+                        month: 'short',
+                        year: 'numeric',
+                      })}
+                    </span>
+                  </div>
 
-                {/* Achievement Title */}
-                <h4 className="text-lg font-semibold text-gray-800 mb-3">
-                  {achievement.title}
-                </h4>
+                  {/* Student Avatar & Name */}
+                  <div className="flex items-center gap-3 mb-4">
+                    <div
+                      className={`w-10 h-10 ${styles.icon} rounded-full flex items-center justify-center text-white font-bold text-sm`}
+                    >
+                      {achievement.student_name.charAt(0)}
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-900 group-hover:text-amber-700 transition-colors">
+                      {achievement.student_name}
+                    </h3>
+                  </div>
 
-                {/* Description */}
-                <p className="text-gray-600 leading-relaxed">
-                  {achievement.description}
-                </p>
-              </div>
-            ))}
+                  {/* Achievement Title */}
+                  <h4 className="text-base font-semibold text-gray-800 mb-3 line-clamp-2">
+                    {achievement.title}
+                  </h4>
+
+                  {/* Description */}
+                  <p className="text-sm text-gray-600 leading-relaxed line-clamp-3">
+                    {achievement.description}
+                  </p>
+
+                  {/* Hover Indicator */}
+                  <div className="mt-4 pt-4 border-t border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="text-xs text-amber-600 font-medium flex items-center gap-1">
+                      <Sparkles className="w-3 h-3" />
+                      Featured Achievement
+                    </span>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </div>
