@@ -28,7 +28,7 @@ export default function HeroSection() {
         >
           <span className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-900 rounded-full text-sm font-semibold">
             <GraduationCap className="w-4 h-4" />
-            Nurturing Young Minds Since 2010
+            Nurturing Young Minds Since 1994
           </span>
         </motion.div>
 
@@ -81,24 +81,7 @@ export default function HeroSection() {
           </Link>
         </motion.div>
 
-        {/* Stats Row */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
-          className="mt-16 flex flex-wrap justify-center gap-8 md:gap-16"
-        >
-          {[
-            { number: '500+', label: 'Students' },
-            { number: '50+', label: 'Teachers' },
-            { number: '15+', label: 'Years' },
-          ].map((stat, index) => (
-            <div key={index} className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-blue-900">{stat.number}</div>
-              <div className="text-sm text-gray-500 font-medium">{stat.label}</div>
-            </div>
-          ))}
-        </motion.div>
+
       </div>
 
       {/* Scroll indicator */}
