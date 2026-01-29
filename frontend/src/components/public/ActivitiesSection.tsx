@@ -1,10 +1,10 @@
 'use client';
 
 /**
- * Activities & Celebrations Section - Premium Design
+ * Activities & Celebrations Section - Igloo-Inspired Design
  *
- * Elegant showcase of school events with
- * refined cards, animations, and visual hierarchy.
+ * Dark elegant showcase with glass cards,
+ * gradient accents, and smooth animations.
  */
 
 import Link from 'next/link';
@@ -58,64 +58,30 @@ export default function ActivitiesSection() {
     }
   };
 
-  const getEventStyles = (type: string) => {
-    switch (type.toLowerCase()) {
-      case 'celebration':
-        return {
-          gradient: 'from-pink-500 to-rose-500',
-          badge: 'bg-pink-100 text-pink-700',
-          light: 'bg-pink-50',
-        };
-      case 'sports':
-        return {
-          gradient: 'from-emerald-500 to-green-500',
-          badge: 'bg-emerald-100 text-emerald-700',
-          light: 'bg-emerald-50',
-        };
-      case 'cultural':
-        return {
-          gradient: 'from-purple-500 to-violet-500',
-          badge: 'bg-purple-100 text-purple-700',
-          light: 'bg-purple-50',
-        };
-      case 'academic':
-        return {
-          gradient: 'from-blue-500 to-indigo-500',
-          badge: 'bg-blue-100 text-blue-700',
-          light: 'bg-blue-50',
-        };
-      default:
-        return {
-          gradient: 'from-orange-500 to-amber-500',
-          badge: 'bg-orange-100 text-orange-700',
-          light: 'bg-orange-50',
-        };
-    }
-  };
-
   const fadeInUp = {
-    initial: { opacity: 0, y: 30 },
+    initial: { opacity: 0, y: 40 },
     whileInView: { opacity: 1, y: 0 },
-    viewport: { once: true, margin: '-50px' },
+    viewport: { once: true, margin: '-100px' },
   };
 
   return (
-    <section id="activities" className="py-20 md:py-28 section-subtle relative overflow-hidden">
-      {/* Decorative Elements */}
-      <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-br from-purple-100 to-transparent rounded-full opacity-50 blur-3xl" />
-      <div className="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-bl from-pink-100 to-transparent rounded-full opacity-50 blur-3xl" />
+    <section id="activities" className="section-elevated py-24 md:py-32 relative overflow-hidden">
+      {/* Background */}
+      <div className="absolute inset-0 bg-grid opacity-50" />
+      <div className="glow-orb glow-orb-blue w-[350px] h-[350px] top-20 left-0 opacity-20" />
+      <div className="glow-orb glow-orb-gold w-[250px] h-[250px] bottom-20 right-10 opacity-15" />
 
-      <div className="max-w-6xl mx-auto px-6 relative">
+      <div className="max-w-6xl mx-auto px-6 relative z-10">
         {/* Section Header */}
         <motion.div {...fadeInUp} className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-800 rounded-full text-sm font-semibold mb-6">
-            <PartyPopper className="w-4 h-4" />
+          <span className="badge badge-accent text-sm mb-6">
+            <PartyPopper className="w-4 h-4 mr-2" />
             School Life
-          </div>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-            Celebrations & <span className="text-purple-700">Events</span>
+          </span>
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">
+            Celebrations & <span className="text-gradient-accent">Events</span>
           </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto text-lg">
+          <p className="text-white/50 max-w-2xl mx-auto text-lg">
             Festivals, events, and special moments that make our school vibrant
           </p>
         </motion.div>
@@ -125,7 +91,7 @@ export default function ActivitiesSection() {
           <motion.div {...fadeInUp} transition={{ delay: 0.1 }} className="flex justify-end mb-8">
             <Link
               href="/celebrations"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-purple-50 text-purple-700 hover:bg-purple-100 rounded-full font-semibold transition-all group"
+              className="btn btn-secondary text-sm flex items-center gap-2 group"
             >
               View All Events
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -140,80 +106,74 @@ export default function ActivitiesSection() {
           </div>
         ) : events.length === 0 ? (
           <motion.div {...fadeInUp} className="text-center py-20">
-            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CalendarDays className="w-10 h-10 text-gray-400" />
+            <div className="icon-circle icon-circle-lg icon-circle-accent mx-auto mb-6">
+              <CalendarDays className="w-8 h-8" />
             </div>
-            <p className="text-xl text-gray-500 font-medium">
+            <p className="text-xl text-white/50 font-medium">
               Upcoming events will be displayed here soon!
             </p>
           </motion.div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {events.map((event, index) => {
-              const styles = getEventStyles(event.event_type);
+            {events.map((event, index) => (
+              <motion.div
+                key={event.id}
+                {...fadeInUp}
+                transition={{ delay: 0.1 + index * 0.1, duration: 0.6 }}
+                className="glass-card overflow-hidden group"
+              >
+                {/* Gradient Bar */}
+                <div className="h-1 bg-gradient-to-r from-[#6691E5] to-[#F5D76E]" />
 
-              return (
-                <motion.div
-                  key={event.id}
-                  {...fadeInUp}
-                  transition={{ delay: 0.1 + index * 0.1 }}
-                  className="group bg-white rounded-2xl overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300"
-                >
-                  {/* Gradient Bar */}
-                  <div className={`h-1.5 bg-gradient-to-r ${styles.gradient}`} />
-
-                  {/* Content */}
-                  <div className="p-6">
-                    {/* Event Type & Date */}
-                    <div className="flex items-center justify-between mb-4">
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 ${styles.badge} rounded-full text-xs font-semibold`}
-                      >
-                        {getEventIcon(event.event_type)}
-                        {event.event_type}
-                      </span>
-                      <span className="text-xs text-gray-500 font-medium flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        {new Date(event.date).toLocaleDateString('en-IN', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric',
-                        })}
-                      </span>
-                    </div>
-
-                    {/* Title */}
-                    <h3 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-purple-700 transition-colors line-clamp-2">
-                      {event.title}
-                    </h3>
-
-                    {/* Description */}
-                    <p className="text-sm text-gray-600 leading-relaxed mb-4 line-clamp-3">
-                      {event.description}
-                    </p>
-
-                    {/* Audience Tags */}
-                    <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-100">
-                      {event.audience_students && (
-                        <span className="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full">
-                          Students
-                        </span>
-                      )}
-                      {event.audience_parents && (
-                        <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-medium rounded-full">
-                          Parents
-                        </span>
-                      )}
-                      {event.audience_teachers && (
-                        <span className="px-2.5 py-1 bg-purple-50 text-purple-700 text-xs font-medium rounded-full">
-                          Teachers
-                        </span>
-                      )}
-                    </div>
+                {/* Content */}
+                <div className="p-6">
+                  {/* Event Type & Date */}
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="badge badge-accent text-xs">
+                      {getEventIcon(event.event_type)}
+                      <span className="ml-1.5">{event.event_type}</span>
+                    </span>
+                    <span className="text-xs text-white/40 font-medium flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      {new Date(event.date).toLocaleDateString('en-IN', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
+                    </span>
                   </div>
-                </motion.div>
-              );
-            })}
+
+                  {/* Title */}
+                  <h3 className="text-lg font-bold text-white mb-3 group-hover:text-[#6691E5] transition-colors line-clamp-2">
+                    {event.title}
+                  </h3>
+
+                  {/* Description */}
+                  <p className="text-sm text-white/50 leading-relaxed mb-4 line-clamp-3">
+                    {event.description}
+                  </p>
+
+                  {/* Audience Tags */}
+                  <div className="flex flex-wrap gap-2 pt-4 border-t border-white/10">
+                    {event.audience_students && (
+                      <span className="px-2.5 py-1 bg-[#6691E5]/15 text-[#6691E5] text-xs font-medium rounded-full border border-[#6691E5]/30">
+                        Students
+                      </span>
+                    )}
+                    {event.audience_parents && (
+                      <span className="px-2.5 py-1 bg-[#F5D76E]/15 text-[#F5D76E] text-xs font-medium rounded-full border border-[#F5D76E]/30">
+                        Parents
+                      </span>
+                    )}
+                    {event.audience_teachers && (
+                      <span className="px-2.5 py-1 bg-white/10 text-white/70 text-xs font-medium rounded-full border border-white/20">
+                        Teachers
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
           </div>
         )}
       </div>

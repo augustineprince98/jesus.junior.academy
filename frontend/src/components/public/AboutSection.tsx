@@ -1,21 +1,21 @@
 'use client';
 
 /**
- * About the School Section - Premium Design
+ * About Section - Igloo-Inspired Design
  *
- * Clean design with animated cards, refined typography,
- * and elegant visual hierarchy.
+ * Dark section with glass cards, gradient borders,
+ * and elegant animations.
  */
 
-import { BookOpen, Target, Heart, Sparkles } from 'lucide-react';
+import { BookOpen, Target, Heart, Sparkles, GraduationCap, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function AboutSection() {
   const fadeInUp = {
-    initial: { opacity: 0, y: 30 },
+    initial: { opacity: 0, y: 40 },
     whileInView: { opacity: 1, y: 0 },
-    viewport: { once: true, margin: '-50px' },
-    transition: { duration: 0.6 },
+    viewport: { once: true, margin: '-100px' },
+    transition: { duration: 0.7 },
   };
 
   const cards = [
@@ -31,63 +31,79 @@ export default function AboutSection() {
       title: 'Our Mission',
       description:
         'To provide a Christ-centered education that nurtures intellectual growth, moral values, and practical skills, preparing students for a purposeful life.',
-      color: 'emerald',
+      color: 'gold',
     },
     {
       icon: Heart,
       title: 'Our Values',
       description:
         'Truth, integrity, compassion, excellence, and service. These core values guide everything we do and shape the character of our students.',
-      color: 'rose',
+      color: 'blue',
     },
   ];
 
-  const colorClasses = {
-    blue: {
-      bg: 'bg-blue-50',
-      icon: 'bg-blue-100 text-blue-900',
-      hover: 'hover:border-blue-200',
-    },
-    emerald: {
-      bg: 'bg-emerald-50',
-      icon: 'bg-emerald-100 text-emerald-700',
-      hover: 'hover:border-emerald-200',
-    },
-    rose: {
-      bg: 'bg-rose-50',
-      icon: 'bg-rose-100 text-rose-700',
-      hover: 'hover:border-rose-200',
-    },
-  };
+  const stats = [
+    { value: '30+', label: 'Years of Excellence', icon: GraduationCap },
+    { value: '500+', label: 'Students & Alumni', icon: Users },
+    { value: '50+', label: 'Expert Teachers', icon: Sparkles },
+  ];
 
   return (
-    <section id="about" className="section-subtle py-20 md:py-28">
-      <div className="max-w-6xl mx-auto px-6">
+    <section id="about" className="section-elevated py-24 md:py-32 relative overflow-hidden">
+      {/* Background pattern */}
+      <div className="absolute inset-0 bg-grid opacity-50" />
+
+      <div className="max-w-6xl mx-auto px-6 relative z-10">
         {/* Section Header */}
-        <motion.div {...fadeInUp} className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-900 rounded-full text-sm font-semibold mb-6">
-            <Sparkles className="w-4 h-4" />
-            About Our School
-          </div>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-            Excellence in Education,
+        <motion.div {...fadeInUp} className="text-center mb-20">
+          <span className="badge badge-gold text-sm mb-6">
+            <Sparkles className="w-4 h-4 mr-2" />
+            Discover Our Story
+          </span>
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+            Excellence in Education
             <br />
-            <span className="text-blue-900">Rooted in Values</span>
+            <span className="text-gradient-accent">Rooted in Values</span>
           </h2>
-          <div className="w-24 h-1 bg-gradient-to-r from-blue-900 to-blue-600 mx-auto rounded-full" />
+          <div className="w-24 h-1 bg-gradient-to-r from-[#6691E5] to-[#F5D76E] mx-auto rounded-full" />
         </motion.div>
 
         {/* Main Description */}
-        <motion.div
+        <motion.p
           {...fadeInUp}
           transition={{ delay: 0.1 }}
-          className="max-w-4xl mx-auto text-center mb-20"
+          className="text-center text-lg md:text-xl text-white/60 max-w-3xl mx-auto mb-20 leading-relaxed"
         >
-          <p className="text-gray-600 leading-relaxed text-lg md:text-xl">
-            Jesus Junior Academy is committed to nurturing young minds through quality education,
-            strong moral values, and a disciplined learning environment. We believe in holistic
-            development through academics and co-curricular activities.
-          </p>
+          Jesus Junior Academy is committed to nurturing young minds through quality education,
+          strong moral values, and a disciplined learning environment. We believe in holistic
+          development through academics and co-curricular activities.
+        </motion.p>
+
+        {/* Stats Row */}
+        <motion.div
+          {...fadeInUp}
+          transition={{ delay: 0.2 }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20"
+        >
+          {stats.map((stat, index) => {
+            const Icon = stat.icon;
+            return (
+              <div
+                key={stat.label}
+                className="glass-card p-8 text-center group"
+              >
+                <div className="icon-circle icon-circle-lg icon-circle-accent mx-auto mb-4">
+                  <Icon className="w-7 h-7" />
+                </div>
+                <div className="text-4xl md:text-5xl font-bold text-white mb-2">
+                  {stat.value}
+                </div>
+                <div className="text-white/50 text-sm uppercase tracking-wider">
+                  {stat.label}
+                </div>
+              </div>
+            );
+          })}
         </motion.div>
 
         {/* History & Philosophy Grid */}
@@ -95,22 +111,22 @@ export default function AboutSection() {
           {/* History */}
           <motion.div
             {...fadeInUp}
-            transition={{ delay: 0.2 }}
-            className="card-premium group"
+            transition={{ delay: 0.3 }}
+            className="gradient-border p-8 group"
           >
             <div className="flex items-center gap-4 mb-6">
-              <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                <BookOpen className="w-6 h-6 text-amber-700" />
+              <div className="icon-circle icon-circle-md icon-circle-gold group-hover:scale-110 transition-transform">
+                <BookOpen className="w-6 h-6" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900">Our History</h3>
+              <h3 className="text-2xl font-bold text-white">Our History</h3>
             </div>
-            <p className="text-gray-600 leading-relaxed mb-4">
+            <p className="text-white/60 leading-relaxed mb-4">
               Founded with a vision to provide quality education rooted in Christian values,
               Jesus Junior Academy has been nurturing young minds and building strong character
               for years. Located in the heart of Rewari, near SBI Bank at Church House, we serve
               as a beacon of educational excellence in the community.
             </p>
-            <p className="text-gray-600 leading-relaxed">
+            <p className="text-white/60 leading-relaxed">
               Our institution stands on the foundation of truth, integrity, and academic excellence,
               preparing students not just for examinations but for life itself.
             </p>
@@ -119,22 +135,21 @@ export default function AboutSection() {
           {/* Philosophy */}
           <motion.div
             {...fadeInUp}
-            transition={{ delay: 0.3 }}
-            className="card-premium group"
+            transition={{ delay: 0.4 }}
+            className="gradient-border p-8 group"
           >
             <div className="flex items-center gap-4 mb-6">
-              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Sparkles className="w-6 h-6 text-purple-700" />
+              <div className="icon-circle icon-circle-md icon-circle-accent group-hover:scale-110 transition-transform">
+                <Sparkles className="w-6 h-6" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900">Educational Philosophy</h3>
+              <h3 className="text-2xl font-bold text-white">Educational Philosophy</h3>
             </div>
-            <p className="text-gray-600 leading-relaxed mb-4">
+            <p className="text-white/60 leading-relaxed mb-4">
               We believe education is more than memorizing facts. It's about developing critical
               thinking, moral values, and a lifelong love for learning. Our curriculum balances
-              academic rigor with character development, ensuring students grow into responsible
-              citizens.
+              academic rigor with character development.
             </p>
-            <p className="text-gray-600 leading-relaxed">
+            <p className="text-white/60 leading-relaxed">
               Every child is unique, and we strive to unlock their potential through personalized
               attention, innovative teaching methods, and a nurturing environment.
             </p>
@@ -144,23 +159,24 @@ export default function AboutSection() {
         {/* Vision, Mission, Values Cards */}
         <div className="grid md:grid-cols-3 gap-6">
           {cards.map((card, index) => {
-            const colors = colorClasses[card.color as keyof typeof colorClasses];
             const Icon = card.icon;
+            const isGold = card.color === 'gold';
 
             return (
               <motion.div
                 key={card.title}
                 {...fadeInUp}
-                transition={{ delay: 0.4 + index * 0.1 }}
-                className={`bg-white border border-gray-100 rounded-2xl p-8 text-center transition-all duration-300 hover:shadow-card-hover ${colors.hover}`}
+                transition={{ delay: 0.5 + index * 0.1 }}
+                className="glass-card p-8 text-center"
               >
                 <div
-                  className={`w-16 h-16 ${colors.icon} rounded-2xl flex items-center justify-center mx-auto mb-6 transition-transform hover:scale-110`}
+                  className={`icon-circle icon-circle-lg mx-auto mb-6 ${isGold ? 'icon-circle-gold' : 'icon-circle-accent'
+                    }`}
                 >
-                  <Icon className="w-8 h-8" />
+                  <Icon className="w-7 h-7" />
                 </div>
-                <h4 className="text-xl font-bold text-gray-900 mb-4">{card.title}</h4>
-                <p className="text-gray-600 leading-relaxed">{card.description}</p>
+                <h4 className="text-xl font-bold text-white mb-4">{card.title}</h4>
+                <p className="text-white/60 leading-relaxed text-sm">{card.description}</p>
               </motion.div>
             );
           })}

@@ -1,106 +1,146 @@
 'use client';
 
 /**
- * Hero Section - Premium Top Fold
+ * Hero Section - Igloo-Inspired Premium Design
  *
- * Clean, centered design with school name and tagline.
- * Features subtle animations and premium button styles.
+ * Full-screen dark hero with:
+ * - Massive typography
+ * - Floating glow orbs
+ * - Animated dot pattern background
+ * - Smooth scroll indicator
  */
 
 import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { ChevronDown, GraduationCap, Users } from 'lucide-react';
+import { motion, useMotionValue, useSpring } from 'framer-motion';
+import { ChevronDown, Sparkles } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 
 export default function HeroSection() {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Mouse tracking for parallax effect
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const springX = useSpring(mouseX, { stiffness: 50, damping: 20 });
+  const springY = useSpring(mouseY, { stiffness: 50, damping: 20 });
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const x = (e.clientX - rect.left - rect.width / 2) / rect.width;
+      const y = (e.clientY - rect.top - rect.height / 2) / rect.height;
+      mouseX.set(x * 30);
+      mouseY.set(y * 30);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [mouseX, mouseY]);
+
   return (
-    <section className="hero-section relative flex flex-col items-center justify-center text-center py-24 md:py-32 px-4 min-h-[90vh]">
-      {/* Decorative background pattern */}
-      <div className="absolute inset-0 bg-hero-pattern bg-[length:40px_40px] opacity-50" />
+    <section
+      ref={containerRef}
+      className="hero-section relative flex flex-col items-center justify-center text-center min-h-screen px-6 overflow-hidden"
+    >
+      {/* Background layers */}
+      <div className="absolute inset-0 bg-dots" />
+
+      {/* Floating glow orbs - parallax effect */}
+      <motion.div
+        style={{ x: springX, y: springY }}
+        className="glow-orb glow-orb-blue w-[400px] h-[400px] -top-20 -left-20 animate-pulse-glow"
+      />
+      <motion.div
+        style={{ x: springX, y: springY }}
+        className="glow-orb glow-orb-gold w-[300px] h-[300px] top-1/3 -right-20 animate-pulse-glow"
+      />
+      <motion.div
+        style={{ x: springX, y: springY }}
+        className="glow-orb glow-orb-blue w-[250px] h-[250px] bottom-20 left-1/4 animate-pulse-glow"
+      />
 
       {/* Content */}
-      <div className="relative z-10">
+      <div className="relative z-10 max-w-5xl">
         {/* Badge */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mb-6"
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="mb-8"
         >
-          <span className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-900 rounded-full text-sm font-semibold">
-            <GraduationCap className="w-4 h-4" />
+          <span className="badge badge-accent text-sm">
+            <Sparkles className="w-4 h-4 mr-2" />
             Nurturing Young Minds Since 1994
           </span>
         </motion.div>
 
-        {/* School Name - Bambi Bold Font, All Caps */}
+        {/* School Name - MASSIVE */}
         <motion.h1
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="font-bambi hero-title text-4xl xs:text-5xl sm:text-6xl md:text-7xl lg:text-8xl mb-6 leading-tight tracking-tight"
+          transition={{ duration: 0.8, delay: 0.4 }}
+          className="font-bambi hero-title text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl mb-6 leading-[0.9] tracking-tight"
         >
-          JESUS JUNIOR
-          <br className="sm:hidden" />
-          <span className="hidden sm:inline"> </span>
-          ACADEMY
+          <span className="block">JESUS JUNIOR</span>
+          <span className="block text-gradient-accent">ACADEMY</span>
         </motion.h1>
 
-        {/* Tagline - Nunito Font */}
-        <motion.p
+        {/* Tagline */}
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="text-lg md:text-xl lg:text-2xl font-medium text-gray-600 mb-12 max-w-2xl mx-auto"
+          transition={{ duration: 0.6, delay: 0.6 }}
+          className="mb-12"
         >
-          <span className="text-blue-900 font-semibold">"THE TRUTH SHALL MAKE YOU FREE."</span>
-          <br />
-          <span className="text-base md:text-lg text-gray-500 mt-2 block">
+          <p className="text-xl md:text-2xl lg:text-3xl font-medium text-white/90 mb-4">
+            "THE TRUTH SHALL MAKE YOU FREE."
+          </p>
+          <p className="text-base md:text-lg text-white/50 max-w-xl mx-auto">
             Quality Education • Strong Values • Bright Futures
-          </span>
-        </motion.p>
+          </p>
+        </motion.div>
 
         {/* CTA Buttons */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
+          transition={{ duration: 0.6, delay: 0.8 }}
           className="flex flex-col sm:flex-row gap-4 justify-center items-center"
         >
           <Link href="#admission">
-            <button className="btn btn-primary px-8 py-4 text-lg flex items-center gap-2 group">
-              <Users className="w-5 h-5" />
+            <button className="btn btn-gold px-8 py-4 text-lg font-bold">
               Admission Enquiry
-              <ChevronDown className="w-4 h-4 group-hover:translate-y-0.5 transition-transform" />
             </button>
           </Link>
 
           <Link href="/login">
             <button className="btn btn-secondary px-8 py-4 text-lg">
-              Login to Campus
+              Enter Campus
             </button>
           </Link>
         </motion.div>
-
-
       </div>
 
       {/* Scroll indicator */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.7 }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 text-gray-400"
+        transition={{ duration: 0.6, delay: 1.2 }}
+        className="absolute bottom-12 left-1/2 -translate-x-1/2"
       >
-        <div className="flex flex-col items-center gap-2">
-          <span className="text-xs font-medium uppercase tracking-wider">Scroll to explore</span>
-          <div className="w-6 h-10 border-2 border-gray-300 rounded-full flex justify-center pt-2">
-            <motion.div
-              animate={{ y: [0, 8, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-              className="w-1.5 h-1.5 bg-gray-400 rounded-full"
-            />
-          </div>
-        </div>
+        <Link href="#about" className="flex flex-col items-center gap-3 group">
+          <span className="text-xs font-medium uppercase tracking-widest text-white/40 group-hover:text-white/60 transition-colors">
+            Scroll to explore
+          </span>
+          <motion.div
+            animate={{ y: [0, 8, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            className="w-8 h-12 border border-white/20 rounded-full flex justify-center pt-3 group-hover:border-white/40 transition-colors"
+          >
+            <ChevronDown className="w-4 h-4 text-white/40 group-hover:text-white/60 transition-colors" />
+          </motion.div>
+        </Link>
       </motion.div>
     </section>
   );

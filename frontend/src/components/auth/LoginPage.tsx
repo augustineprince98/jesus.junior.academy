@@ -1,10 +1,10 @@
 'use client';
 
 /**
- * ACCESS GATE - Premium Login Experience
+ * ACCESS GATE - Igloo-Inspired Login Experience
  *
- * Modern dark theme with glassmorphism,
- * elegant animations, and refined input styling.
+ * Elegant dark theme with glassmorphism,
+ * glow effects, and refined input styling.
  */
 
 import { useState } from 'react';
@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useStore';
 import { authApi } from '@/lib/api';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, ArrowRight, Loader2, GraduationCap } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, Loader2, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AccessGate() {
@@ -68,32 +68,36 @@ export default function AccessGate() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-4 py-8">
+    <main className="min-h-screen flex items-center justify-center bg-[#0A0A0A] px-4 py-8 relative overflow-hidden">
       {/* Background Pattern */}
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.03)_1px,transparent_0)] bg-[length:32px_32px]" />
+      <div className="absolute inset-0 bg-dots" />
+
+      {/* Glow orbs */}
+      <div className="glow-orb glow-orb-blue w-[400px] h-[400px] -top-20 -left-20 opacity-20" />
+      <div className="glow-orb glow-orb-gold w-[300px] h-[300px] bottom-20 -right-20 opacity-15" />
 
       {/* Login Card */}
       <motion.div
         initial={{ opacity: 0, y: 20, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.5 }}
-        className="relative w-full max-w-md"
+        className="relative w-full max-w-md z-10"
       >
-        <div className="glass-dark rounded-3xl p-8 md:p-10 shadow-2xl">
+        <div className="gradient-border p-8 md:p-10">
           {/* Header */}
           <div className="text-center mb-10">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-500/20">
-              <GraduationCap className="w-8 h-8 text-white" />
+            <div className="icon-circle icon-circle-lg icon-circle-accent mx-auto mb-6">
+              <Sparkles className="w-7 h-7" />
             </div>
             <h1 className="font-bambi text-2xl text-white mb-2">JESUS JUNIOR ACADEMY</h1>
-            <p className="text-gray-400 text-sm tracking-wide">Digital Campus Access</p>
+            <p className="text-white/40 text-sm tracking-wide">Digital Campus Access</p>
           </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Phone Input */}
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">
                 Phone Number
               </label>
               <div className="relative">
@@ -101,13 +105,13 @@ export default function AccessGate() {
                   type="tel"
                   value={phone}
                   onChange={handlePhoneChange}
-                  className="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-4 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                  className="input pr-16"
                   placeholder="Enter 10-digit phone number"
                   maxLength={10}
                   pattern="[0-9]{10}"
                   required
                 />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-gray-500">
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-white/30">
                   {phone.length}/10
                 </span>
               </div>
@@ -115,7 +119,7 @@ export default function AccessGate() {
 
             {/* Password Input */}
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">
                 Password
               </label>
               <div className="relative">
@@ -123,14 +127,14 @@ export default function AccessGate() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-4 pr-12 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                  className="input pr-12"
                   placeholder="Enter your password"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -152,9 +156,7 @@ export default function AccessGate() {
             <button
               type="submit"
               disabled={verifying}
-              className={`w-full py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition-all duration-300 ${verifying
-                  ? 'opacity-70 cursor-not-allowed'
-                  : 'hover:from-blue-500 hover:to-blue-600 hover:shadow-lg hover:shadow-blue-500/25 hover:-translate-y-0.5'
+              className={`w-full btn btn-primary py-4 flex items-center justify-center gap-2 ${verifying ? 'opacity-70 cursor-not-allowed' : ''
                 }`}
             >
               {verifying ? (
@@ -175,18 +177,18 @@ export default function AccessGate() {
           <div className="mt-6 text-center">
             <Link
               href="/forgot-password"
-              className="text-sm text-gray-400 hover:text-white transition-colors"
+              className="text-sm text-white/40 hover:text-white transition-colors"
             >
               Forgot your password?
             </Link>
           </div>
 
           {/* Registration Link */}
-          <div className="mt-8 pt-8 border-t border-gray-700/50 text-center">
-            <p className="text-sm text-gray-500 mb-3">New to the academy?</p>
+          <div className="mt-8 pt-8 border-t border-white/10 text-center">
+            <p className="text-sm text-white/30 mb-3">New to the academy?</p>
             <Link
               href="/register"
-              className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 font-semibold transition-colors group"
+              className="inline-flex items-center gap-2 text-[#6691E5] hover:text-white font-semibold transition-colors group"
             >
               Request Access
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -195,7 +197,7 @@ export default function AccessGate() {
         </div>
 
         {/* Footer Note */}
-        <p className="text-center text-xs text-gray-500 mt-6">
+        <p className="text-center text-xs text-white/20 mt-6">
           Protected by Jesus Junior Academy Administration
         </p>
       </motion.div>

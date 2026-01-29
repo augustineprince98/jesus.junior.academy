@@ -1,10 +1,10 @@
 'use client';
 
 /**
- * Achievers Club Section - Premium Design
+ * Achievers Club Section - Igloo-Inspired Design
  *
- * Elegant showcase of student achievements with
- * animations, refined cards, and visual hierarchy.
+ * Dark elegant showcase with spotlight effects,
+ * glass cards, and premium animations.
  */
 
 import Link from 'next/link';
@@ -57,55 +57,44 @@ export default function AchieversSection() {
     }
   };
 
-  const getCategoryStyles = (category: string) => {
+  const getCategoryColor = (category: string) => {
     switch (category.toLowerCase()) {
       case 'academic':
-        return {
-          badge: 'bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 border-amber-200',
-          icon: 'bg-amber-500',
-        };
+        return 'gold';
       case 'sports':
-        return {
-          badge: 'bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800 border-emerald-200',
-          icon: 'bg-emerald-500',
-        };
+        return 'blue';
       case 'arts':
       case 'cultural':
-        return {
-          badge: 'bg-gradient-to-r from-purple-100 to-violet-100 text-purple-800 border-purple-200',
-          icon: 'bg-purple-500',
-        };
+        return 'blue';
       default:
-        return {
-          badge: 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border-blue-200',
-          icon: 'bg-blue-500',
-        };
+        return 'gold';
     }
   };
 
   const fadeInUp = {
-    initial: { opacity: 0, y: 30 },
+    initial: { opacity: 0, y: 40 },
     whileInView: { opacity: 1, y: 0 },
-    viewport: { once: true, margin: '-50px' },
+    viewport: { once: true, margin: '-100px' },
   };
 
   return (
-    <section id="achievers" className="py-20 md:py-28 bg-white relative overflow-hidden">
-      {/* Decorative Background */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-amber-50 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
-      <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-blue-50 to-transparent rounded-full translate-y-1/2 -translate-x-1/2" />
+    <section id="achievers" className="section-dark py-24 md:py-32 relative overflow-hidden">
+      {/* Background effects */}
+      <div className="absolute inset-0 bg-dots" />
+      <div className="glow-orb glow-orb-gold w-[400px] h-[400px] top-0 right-0 opacity-20" />
+      <div className="glow-orb glow-orb-blue w-[300px] h-[300px] bottom-0 left-0 opacity-20" />
 
-      <div className="max-w-6xl mx-auto px-6 relative">
+      <div className="max-w-6xl mx-auto px-6 relative z-10">
         {/* Section Header */}
         <motion.div {...fadeInUp} className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-100 text-amber-800 rounded-full text-sm font-semibold mb-6">
-            <Trophy className="w-4 h-4" />
+          <span className="badge badge-gold text-sm mb-6">
+            <Trophy className="w-4 h-4 mr-2" />
             Student Excellence
-          </div>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+          </span>
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">
             Achievers' <span className="text-gradient-gold">Club</span>
           </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto text-lg">
+          <p className="text-white/50 max-w-2xl mx-auto text-lg">
             Celebrating students who excel in academics and co-curricular activities
           </p>
         </motion.div>
@@ -115,7 +104,7 @@ export default function AchieversSection() {
           <motion.div {...fadeInUp} transition={{ delay: 0.1 }} className="flex justify-end mb-8">
             <Link
               href="/achievers"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-full font-semibold transition-all group"
+              className="btn btn-secondary text-sm flex items-center gap-2 group"
             >
               View All Achievements
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -130,34 +119,33 @@ export default function AchieversSection() {
           </div>
         ) : achievements.length === 0 ? (
           <motion.div {...fadeInUp} className="text-center py-20">
-            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Trophy className="w-10 h-10 text-gray-400" />
+            <div className="icon-circle icon-circle-lg icon-circle-gold mx-auto mb-6">
+              <Trophy className="w-8 h-8" />
             </div>
-            <p className="text-xl text-gray-500 font-medium">
+            <p className="text-xl text-white/50 font-medium">
               Achievements will be showcased here soon!
             </p>
           </motion.div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {achievements.map((achievement, index) => {
-              const styles = getCategoryStyles(achievement.category);
+              const color = getCategoryColor(achievement.category);
+              const isGold = color === 'gold';
 
               return (
                 <motion.div
                   key={achievement.id}
                   {...fadeInUp}
-                  transition={{ delay: 0.1 + index * 0.1 }}
-                  className="group bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-xl hover:border-amber-200 transition-all duration-300"
+                  transition={{ delay: 0.1 + index * 0.1, duration: 0.6 }}
+                  className="glass-card p-6 group"
                 >
                   {/* Category Badge & Date */}
                   <div className="flex items-center justify-between mb-4">
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border ${styles.badge}`}
-                    >
+                    <span className={`badge ${isGold ? 'badge-gold' : 'badge-accent'} text-xs`}>
                       {getCategoryIcon(achievement.category)}
-                      {achievement.category}
+                      <span className="ml-1.5">{achievement.category}</span>
                     </span>
-                    <span className="text-xs text-gray-400 font-medium">
+                    <span className="text-xs text-white/40 font-medium">
                       {new Date(achievement.date).toLocaleDateString('en-IN', {
                         month: 'short',
                         year: 'numeric',
@@ -168,28 +156,31 @@ export default function AchieversSection() {
                   {/* Student Avatar & Name */}
                   <div className="flex items-center gap-3 mb-4">
                     <div
-                      className={`w-10 h-10 ${styles.icon} rounded-full flex items-center justify-center text-white font-bold text-sm`}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${isGold
+                          ? 'bg-gradient-to-br from-[#F5D76E] to-[#D4AF37] text-[#1A1A1A]'
+                          : 'bg-gradient-to-br from-[#6691E5] to-[#4A7BD4] text-white'
+                        }`}
                     >
                       {achievement.student_name.charAt(0)}
                     </div>
-                    <h3 className="text-lg font-bold text-gray-900 group-hover:text-amber-700 transition-colors">
+                    <h3 className="text-lg font-bold text-white group-hover:text-[#F5D76E] transition-colors">
                       {achievement.student_name}
                     </h3>
                   </div>
 
                   {/* Achievement Title */}
-                  <h4 className="text-base font-semibold text-gray-800 mb-3 line-clamp-2">
+                  <h4 className="text-base font-semibold text-white/90 mb-3 line-clamp-2">
                     {achievement.title}
                   </h4>
 
                   {/* Description */}
-                  <p className="text-sm text-gray-600 leading-relaxed line-clamp-3">
+                  <p className="text-sm text-white/50 leading-relaxed line-clamp-3">
                     {achievement.description}
                   </p>
 
                   {/* Hover Indicator */}
-                  <div className="mt-4 pt-4 border-t border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="text-xs text-amber-600 font-medium flex items-center gap-1">
+                  <div className="mt-4 pt-4 border-t border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="text-xs text-[#F5D76E] font-medium flex items-center gap-1">
                       <Sparkles className="w-3 h-3" />
                       Featured Achievement
                     </span>

@@ -1,13 +1,13 @@
 'use client';
 
 /**
- * Admission Enquiry Section - Premium Design
+ * Admission Enquiry Section - Igloo-Inspired Design
  *
- * Elegant admission form with refined styling,
- * animations, and premium visual hierarchy.
+ * Dark elegant form with glass styling,
+ * gradient accents, and premium inputs.
  */
 
-import { Send, Phone, Mail, MapPin, CheckCircle, GraduationCap, Loader2, Users } from 'lucide-react';
+import { Send, Phone, Mail, MapPin, CheckCircle, GraduationCap, Loader2, Users, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 
@@ -57,45 +57,31 @@ export default function AdmissionSection() {
   };
 
   const fadeInUp = {
-    initial: { opacity: 0, y: 30 },
+    initial: { opacity: 0, y: 40 },
     whileInView: { opacity: 1, y: 0 },
-    viewport: { once: true, margin: '-50px' },
+    viewport: { once: true, margin: '-100px' },
   };
 
   const contactInfo = [
     {
       icon: MapPin,
       title: 'Visit Us',
-      content: (
-        <>
-          Jesus Junior Academy
-          <br />
-          Church House, Near SBI Bank
-          <br />
-          Rewari, Haryana
-        </>
-      ),
-      color: 'bg-blue-500',
+      content: 'Church House, Near SBI Bank, Rewari, Haryana',
+      color: 'blue',
     },
     {
       icon: Phone,
       title: 'Call Us',
-      content: (
-        <a href="tel:+918059589595" className="text-blue-600 hover:text-blue-800 font-semibold">
-          +91-8059589595
-        </a>
-      ),
-      color: 'bg-emerald-500',
+      content: '+91-8059589595',
+      href: 'tel:+918059589595',
+      color: 'gold',
     },
     {
       icon: Mail,
       title: 'Email Us',
-      content: (
-        <a href="mailto:info@jesusja.com" className="text-blue-600 hover:text-blue-800 font-semibold">
-          info@jesusja.com
-        </a>
-      ),
-      color: 'bg-purple-500',
+      content: 'info@jesusja.com',
+      href: 'mailto:info@jesusja.com',
+      color: 'blue',
     },
   ];
 
@@ -114,24 +100,23 @@ export default function AdmissionSection() {
   ];
 
   return (
-    <section id="admission" className="py-20 md:py-28 bg-gradient-to-b from-white to-blue-50 relative overflow-hidden">
-      {/* Decorative Background */}
-      <div className="absolute top-0 left-0 w-full h-full">
-        <div className="absolute top-20 right-20 w-96 h-96 bg-blue-100 rounded-full opacity-30 blur-3xl" />
-        <div className="absolute bottom-20 left-20 w-80 h-80 bg-purple-100 rounded-full opacity-30 blur-3xl" />
-      </div>
+    <section id="admission" className="section-dark py-24 md:py-32 relative overflow-hidden">
+      {/* Background */}
+      <div className="absolute inset-0 bg-dots" />
+      <div className="glow-orb glow-orb-blue w-[400px] h-[400px] top-0 left-1/4 opacity-15" />
+      <div className="glow-orb glow-orb-gold w-[300px] h-[300px] bottom-20 right-0 opacity-20" />
 
-      <div className="max-w-6xl mx-auto px-6 relative">
+      <div className="max-w-6xl mx-auto px-6 relative z-10">
         {/* Section Header */}
         <motion.div {...fadeInUp} className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold mb-6">
-            <GraduationCap className="w-4 h-4" />
+          <span className="badge badge-gold text-sm mb-6">
+            <GraduationCap className="w-4 h-4 mr-2" />
             Start Your Journey
-          </div>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-            Admission <span className="text-blue-900">Enquiry</span>
+          </span>
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">
+            Admission <span className="text-gradient-gold">Enquiry</span>
           </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto text-lg">
+          <p className="text-white/50 max-w-2xl mx-auto text-lg">
             Take the first step towards your child's bright future with quality education
           </p>
         </motion.div>
@@ -139,9 +124,9 @@ export default function AdmissionSection() {
         <div className="grid lg:grid-cols-2 gap-12 items-start">
           {/* Left: Contact Information */}
           <motion.div {...fadeInUp} transition={{ delay: 0.1 }}>
-            <h3 className="text-2xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-                <Users className="w-5 h-5 text-blue-700" />
+            <h3 className="text-2xl font-bold text-white mb-8 flex items-center gap-3">
+              <div className="icon-circle icon-circle-md icon-circle-accent">
+                <Users className="w-5 h-5" />
               </div>
               Get in Touch
             </h3>
@@ -150,22 +135,33 @@ export default function AdmissionSection() {
             <div className="space-y-4">
               {contactInfo.map((item, index) => {
                 const Icon = item.icon;
+                const isGold = item.color === 'gold';
+                const Wrapper = item.href ? 'a' : 'div';
+
                 return (
                   <motion.div
                     key={item.title}
                     {...fadeInUp}
                     transition={{ delay: 0.2 + index * 0.1 }}
-                    className="flex items-start gap-4 p-5 bg-white rounded-2xl shadow-card hover:shadow-card-hover transition-all duration-300 group"
                   >
-                    <div
-                      className={`w-12 h-12 ${item.color} rounded-xl flex items-center justify-center flex-shrink-0 text-white group-hover:scale-110 transition-transform`}
+                    <Wrapper
+                      {...(item.href ? { href: item.href } : {})}
+                      className="flex items-start gap-4 p-5 glass-card group cursor-pointer"
                     >
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-gray-900 mb-1">{item.title}</h4>
-                      <p className="text-gray-600 text-sm leading-relaxed">{item.content}</p>
-                    </div>
+                      <div
+                        className={`icon-circle icon-circle-md flex-shrink-0 ${isGold ? 'icon-circle-gold' : 'icon-circle-accent'
+                          }`}
+                      >
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-white mb-1">{item.title}</h4>
+                        <p className={`text-sm leading-relaxed ${item.href ? 'text-[#6691E5] group-hover:text-white' : 'text-white/60'
+                          } transition-colors`}>
+                          {item.content}
+                        </p>
+                      </div>
+                    </Wrapper>
                   </motion.div>
                 );
               })}
@@ -175,18 +171,21 @@ export default function AdmissionSection() {
             <motion.div
               {...fadeInUp}
               transition={{ delay: 0.5 }}
-              className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl border border-blue-100"
+              className="mt-8 gradient-border p-6"
             >
-              <h4 className="font-bold text-gray-900 mb-3">Why Choose Us?</h4>
-              <ul className="space-y-2 text-sm text-gray-600">
+              <h4 className="font-bold text-white mb-4 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-[#F5D76E]" />
+                Why Choose Us?
+              </h4>
+              <ul className="space-y-3 text-sm text-white/60">
                 {[
                   'Experienced & Dedicated Teachers',
                   'Value-Based Education',
                   'Safe & Nurturing Environment',
                   'Modern Teaching Methods',
                 ].map((item, i) => (
-                  <li key={i} className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                  <li key={i} className="flex items-center gap-3">
+                    <CheckCircle className="w-4 h-4 text-[#F5D76E] flex-shrink-0" />
                     {item}
                   </li>
                 ))}
@@ -200,29 +199,29 @@ export default function AdmissionSection() {
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200 rounded-3xl p-10 text-center"
+                className="glass-card p-10 text-center"
               >
-                <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <CheckCircle className="w-10 h-10 text-emerald-600" />
+                <div className="icon-circle icon-circle-lg icon-circle-gold mx-auto mb-6">
+                  <CheckCircle className="w-8 h-8" />
                 </div>
-                <h3 className="text-2xl font-bold text-emerald-800 mb-3">Thank You!</h3>
-                <p className="text-emerald-700 mb-8">
+                <h3 className="text-2xl font-bold text-white mb-3">Thank You!</h3>
+                <p className="text-white/60 mb-8">
                   We have received your enquiry. Our team will contact you shortly.
                 </p>
                 <button
                   onClick={() => setSubmitted(false)}
-                  className="px-8 py-3 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-colors"
+                  className="btn btn-gold px-8 py-3"
                 >
                   Submit Another Enquiry
                 </button>
               </motion.div>
             ) : (
-              <form onSubmit={handleSubmit} className="bg-white rounded-3xl p-8 shadow-premium">
+              <form onSubmit={handleSubmit} className="gradient-border p-8">
                 <div className="space-y-5">
                   {/* Student Name */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Student Name <span className="text-red-500">*</span>
+                    <label className="block text-sm font-medium text-white/80 mb-2">
+                      Student Name <span className="text-[#F5D76E]">*</span>
                     </label>
                     <input
                       type="text"
@@ -237,8 +236,8 @@ export default function AdmissionSection() {
 
                   {/* Parent Name */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Parent/Guardian Name <span className="text-red-500">*</span>
+                    <label className="block text-sm font-medium text-white/80 mb-2">
+                      Parent/Guardian Name <span className="text-[#F5D76E]">*</span>
                     </label>
                     <input
                       type="text"
@@ -253,8 +252,8 @@ export default function AdmissionSection() {
 
                   {/* Phone */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Contact Number <span className="text-red-500">*</span>
+                    <label className="block text-sm font-medium text-white/80 mb-2">
+                      Contact Number <span className="text-[#F5D76E]">*</span>
                     </label>
                     <input
                       type="tel"
@@ -270,8 +269,8 @@ export default function AdmissionSection() {
 
                   {/* Desired Class */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Class Seeking Admission <span className="text-red-500">*</span>
+                    <label className="block text-sm font-medium text-white/80 mb-2">
+                      Class Seeking Admission <span className="text-[#F5D76E]">*</span>
                     </label>
                     <select
                       name="seeking_class"
@@ -294,9 +293,9 @@ export default function AdmissionSection() {
                     <motion.div
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="p-4 bg-red-50 border border-red-200 rounded-xl"
+                      className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl"
                     >
-                      <p className="text-sm text-red-700">{error}</p>
+                      <p className="text-sm text-red-400">{error}</p>
                     </motion.div>
                   )}
 
@@ -304,9 +303,7 @@ export default function AdmissionSection() {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className={`w-full py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition-all duration-300 ${submitting
-                        ? 'opacity-70 cursor-not-allowed'
-                        : 'hover:from-blue-500 hover:to-blue-600 hover:shadow-lg hover:shadow-blue-500/25 hover:-translate-y-0.5'
+                    className={`w-full btn btn-gold py-4 text-lg flex items-center justify-center gap-2 ${submitting ? 'opacity-70 cursor-not-allowed' : ''
                       }`}
                   >
                     {submitting ? (
