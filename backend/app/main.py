@@ -19,6 +19,17 @@ from datetime import datetime
 import time
 import os
 import uuid
+import signal
+
+# Sentry for error monitoring (production)
+try:
+    import sentry_sdk
+    from sentry_sdk.integrations.fastapi import FastApiIntegration
+    from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+    SENTRY_AVAILABLE = True
+except ImportError:
+    SENTRY_AVAILABLE = False
+
 
 from app.websocket import websocket_endpoint
 from app.routers import (
@@ -52,7 +63,10 @@ from app.core.config import settings
 from app.core.constants import API_TAGS_METADATA
 from app.core.logging_config import setup_logging, get_logger, set_request_id
 from app.core.exceptions import register_exception_handlers, AppException
+from app.core.security_headers import SecurityHeadersMiddleware, RequestSizeLimitMiddleware
 from app.services.scheduler_service import start_scheduler, stop_scheduler
+from app.core.database import dispose_engine
+
 
 # Setup logging
 is_production = settings.APP_ENV == "production"
@@ -65,12 +79,39 @@ logger = get_logger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Manage application lifecycle - start/stop scheduler."""
-    logger.info("Starting Jesus Junior Academy ERP...")
+    """Manage application lifecycle - start/stop scheduler, database pool."""
+    logger.info("Starting Jesus Junior Academy ERP v2.2.0...")
+    
+    # Initialize Sentry in production
+    sentry_dsn = os.getenv("SENTRY_DSN")
+    if SENTRY_AVAILABLE and sentry_dsn and is_production:
+        sentry_sdk.init(
+            dsn=sentry_dsn,
+            integrations=[
+                FastApiIntegration(transaction_style="endpoint"),
+                SqlalchemyIntegration(),
+            ],
+            traces_sample_rate=0.1,  # 10% of transactions for performance
+            profiles_sample_rate=0.1,
+            environment=settings.APP_ENV,
+            release=f"jja-erp@2.2.0",
+        )
+        logger.info("Sentry error monitoring initialized")
+    
+    # Start background scheduler
     start_scheduler()
+    
+    # Record startup time for uptime tracking
+    app.state.startup_time = datetime.utcnow()
+    
     yield
+    
+    # Graceful shutdown
     logger.info("Shutting down application...")
     stop_scheduler()
+    dispose_engine()  # Clean up database connections
+    logger.info("Shutdown complete")
+
 
 
 # Application description for documentation
@@ -155,6 +196,15 @@ app.add_middleware(
     allow_headers=allowed_headers,
 )
 
+# Security Headers Middleware (after CORS so headers are added to responses)
+app.add_middleware(
+    SecurityHeadersMiddleware,
+    is_production=is_production,
+    hsts_max_age=31536000,  # 1 year
+)
+
+# Request Size Limit (10MB max)
+app.add_middleware(RequestSizeLimitMiddleware, max_size=10 * 1024 * 1024)
 
 # Request tracking and logging middleware
 @app.middleware("http")
@@ -315,21 +365,28 @@ app.websocket("/ws")(websocket_endpoint)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 @app.get("/health", tags=["System"])
-def health():
+def health(request: Request):
     """
     Health check endpoint for monitoring and load balancers.
     
-    Returns server status, database connectivity, and pool statistics.
+    Returns server status, database connectivity, pool statistics, and uptime.
     """
-    from app.core.database import engine, SessionLocal
+    from app.core.database import engine, SessionLocal, get_pool_status
     from sqlalchemy import text
+
+    # Calculate uptime
+    uptime_seconds = 0
+    if hasattr(request.app.state, "startup_time"):
+        uptime_seconds = (datetime.utcnow() - request.app.state.startup_time).total_seconds()
 
     health_status = {
         "status": "healthy",
-        "version": "2.1.0",
+        "version": "2.2.0",
         "environment": settings.APP_ENV,
         "database": "disconnected",
+        "uptime_seconds": int(uptime_seconds),
         "timestamp": datetime.utcnow().isoformat(),
+        "sentry_enabled": SENTRY_AVAILABLE and bool(os.getenv("SENTRY_DSN")) and is_production,
     }
 
     try:
@@ -340,12 +397,7 @@ def health():
                 raise Exception("Database query returned unexpected result")
         
         # Get pool statistics
-        pool = engine.pool
-        health_status["pool"] = {
-            "size": pool.size(),
-            "checked_out": pool.checkedout(),
-            "overflow": pool.overflow(),
-        }
+        health_status["pool"] = get_pool_status()
         
         # Test a session
         db = SessionLocal()
@@ -368,6 +420,7 @@ def health():
             health_status["error"] = str(e)
 
     return health_status
+
 
 
 @app.get("/", tags=["System"])

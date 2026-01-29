@@ -40,3 +40,5 @@ slowapi==0.1.9
 aiofiles==24.1.0
 twilio==9.0.0
 pywebpush==2.0.0
+sentry-sdk[fastapi]==2.0.0
+gunicorn==23.0.0

@@ -14,6 +14,7 @@ import {
   Calendar,
   Download,
   Filter,
+  FileText,
 } from 'lucide-react';
 
 interface Mark {
@@ -69,9 +70,9 @@ export default function ResultsPage() {
       setMarks(Array.isArray(marksData?.marks) ? (marksData.marks as Mark[]) : []);
       setResult(resultData as Result || null);
     } catch (err: any) {
-      const errorMessage = typeof err.detail === 'string' ? err.detail : 
-                          err.message || 
-                          'Failed to load results';
+      const errorMessage = typeof err.detail === 'string' ? err.detail :
+        err.message ||
+        'Failed to load results';
       setError(errorMessage);
       setMarks([]); // Set empty array on error
       setResult(null);
@@ -91,202 +92,206 @@ export default function ResultsPage() {
   if (!isAuthenticated || !user) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.push('/campus')}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
-              </button>
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
-                <BarChart3 className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-lg font-bold text-gray-900">My Results</h1>
-                <p className="text-xs text-gray-500">Academic Performance</p>
-              </div>
-            </div>
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Page Header */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between mb-8"
+      >
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => router.push('/campus')}
+            className="p-2 bg-white/5 hover:bg-white/10 rounded-full text-white/60 hover:text-white transition-all"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+              My Results
+              <span className="px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold">
+                Academic
+              </span>
+            </h1>
+            <p className="text-white/40 text-sm">Performance analytics and exam reports</p>
           </div>
         </div>
-      </header>
+      </motion.div>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      {loading ? (
+        <div className="flex items-center justify-center h-64">
+          <div className="relative w-20 h-20">
+            <div className="absolute inset-0 rounded-full border-2 border-t-blue-500 border-r-transparent border-b-transparent border-l-transparent animate-spin"></div>
+            <div className="absolute inset-2 rounded-full border-2 border-t-transparent border-r-purple-500 border-b-transparent border-l-transparent animate-spin-slow"></div>
           </div>
-        ) : error ? (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-            <p className="text-red-600">{error}</p>
-            <button
-              onClick={loadResults}
-              className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-            >
-              Retry
-            </button>
-          </div>
-        ) : (
-          <>
-            {/* Overview Cards */}
-            {result && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"
-              >
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600 mb-1">Overall Percentage</p>
-                      <p className="text-3xl font-bold text-gray-900">{result.percentage.toFixed(1)}%</p>
-                    </div>
-                    <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                      <TrendingUp className="w-6 h-6 text-blue-600" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600 mb-1">Class Rank</p>
-                      <p className="text-3xl font-bold text-gray-900">
-                        {result.class_rank ? `#${result.class_rank}` : 'N/A'}
-                      </p>
-                      {result.class_rank && (
-                        <p className="text-xs text-gray-500">of {result.total_students} students</p>
-                      )}
-                    </div>
-                    <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
-                      <Award className="w-6 h-6 text-yellow-600" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600 mb-1">FA Score</p>
-                      <p className="text-3xl font-bold text-gray-900">{result.fa_score}</p>
-                      <p className="text-xs text-gray-500">out of 200</p>
-                    </div>
-                    <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                      <BookOpen className="w-6 h-6 text-green-600" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600 mb-1">Term Score</p>
-                      <p className="text-3xl font-bold text-gray-900">{result.term_score}</p>
-                      <p className="text-xs text-gray-500">out of 800</p>
-                    </div>
-                    <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                      <Calendar className="w-6 h-6 text-purple-600" />
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {/* Filter and Actions */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 bg-white rounded-lg p-1 border border-gray-200">
-                  <Filter className="w-4 h-4 text-gray-500 ml-2" />
-                  <select
-                    value={selectedExamType}
-                    onChange={(e) => setSelectedExamType(e.target.value)}
-                    className="bg-transparent border-none text-sm focus:ring-0 pr-8"
-                  >
-                    <option value="all">All Exams</option>
-                    {examTypes.map(type => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                <Download className="w-4 h-4" />
-                Download Report
-              </button>
-            </div>
-
-            {/* Marks Table */}
+        </div>
+      ) : error ? (
+        <div className="glass-card bg-red-500/10 border-red-500/20 p-8 text-center">
+          <FileText className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <p className="text-red-400 mb-6">{error}</p>
+          <button
+            onClick={loadResults}
+            className="px-6 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors border border-red-500/20"
+          >
+            Retry Connection
+          </button>
+        </div>
+      ) : (
+        <>
+          {/* Overview Cards */}
+          {result && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
+              className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"
             >
-              <div className="px-6 py-4 border-b border-gray-100">
-                <h2 className="text-lg font-semibold text-gray-900">Subject-wise Marks</h2>
+              <div className="glass-card p-6 border-l-4 border-l-blue-500 bg-gradient-to-br from-blue-500/5 to-transparent">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-white/50 mb-1">Overall Percentage</p>
+                    <p className="text-3xl font-bold text-white">{result.percentage.toFixed(1)}%</p>
+                  </div>
+                  <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center">
+                    <TrendingUp className="w-6 h-6 text-blue-400" />
+                  </div>
+                </div>
               </div>
 
-              {filteredMarks.length === 0 ? (
-                <div className="p-12 text-center">
-                  <BarChart3 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">No marks available yet</p>
+              <div className="glass-card p-6 border-l-4 border-l-yellow-500 bg-gradient-to-br from-yellow-500/5 to-transparent">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-white/50 mb-1">Class Rank</p>
+                    <p className="text-3xl font-bold text-white">
+                      {result.class_rank ? `#${result.class_rank}` : 'N/A'}
+                    </p>
+                    {result.class_rank && (
+                      <p className="text-xs text-white/40">of {result.total_students} students</p>
+                    )}
+                  </div>
+                  <div className="w-12 h-12 bg-yellow-500/10 rounded-xl flex items-center justify-center">
+                    <Award className="w-6 h-6 text-yellow-400" />
+                  </div>
                 </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                          Subject
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                          Exam
-                        </th>
-                        <th className="px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                          Marks
-                        </th>
-                        <th className="px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                          Percentage
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {filteredMarks.map((mark, index) => (
-                        <tr key={index} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-6 py-4">
-                            <div className="font-medium text-gray-900">{mark.subject_name}</div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="text-sm text-gray-600">{mark.exam_name}</div>
-                            <div className="text-xs text-gray-400">{mark.exam_type}</div>
-                          </td>
-                          <td className="px-6 py-4 text-center">
-                            <span className="font-semibold text-gray-900">{mark.marks_obtained}</span>
-                            <span className="text-gray-400"> / {mark.max_marks}</span>
-                          </td>
-                          <td className="px-6 py-4 text-center">
-                            <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
-                              <div
-                                className="bg-blue-600 h-2 rounded-full"
-                                style={{ width: `${mark.percentage}%` }}
-                              ></div>
-                            </div>
-                            <span className="text-sm text-gray-600">{mark.percentage.toFixed(1)}%</span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              </div>
+
+              <div className="glass-card p-6 border-l-4 border-l-green-500 bg-gradient-to-br from-green-500/5 to-transparent">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-white/50 mb-1">FA Score</p>
+                    <p className="text-3xl font-bold text-white">{result.fa_score}</p>
+                    <p className="text-xs text-white/40">out of 200</p>
+                  </div>
+                  <div className="w-12 h-12 bg-green-500/10 rounded-xl flex items-center justify-center">
+                    <BookOpen className="w-6 h-6 text-green-400" />
+                  </div>
                 </div>
-              )}
+              </div>
+
+              <div className="glass-card p-6 border-l-4 border-l-purple-500 bg-gradient-to-br from-purple-500/5 to-transparent">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-white/50 mb-1">Term Score</p>
+                    <p className="text-3xl font-bold text-white">{result.term_score}</p>
+                    <p className="text-xs text-white/40">out of 800</p>
+                  </div>
+                  <div className="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center">
+                    <Calendar className="w-6 h-6 text-purple-400" />
+                  </div>
+                </div>
+              </div>
             </motion.div>
-          </>
-        )}
-      </main>
-    </div>
+          )}
+
+          {/* Filter and Actions */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 glass-card rounded-lg p-1 px-3">
+                <Filter className="w-4 h-4 text-white/50" />
+                <select
+                  value={selectedExamType}
+                  onChange={(e) => setSelectedExamType(e.target.value)}
+                  className="bg-transparent border-none text-sm text-white focus:ring-0 pr-8 py-1 [&>option]:bg-gray-900"
+                >
+                  <option value="all">All Exams</option>
+                  {examTypes.map(type => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <button className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:shadow-[0_0_15px_rgba(79,70,229,0.4)] transition-all">
+              <Download className="w-4 h-4" />
+              Download Report
+            </button>
+          </div>
+
+          {/* Marks Table */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="glass-card overflow-hidden"
+          >
+            <div className="px-6 py-4 border-b border-white/5">
+              <h2 className="text-lg font-semibold text-white">Subject-wise Marks</h2>
+            </div>
+
+            {filteredMarks.length === 0 ? (
+              <div className="p-12 text-center">
+                <BarChart3 className="w-12 h-12 text-white/20 mx-auto mb-4" />
+                <p className="text-white/40">No marks available yet</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-white/5">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-white/50 uppercase tracking-wider">
+                        Subject
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-white/50 uppercase tracking-wider">
+                        Exam
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-semibold text-white/50 uppercase tracking-wider">
+                        Marks
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-semibold text-white/50 uppercase tracking-wider">
+                        Percentage
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {filteredMarks.map((mark, index) => (
+                      <tr key={index} className="hover:bg-white/5 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="font-medium text-white">{mark.subject_name}</div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-white/80">{mark.exam_name}</div>
+                          <div className="text-xs text-white/40">{mark.exam_type}</div>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <span className="font-semibold text-white">{mark.marks_obtained}</span>
+                          <span className="text-white/40"> / {mark.max_marks}</span>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <div className="w-full bg-white/10 rounded-full h-2 mb-1">
+                            <div
+                              className="bg-blue-500 h-2 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.3)]"
+                              style={{ width: `${mark.percentage}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-sm text-white/60">{mark.percentage.toFixed(1)}%</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </motion.div>
+        </>
+      )}
+    </main>
   );
 }

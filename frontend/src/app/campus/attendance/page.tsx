@@ -15,6 +15,7 @@ import {
   ChevronRight,
   TrendingUp,
   AlertTriangle,
+  Info,
 } from 'lucide-react';
 
 interface AttendanceRecord {
@@ -71,26 +72,26 @@ export default function AttendancePage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'PRESENT':
-        return 'bg-green-500';
+        return 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.4)]';
       case 'ABSENT':
-        return 'bg-red-500';
+        return 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.4)]';
       case 'LATE':
-        return 'bg-yellow-500';
+        return 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.4)]';
       case 'LEAVE':
-        return 'bg-blue-500';
+        return 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.4)]';
       default:
-        return 'bg-gray-300';
+        return 'bg-white/10';
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'PRESENT':
-        return <CheckCircle2 className="w-4 h-4 text-green-600" />;
+        return <CheckCircle2 className="w-4 h-4 text-green-400" />;
       case 'ABSENT':
-        return <XCircle className="w-4 h-4 text-red-600" />;
+        return <XCircle className="w-4 h-4 text-red-400" />;
       case 'LATE':
-        return <Clock className="w-4 h-4 text-yellow-600" />;
+        return <Clock className="w-4 h-4 text-yellow-400" />;
       default:
         return null;
     }
@@ -139,7 +140,7 @@ export default function AttendancePage() {
 
     // Empty cells for days before the first day of month
     for (let i = 0; i < firstDay; i++) {
-      days.push(<div key={`empty-${i}`} className="h-12"></div>);
+      days.push(<div key={`empty-${i}`} className="h-12 border border-transparent"></div>);
     }
 
     // Days of the month
@@ -153,22 +154,23 @@ export default function AttendancePage() {
       days.push(
         <div
           key={day}
-          className={`h-12 flex items-center justify-center relative ${
-            isToday ? 'font-bold' : ''
-          }`}
-        >
-          <div
-            className={`w-10 h-10 rounded-full flex items-center justify-center text-sm transition-all ${
-              isToday ? 'ring-2 ring-blue-500 ring-offset-2' : ''
-            } ${
-              record && !isFuture
-                ? getStatusColor(record.status) + ' text-white'
-                : isFuture
-                ? 'text-gray-300'
-                : 'bg-gray-100 text-gray-600'
+          className={`h-14 md:h-20 flex flex-col items-center justify-center relative p-1 rounded-xl border transition-all ${isToday
+              ? 'border-blue-500/50 bg-blue-500/10'
+              : 'border-white/5 bg-white/[0.02] hover:bg-white/[0.05]'
             }`}
-          >
+        >
+          <span className={`text-sm ${isToday ? 'text-blue-400 font-bold' : 'text-white/60'}`}>
             {day}
+          </span>
+
+          <div className="mt-2">
+            {record && !isFuture ? (
+              <div className={`w-2 h-2 rounded-full ${getStatusColor(record.status)}`}></div>
+            ) : isFuture ? (
+              <span className="text-[10px] text-white/10">-</span>
+            ) : (
+              <div className="w-2 h-2 rounded-full bg-white/5"></div>
+            )}
           </div>
         </div>
       );
@@ -180,164 +182,198 @@ export default function AttendancePage() {
   if (!isAuthenticated || !user) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50 to-violet-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.push('/campus')}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
-              </button>
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-lg font-bold text-gray-900">Attendance</h1>
-                <p className="text-xs text-gray-500">Track your attendance history</p>
-              </div>
-            </div>
+    <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Page Header */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between mb-8"
+      >
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => router.push('/campus')}
+            className="p-2 bg-white/5 hover:bg-white/10 rounded-full text-white/60 hover:text-white transition-all"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+              Attendance History
+              <span className="px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold">
+                Student
+              </span>
+            </h1>
+            <p className="text-white/40 text-sm">Track your daily presence and consistency</p>
           </div>
         </div>
-      </header>
+      </motion.div>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      {loading ? (
+        <div className="flex items-center justify-center h-64">
+          <div className="relative w-20 h-20">
+            <div className="absolute inset-0 rounded-full border-2 border-t-blue-500 border-r-transparent border-b-transparent border-l-transparent animate-spin"></div>
+            <div className="absolute inset-2 rounded-full border-2 border-t-transparent border-r-purple-500 border-b-transparent border-l-transparent animate-spin-slow"></div>
           </div>
-        ) : error ? (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-            <p className="text-red-600">{error}</p>
-            <button
-              onClick={loadAttendance}
-              className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-            >
-              Retry
-            </button>
-          </div>
-        ) : (
-          <>
-            {/* Stats Cards */}
+        </div>
+      ) : error ? (
+        <div className="glass-card bg-red-500/10 border-red-500/20 p-8 text-center">
+          <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <p className="text-red-400 mb-6">{error}</p>
+          <button
+            onClick={loadAttendance}
+            className="px-6 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors border border-red-500/20"
+          >
+            Retry Connection
+          </button>
+        </div>
+      ) : (
+        <>
+          {/* Stats Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.1 }}
+              className="col-span-2 md:col-span-1 glass-card p-5 border-l-4 border-l-blue-500 bg-gradient-to-br from-blue-500/5 to-transparent"
             >
-              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-2xl font-bold text-gray-900">{stats?.percentage.toFixed(1) || 0}%</p>
-                    <p className="text-sm text-gray-600">Attendance</p>
-                  </div>
-                  <TrendingUp className={`w-6 h-6 ${(stats?.percentage || 0) >= 75 ? 'text-green-600' : 'text-red-600'}`} />
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-3xl font-bold text-white">{stats?.percentage.toFixed(1) || 0}%</p>
+                  <p className="text-xs text-white/50 uppercase tracking-wider mt-1">Total Attendance</p>
                 </div>
-              </div>
-
-              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                <p className="text-2xl font-bold text-green-600">{stats?.present_days || 0}</p>
-                <p className="text-sm text-gray-600">Present</p>
-              </div>
-
-              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                <p className="text-2xl font-bold text-red-600">{stats?.absent_days || 0}</p>
-                <p className="text-sm text-gray-600">Absent</p>
-              </div>
-
-              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                <p className="text-2xl font-bold text-yellow-600">{stats?.late_days || 0}</p>
-                <p className="text-sm text-gray-600">Late</p>
-              </div>
-
-              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                <p className="text-2xl font-bold text-blue-600">{stats?.leave_days || 0}</p>
-                <p className="text-sm text-gray-600">Leave</p>
+                <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                  <TrendingUp className={`w-5 h-5 ${(stats?.percentage || 0) >= 75 ? 'text-green-400' : 'text-red-400'}`} />
+                </div>
               </div>
             </motion.div>
 
-            {/* Warning if below 75% */}
-            {stats && stats.percentage < 75 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-red-50 border border-red-200 rounded-xl p-4 mb-8 flex items-center gap-4"
-              >
-                <AlertTriangle className="w-6 h-6 text-red-600" />
-                <div>
-                  <p className="font-semibold text-red-800">Low Attendance Warning</p>
-                  <p className="text-sm text-red-600">
-                    Your attendance is below 75%. Please maintain regular attendance.
-                  </p>
-                </div>
-              </motion.div>
-            )}
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="glass-card p-4 text-center hover:bg-white/5 transition-colors"
+            >
+              <p className="text-2xl font-bold text-green-400">{stats?.present_days || 0}</p>
+              <p className="text-xs text-white/40 mt-1">Present</p>
+            </motion.div>
 
-            {/* Calendar */}
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="glass-card p-4 text-center hover:bg-white/5 transition-colors"
+            >
+              <p className="text-2xl font-bold text-red-400">{stats?.absent_days || 0}</p>
+              <p className="text-xs text-white/40 mt-1">Absent</p>
+            </motion.div>
+
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="glass-card p-4 text-center hover:bg-white/5 transition-colors"
+            >
+              <p className="text-2xl font-bold text-yellow-400">{stats?.late_days || 0}</p>
+              <p className="text-xs text-white/40 mt-1">Late</p>
+            </motion.div>
+
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="glass-card p-4 text-center hover:bg-white/5 transition-colors"
+            >
+              <p className="text-2xl font-bold text-blue-400">{stats?.leave_days || 0}</p>
+              <p className="text-xs text-white/40 mt-1">Leave</p>
+            </motion.div>
+          </div>
+
+          {/* Low Attendance Warning */}
+          {stats && stats.percentage < 75 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="bg-white rounded-xl shadow-sm border border-gray-100 p-6"
+              className="glass-card bg-red-500/5 border-red-500/20 p-4 mb-8 flex items-start gap-4"
             >
-              {/* Month Navigation */}
-              <div className="flex items-center justify-between mb-6">
-                <button
-                  onClick={() => navigateMonth('prev')}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <ChevronLeft className="w-5 h-5 text-gray-600" />
-                </button>
-                <h2 className="text-xl font-bold text-gray-900">
+              <div className="p-2 bg-red-500/10 rounded-full flex-shrink-0">
+                <AlertTriangle className="w-5 h-5 text-red-500" />
+              </div>
+              <div>
+                <p className="font-bold text-white">Low Attendance Warning</p>
+                <p className="text-sm text-red-300 mt-1">
+                  Your attendance is currently below 75%. Please ensure you attend classes regularly to meet academic requirements.
+                </p>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Calendar Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="glass-card p-6 md:p-8"
+          >
+            {/* Calendar Controls */}
+            <div className="flex items-center justify-between mb-8">
+              <button
+                onClick={() => navigateMonth('prev')}
+                className="p-3 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+
+              <div className="text-center">
+                <h2 className="text-2xl font-bold text-white tracking-tight">
                   {monthNames[currentMonth - 1]} {currentYear}
                 </h2>
-                <button
-                  onClick={() => navigateMonth('next')}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <ChevronRight className="w-5 h-5 text-gray-600" />
-                </button>
+                <p className="text-xs text-white/40 uppercase tracking-widest mt-1">Monthly Report</p>
               </div>
 
-              {/* Day Headers */}
-              <div className="grid grid-cols-7 gap-2 mb-4">
-                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                  <div key={day} className="text-center text-sm font-semibold text-gray-500">
-                    {day}
-                  </div>
-                ))}
-              </div>
+              <button
+                onClick={() => navigateMonth('next')}
+                className="p-3 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
 
-              {/* Calendar Grid */}
-              <div className="grid grid-cols-7 gap-2">
-                {renderCalendar()}
-              </div>
+            {/* Week Headers */}
+            <div className="grid grid-cols-7 gap-2 mb-4">
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                <div key={day} className="text-center text-xs font-bold text-white/30 uppercase tracking-wider">
+                  {day}
+                </div>
+              ))}
+            </div>
 
-              {/* Legend */}
-              <div className="flex items-center justify-center gap-6 mt-6 pt-6 border-t border-gray-100">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full bg-green-500"></div>
-                  <span className="text-sm text-gray-600">Present</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full bg-red-500"></div>
-                  <span className="text-sm text-gray-600">Absent</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full bg-yellow-500"></div>
-                  <span className="text-sm text-gray-600">Late</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full bg-blue-500"></div>
-                  <span className="text-sm text-gray-600">Leave</span>
-                </div>
+            {/* Calendar Grid */}
+            <div className="grid grid-cols-7 gap-2 md:gap-4">
+              {renderCalendar()}
+            </div>
+
+            {/* Legend */}
+            <div className="flex flex-wrap items-center justify-center gap-6 mt-8 pt-8 border-t border-white/5">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]"></div>
+                <span className="text-sm text-white/60">Present</span>
               </div>
-            </motion.div>
-          </>
-        )}
-      </main>
-    </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]"></div>
+                <span className="text-sm text-white/60">Absent</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.4)]"></div>
+                <span className="text-sm text-white/60">Late</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)]"></div>
+                <span className="text-sm text-white/60">Leave</span>
+              </div>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </main>
   );
 }

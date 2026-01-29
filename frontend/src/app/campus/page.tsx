@@ -1,11 +1,10 @@
 'use client';
 
 /**
- * Modern Campus Dashboard - Redesigned
+ * Modern Campus Dashboard - Igloo.inc Inspired
  *
- * Clean, functional, card-based interface
- * Role-based content display
- * Inspired by modern dashboard designs
+ * Dark, glassmorphic interface with particle effects
+ * and verified role-based access.
  */
 
 import { useEffect, useState } from 'react';
@@ -13,7 +12,6 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useStore';
 import { motion } from 'framer-motion';
 import {
-  GraduationCap,
   BookOpen,
   DollarSign,
   Bell,
@@ -23,15 +21,11 @@ import {
   FileText,
   Clock,
   Trophy,
-  Home,
-  LogOut,
   ChevronRight,
-  Star,
   TrendingUp,
-  Activity,
-  User,
-  Settings,
+  Star,
   Shield,
+  Sparkles,
 } from 'lucide-react';
 
 interface DashboardCard {
@@ -39,7 +33,7 @@ interface DashboardCard {
   title: string;
   description: string;
   icon: any;
-  color: string;
+  color: string; // Tailwind gradient classes
   href: string;
   roles: string[];
   badge?: string;
@@ -47,7 +41,7 @@ interface DashboardCard {
 
 export default function ModernCampusPage() {
   const router = useRouter();
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   const [greeting, setGreeting] = useState('');
 
   useEffect(() => {
@@ -125,7 +119,7 @@ export default function ModernCampusPage() {
       roles: ['PARENT'],
     },
 
-    // TEACHER Cards (ADMIN also has access to all teacher features)
+    // TEACHER Cards
     {
       id: 'my-classes',
       title: 'Manage Classes',
@@ -205,7 +199,7 @@ export default function ModernCampusPage() {
     {
       id: 'notifications',
       title: 'Notifications',
-      description: 'View important announcements and updates',
+      description: 'Check announcements and updates',
       icon: Bell,
       color: 'from-amber-500 to-yellow-600',
       href: '/campus/notifications',
@@ -232,185 +226,132 @@ export default function ModernCampusPage() {
     },
   ];
 
-  // Ensure cards is always an array and user has a role before filtering
-  const userCards = Array.isArray(cards) && user?.role 
-    ? cards.filter((card) => card.roles.includes(user.role))
-    : [];
-
-  const handleLogout = () => {
-    logout();
-    router.push('/');
-  };
-
   if (!isAuthenticated || !user) {
     return null;
   }
 
-  const getRoleName = (role: string) => {
-    return role.replace('_', ' ').toLowerCase().replace(/\b\w/g, (l) => l.toUpperCase());
-  };
+  // Filter cards based on user role
+  const userCards = Array.isArray(cards) && user?.role
+    ? cards.filter((card) => card.roles.includes(user.role))
+    : [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
-      {/* Modern Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50 backdrop-blur-lg bg-white/90">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo & Title */}
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary-600 to-primary-700 rounded-xl flex items-center justify-center">
-                <GraduationCap className="w-6 h-6 text-white" />
-              </div>
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Welcome Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+        className="mb-12 relative"
+      >
+        <div className="absolute -left-20 -top-20 w-64 h-64 bg-blue-500/20 rounded-full blur-[100px] pointer-events-none" />
+
+        <h2 className="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">
+          {greeting}, <span className="text-gradient-accent">{user.name.split(' ')[0]}</span>
+        </h2>
+        <p className="text-white/60 text-lg max-w-2xl">
+          Welcome to your digital campus. Access your tools, track progress, and stay updated with the latest announcements.
+        </p>
+      </motion.div>
+
+      {/* Dashboard Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {userCards.map((card, index) => {
+          const Icon = card.icon;
+          return (
+            <motion.div
+              key={card.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.08, duration: 0.5 }}
+            >
+              <button
+                onClick={() => router.push(card.href)}
+                className="w-full group relative glass-card p-8 h-full text-left overflow-hidden hover:bg-white/[0.04] transition-all duration-500"
+              >
+                {/* Gradient Glow Effect on Hover */}
+                <div className={`absolute inset-0 bg-gradient-to-br ${card.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
+                <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform translate-x-2 group-hover:translate-x-0">
+                  <ChevronRight className="w-5 h-5 text-white/40" />
+                </div>
+
+                {/* Content */}
+                <div className="relative z-10">
+                  <div className="flex items-start justify-between mb-6">
+                    <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${card.color} p-[1px] group-hover:scale-110 transition-transform duration-500`}>
+                      <div className="w-full h-full rounded-2xl bg-[#151515] flex items-center justify-center">
+                        <Icon className="w-7 h-7 text-white" />
+                      </div>
+                    </div>
+                    {card.badge && (
+                      <span className="px-3 py-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold rounded-full shadow-lg shadow-red-500/20">
+                        {card.badge}
+                      </span>
+                    )}
+                  </div>
+
+                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-blue-400 transition-colors">
+                    {card.title}
+                  </h3>
+                  <p className="text-white/50 text-sm leading-relaxed mb-4 group-hover:text-white/70 transition-colors">
+                    {card.description}
+                  </p>
+
+                  {/* Hover Line */}
+                  <div className="h-0.5 w-0 bg-gradient-to-r from-blue-500 to-purple-500 group-hover:w-full transition-all duration-700 ease-out" />
+                </div>
+              </button>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* Quick Stats (Student Only) */}
+      {user.role === 'STUDENT' && (
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="mt-12"
+        >
+          <div className="flex items-center gap-2 mb-6 text-white/40 text-sm uppercase tracking-widest font-semibold">
+            <Sparkles className="w-4 h-4" />
+            <span>Quick Insights</span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="glass-card p-6 flex items-center justify-between border-l-4 border-l-green-500">
               <div>
-                <h1 className="text-lg font-bold text-gray-900">Jesus Junior Academy</h1>
-                <p className="text-xs text-gray-500">Digital Campus</p>
+                <p className="text-sm text-white/50 mb-1">Attendance</p>
+                <p className="text-3xl font-bold text-white">92%</p>
+              </div>
+              <div className="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center">
+                <TrendingUp className="w-6 h-6 text-green-500" />
               </div>
             </div>
 
-            {/* User Menu */}
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.push('/')}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                title="Go to Homepage"
-              >
-                <Home className="w-5 h-5 text-gray-600" />
-              </button>
-
-              <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-gray-900">{user.name}</p>
-                  <p className="text-xs text-gray-500">{getRoleName(user.role)}</p>
-                </div>
-                <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-semibold">
-                  {user.name.charAt(0).toUpperCase()}
-                </div>
+            <div className="glass-card p-6 flex items-center justify-between border-l-4 border-l-blue-500">
+              <div>
+                <p className="text-sm text-white/50 mb-1">Assigned Homework</p>
+                <p className="text-3xl font-bold text-white">3</p>
               </div>
+              <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center">
+                <BookOpen className="w-6 h-6 text-blue-500" />
+              </div>
+            </div>
 
-              <button
-                onClick={handleLogout}
-                className="p-2 hover:bg-red-50 text-gray-600 hover:text-red-600 rounded-lg transition-colors"
-                title="Logout"
-              >
-                <LogOut className="w-5 h-5" />
-              </button>
+            <div className="glass-card p-6 flex items-center justify-between border-l-4 border-l-yellow-500">
+              <div>
+                <p className="text-sm text-white/50 mb-1">Performance</p>
+                <p className="text-3xl font-bold text-white">A</p>
+              </div>
+              <div className="w-12 h-12 rounded-full bg-yellow-500/10 flex items-center justify-center">
+                <Star className="w-6 h-6 text-yellow-500" />
+              </div>
             </div>
           </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            {greeting}, {user.name.split(' ')[0]}!
-          </h2>
-          <p className="text-gray-600">
-            Welcome to your digital campus. Select a service below to get started.
-          </p>
         </motion.div>
-
-        {/* Dashboard Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {userCards.map((card, index) => {
-            const Icon = card.icon;
-            return (
-              <motion.div
-                key={card.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <button
-                  onClick={() => router.push(card.href)}
-                  className="w-full group relative bg-white rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-transparent overflow-hidden text-left"
-                >
-                  {/* Gradient Background (on hover) */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${card.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
-
-                  {/* Content */}
-                  <div className="relative">
-                    {/* Icon & Badge */}
-                    <div className="flex items-start justify-between mb-4">
-                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${card.color} flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300`}>
-                        <Icon className="w-6 h-6 text-white" />
-                      </div>
-                      {card.badge && (
-                        <span className="px-2 py-1 bg-red-500 text-white text-xs font-semibold rounded-full">
-                          {card.badge}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Title & Description */}
-                    <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-primary-600 transition-colors">
-                      {card.title}
-                    </h3>
-                    <p className="text-sm text-gray-600 mb-4">{card.description}</p>
-
-                    {/* Arrow */}
-                    <div className="flex items-center text-sm font-semibold text-primary-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <span>Open</span>
-                      <ChevronRight className="w-4 h-4 ml-1 transform group-hover:translate-x-1 transition-transform" />
-                    </div>
-                  </div>
-                </button>
-              </motion.div>
-            );
-          })}
-        </div>
-
-        {/* Quick Stats (Optional) */}
-        {user.role === 'STUDENT' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6"
-          >
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Attendance</p>
-                  <p className="text-2xl font-bold text-gray-900">92%</p>
-                </div>
-                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                  <TrendingUp className="w-6 h-6 text-green-600" />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Pending Homework</p>
-                  <p className="text-2xl font-bold text-gray-900">3</p>
-                </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <BookOpen className="w-6 h-6 text-blue-600" />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Overall Grade</p>
-                  <p className="text-2xl font-bold text-gray-900">A</p>
-                </div>
-                <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
-                  <Star className="w-6 h-6 text-yellow-600" fill="currentColor" />
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </main>
-    </div>
+      )}
+    </main>
   );
 }
