@@ -6,7 +6,7 @@ Creates test users for development and testing purposes.
 
 from app.core.database import engine, Base
 from app.core.security import hash_password
-from app.models.user import User
+from app.models.user import User, ApprovalStatus
 from app.models.academic_year import AcademicYear
 from app.models.subject import Subject
 from app.models.school_class import SchoolClass
@@ -143,6 +143,8 @@ def seed_test_users():
                 password_hash=hash_password(user_data["password"]),
                 role=user_data["role"],
                 is_active=True,
+                is_approved=True,
+                approval_status=ApprovalStatus.APPROVED,
             )
 
             # Link to entity

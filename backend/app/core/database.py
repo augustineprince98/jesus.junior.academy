@@ -39,7 +39,7 @@ engine = create_engine(
     connect_args={
         "connect_timeout": 10,  # Connection timeout in seconds
         "sslmode": "require",  # Ensure SSL is required
-        "options": "-c statement_timeout=30000",  # 30s query timeout
+        # Note: statement_timeout is not supported by Neon.tech pooled connections
     },
     echo=False,  # Set to True for SQL query logging
 )

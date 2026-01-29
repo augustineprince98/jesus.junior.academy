@@ -33,6 +33,9 @@ from .teacher_class_subject import TeacherClassSubject
 from .achievement import Achievement, AchievementCategory
 from .event import Event, EventType
 
+# Push notifications
+from .push_subscription import PushSubscription
+
 __all__ = [
     "Base",
     "User",
@@ -82,4 +85,6 @@ __all__ = [
     "AchievementCategory",
     "Event",
     "EventType",
+    # Push notifications
+    "PushSubscription",
 ]

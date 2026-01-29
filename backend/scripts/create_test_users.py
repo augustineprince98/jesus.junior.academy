@@ -6,7 +6,7 @@ Creates users for all roles: Admin, Teacher, Parent, Student
 
 from app.core.database import SessionLocal
 from app.core.security import hash_password
-from app.models.user import User
+from app.models.user import User, ApprovalStatus
 from app.models.people import Student, Parent, Teacher
 
 def create_test_users():
@@ -27,7 +27,9 @@ def create_test_users():
                 email="admin@jesusja.com",
                 password_hash=hash_password("admin123"),
                 role="ADMIN",
-                is_active=True
+                is_active=True,
+                is_approved=True,
+                approval_status=ApprovalStatus.APPROVED
             )
             db.add(admin)
             db.commit()
@@ -56,6 +58,8 @@ def create_test_users():
                 password_hash=hash_password("teacher123"),
                 role="TEACHER",
                 is_active=True,
+                is_approved=True,
+                approval_status=ApprovalStatus.APPROVED,
                 teacher_id=teacher.id
             )
             db.add(teacher_user)
@@ -85,6 +89,8 @@ def create_test_users():
                 password_hash=hash_password("parent123"),
                 role="PARENT",
                 is_active=True,
+                is_approved=True,
+                approval_status=ApprovalStatus.APPROVED,
                 parent_id=parent.id
             )
             db.add(parent_user)
@@ -115,6 +121,8 @@ def create_test_users():
                 password_hash=hash_password("student123"),
                 role="STUDENT",
                 is_active=True,
+                is_approved=True,
+                approval_status=ApprovalStatus.APPROVED,
                 student_id=student.id
             )
             db.add(student_user)
