@@ -28,18 +28,22 @@ if not DATABASE_URL:
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 # Optimized connection pool settings for Neon.tech (serverless PostgreSQL)
+# Tuned for faster connections and reduced cold start impact
 engine = create_engine(
     DATABASE_URL,
     poolclass=QueuePool,
-    pool_size=5,  # Number of connections to maintain
-    max_overflow=10,  # Additional connections that can be created
-    pool_pre_ping=True,  # Verify connections before using
-    pool_recycle=1800,  # Recycle connections after 30 minutes
-    pool_timeout=30,  # Wait up to 30s for a connection
+    pool_size=3,  # Smaller pool for serverless (reduces connection overhead)
+    max_overflow=7,  # Allow up to 10 total connections
+    pool_pre_ping=True,  # Verify connections before using (prevents stale connections)
+    pool_recycle=300,  # Recycle connections every 5 minutes (keeps connections fresh)
+    pool_timeout=15,  # Faster timeout - fail fast if no connection available
     connect_args={
-        "connect_timeout": 10,  # Connection timeout in seconds
+        "connect_timeout": 5,  # Quick connection timeout
         "sslmode": "require",  # Ensure SSL is required
-        # Note: statement_timeout is not supported by Neon.tech pooled connections
+        "keepalives": 1,  # Enable TCP keepalives
+        "keepalives_idle": 30,  # Start keepalive after 30s idle
+        "keepalives_interval": 10,  # Send keepalive every 10s
+        "keepalives_count": 5,  # Disconnect after 5 failed keepalives
     },
     echo=False,  # Set to True for SQL query logging
 )

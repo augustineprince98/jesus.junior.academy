@@ -19,6 +19,7 @@ from datetime import datetime
 import time
 import os
 import uuid
+import asyncio
 import signal
 
 # Sentry for error monitoring (production)
@@ -65,7 +66,7 @@ from app.core.logging_config import setup_logging, get_logger, set_request_id
 from app.core.exceptions import register_exception_handlers, AppException
 from app.core.security_headers import SecurityHeadersMiddleware, RequestSizeLimitMiddleware
 from app.services.scheduler_service import start_scheduler, stop_scheduler
-from app.core.database import dispose_engine
+from app.core.database import dispose_engine, check_database_connection
 
 
 # Setup logging
@@ -75,6 +76,27 @@ setup_logging(
     json_format=is_production,
 )
 logger = get_logger(__name__)
+
+
+# Database warmup task to prevent Neon.tech cold starts
+async def database_warmup_task():
+    """
+    Pings the database every 4 minutes to keep the connection warm.
+    Prevents Neon.tech serverless PostgreSQL from going to sleep.
+    """
+    while True:
+        try:
+            await asyncio.sleep(240)  # 4 minutes
+            if check_database_connection():
+                logger.debug("Database warmup ping successful")
+            else:
+                logger.warning("Database warmup ping failed")
+        except asyncio.CancelledError:
+            logger.info("Database warmup task cancelled")
+            break
+        except Exception as e:
+            logger.error(f"Database warmup error: {e}")
+            await asyncio.sleep(60)  # Retry after 1 minute on error
 
 
 @asynccontextmanager
@@ -104,10 +126,25 @@ async def lifespan(app: FastAPI):
     # Record startup time for uptime tracking
     app.state.startup_time = datetime.utcnow()
     
+    # Start database warmup task to prevent cold starts
+    warmup_task = asyncio.create_task(database_warmup_task())
+    logger.info("Database warmup task started (pings every 4 minutes)")
+    
+    # Initial database connection check
+    if check_database_connection():
+        logger.info("Initial database connection verified")
+    else:
+        logger.warning("Initial database connection check failed")
+    
     yield
     
     # Graceful shutdown
     logger.info("Shutting down application...")
+    warmup_task.cancel()
+    try:
+        await warmup_task
+    except asyncio.CancelledError:
+        pass
     stop_scheduler()
     dispose_engine()  # Clean up database connections
     logger.info("Shutdown complete")
