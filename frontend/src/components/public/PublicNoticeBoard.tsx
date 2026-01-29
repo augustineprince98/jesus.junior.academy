@@ -66,7 +66,21 @@ export default function PublicNoticeBoard() {
         );
     }
 
-    if (notices.length === 0) return null;
+    // If no notices, show empty state instead of null to maintain layout
+    if (!loading && notices.length === 0) {
+        return (
+            <section className="section-elevated py-20 relative overflow-hidden">
+                <div className="absolute inset-0 bg-grid opacity-30" />
+                <div className="max-w-7xl mx-auto px-6 relative z-10 text-center text-white/40">
+                    <div className="icon-circle icon-circle-lg icon-circle-gold mx-auto mb-4 opacity-50">
+                        <Bell className="w-6 h-6" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-white mb-2">Notice Board</h2>
+                    <p>No new announcements at this time.</p>
+                </div>
+            </section>
+        );
+    }
 
     return (
         <section className="section-elevated py-20 relative overflow-hidden">

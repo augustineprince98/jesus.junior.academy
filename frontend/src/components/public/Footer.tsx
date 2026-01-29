@@ -111,10 +111,8 @@ export default function Footer() {
           <div className="max-w-6xl mx-auto px-6 py-6">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               {/* Copyright */}
-              <p className="text-sm text-white/30 flex items-center gap-1">
-                © {currentYear} Jesus Junior Academy. Made with
-                <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
-                in India
+              <p className="text-sm text-white/30">
+                © {currentYear} Jesus Junior Academy. All Rights Reserved.
               </p>
 
               {/* Policy Links */}
