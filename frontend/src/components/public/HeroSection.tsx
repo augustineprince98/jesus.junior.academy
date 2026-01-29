@@ -55,7 +55,7 @@ function BreathingCenterpiece({ scrollYProgress }: { scrollYProgress: any }) {
 
             {/* Inner Shield Shape */}
             <path
-              d="M100 20 L170 50 V110 C170 155 100 190 100 190 C100 190 30 155 30 110 V50 L100 20 Z"
+              d="M100 15 L170 45 V105 C170 150 100 185 100 185 C100 185 30 150 30 105 V45 L100 15 Z"
               fill="url(#shieldGrad)"
               stroke="url(#borderGrad)"
               strokeWidth="2"
@@ -63,7 +63,7 @@ function BreathingCenterpiece({ scrollYProgress }: { scrollYProgress: any }) {
 
             {/* Inner Symbol - "JJ" Monogram or Cross */}
             <path
-              d="M100 50 V150 M70 80 H130"
+              d="M100 45 V145 M70 75 H130"
               stroke="white"
               strokeWidth="2"
               strokeLinecap="round"
