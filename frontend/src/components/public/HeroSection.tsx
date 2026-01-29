@@ -1,274 +1,172 @@
 'use client';
 
 /**
- * Hero Section - Igloo.inc Inspired with Interactive Parallax
+ * Hero Section - Igloo-Inspired with Breathing Centerpiece & Scroll Transition
  *
- * Full-screen dark hero with:
- * - Interactive dot grid that reacts to mouse
- * - Parallax floating elements
- * - Smooth animations
+ * - Single line massive header
+ * - Breathing "Shield" centerpiece
+ * - Scroll-linked zoom/parallax effects
  */
 
 import Link from 'next/link';
-import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { ChevronDown, Sparkles } from 'lucide-react';
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { motion, useScroll, useTransform, useSpring, useMotionValue } from 'framer-motion';
+import { ChevronDown, Shield, Sparkles } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
-// Interactive dot grid component
-function InteractiveDotGrid() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [isHovering, setIsHovering] = useState(false);
-
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    setMousePosition({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    });
-  }, []);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    container.addEventListener('mousemove', handleMouseMove);
-    container.addEventListener('mouseenter', () => setIsHovering(true));
-    container.addEventListener('mouseleave', () => setIsHovering(false));
-
-    return () => {
-      container.removeEventListener('mousemove', handleMouseMove);
-      container.removeEventListener('mouseenter', () => setIsHovering(true));
-      container.removeEventListener('mouseleave', () => setIsHovering(false));
-    };
-  }, [handleMouseMove]);
-
-  // Generate dots
-  const dots = [];
-  const spacing = 50;
-  const cols = 40;
-  const rows = 25;
-
-  for (let i = 0; i < rows; i++) {
-    for (let j = 0; j < cols; j++) {
-      const x = j * spacing + spacing / 2;
-      const y = i * spacing + spacing / 2;
-
-      // Calculate distance from mouse
-      const dx = mousePosition.x - x;
-      const dy = mousePosition.y - y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      const maxDistance = 150;
-
-      // Calculate displacement based on distance
-      const factor = Math.max(0, 1 - distance / maxDistance);
-      const displaceX = isHovering ? (dx / distance) * factor * 20 : 0;
-      const displaceY = isHovering ? (dy / distance) * factor * 20 : 0;
-
-      // Calculate opacity based on distance
-      const opacity = isHovering && distance < maxDistance
-        ? 0.15 + factor * 0.6
-        : 0.08;
-
-      dots.push(
-        <circle
-          key={`${i}-${j}`}
-          cx={x + (isNaN(displaceX) ? 0 : displaceX)}
-          cy={y + (isNaN(displaceY) ? 0 : displaceY)}
-          r={isHovering && distance < maxDistance ? 2 + factor * 2 : 1.5}
-          fill={distance < maxDistance && isHovering ? '#6691E5' : '#ffffff'}
-          opacity={opacity}
-          style={{
-            transition: 'all 0.15s ease-out',
-          }}
-        />
-      );
-    }
-  }
+// Geometric Shield Component that "Breathes"
+function BreathingCenterpiece({ scrollYProgress }: { scrollYProgress: any }) {
+  // Map scroll to scale/opacity
+  // Scale UP as we scroll down to create a "portal" effect or just fade out
+  const scale = useTransform(scrollYProgress, [0, 0.5], [1, 20]);
+  const opacity = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
+  const rotate = useTransform(scrollYProgress, [0, 1], [0, 45]);
 
   return (
-    <div ref={containerRef} className="absolute inset-0 overflow-hidden">
-      <svg
-        className="w-full h-full"
-        style={{ minWidth: cols * spacing, minHeight: rows * spacing }}
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+      <motion.div
+        style={{ scale, opacity, rotate }}
+        className="relative"
       >
-        {dots}
-      </svg>
+        {/* Core Shield */}
+        <div className="relative w-64 h-64 md:w-96 md:h-96">
+          {/* Breathing Animation Layer */}
+          <motion.div
+            animate={{ scale: [1, 1.05, 1], opacity: [0.5, 0.8, 0.5] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute inset-0 bg-gradient-to-b from-[#6691E5]/20 to-transparent rounded-full blur-3xl"
+          />
+
+          {/* Geometric Shield Icon */}
+          <svg viewBox="0 0 200 200" className="w-full h-full drop-shadow-[0_0_30px_rgba(102,145,229,0.3)]">
+            <defs>
+              <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#222" />
+                <stop offset="50%" stopColor="#111" />
+                <stop offset="100%" stopColor="#000" />
+              </linearGradient>
+              <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#6691E5" />
+                <stop offset="100%" stopColor="#F5D76E" />
+              </linearGradient>
+            </defs>
+
+            {/* Outer Ring */}
+            <circle cx="100" cy="100" r="90" fill="none" stroke="url(#borderGrad)" strokeWidth="1" strokeOpacity="0.3" />
+
+            {/* Inner Shield Shape */}
+            <path
+              d="M100 20 L170 50 V110 C170 155 100 190 100 190 C100 190 30 155 30 110 V50 L100 20 Z"
+              fill="url(#shieldGrad)"
+              stroke="url(#borderGrad)"
+              strokeWidth="2"
+            />
+
+            {/* Inner Symbol - "JJ" Monogram or Cross */}
+            <path
+              d="M100 50 V150 M70 80 H130"
+              stroke="white"
+              strokeWidth="2"
+              strokeLinecap="round"
+              opacity="0.8"
+            />
+          </svg>
+        </div>
+      </motion.div>
     </div>
   );
 }
 
-// Floating parallax element
-function FloatingElement({
-  children,
-  depth = 1,
-  className = ''
-}: {
-  children: React.ReactNode;
-  depth?: number;
-  className?: string;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-
-  const springConfig = { stiffness: 50, damping: 20 };
-  const x = useSpring(useTransform(mouseX, [-500, 500], [-30 * depth, 30 * depth]), springConfig);
-  const y = useSpring(useTransform(mouseY, [-500, 500], [-30 * depth, 30 * depth]), springConfig);
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      const centerX = window.innerWidth / 2;
-      const centerY = window.innerHeight / 2;
-      mouseX.set(e.clientX - centerX);
-      mouseY.set(e.clientY - centerY);
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, [mouseX, mouseY]);
-
-  return (
-    <motion.div ref={ref} style={{ x, y }} className={className}>
-      {children}
-    </motion.div>
-  );
-}
-
 export default function HeroSection() {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Track scroll for parallax
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end start"]
+  });
+
+  const textY = useTransform(scrollYProgress, [0, 0.5], [0, -200]);
+  const textOpacity = useTransform(scrollYProgress, [0, 0.4], [1, 0]);
+
   return (
-    <section className="hero-section relative flex flex-col items-center justify-center text-center min-h-screen px-6 overflow-hidden bg-[#0A0A0A]">
-      {/* Interactive dot grid background */}
-      <InteractiveDotGrid />
+    <section
+      ref={containerRef}
+      className="relative h-[150vh] bg-[#0A0A0A]" // Extra height for scroll distance
+    >
+      <div className="sticky top-0 h-screen flex flex-col items-center justify-center overflow-hidden">
 
-      {/* Gradient overlays for depth */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0A0A0A] pointer-events-none" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,#0A0A0A_70%)] pointer-events-none" />
+        {/* Background Effects */}
+        <div className="absolute inset-0 bg-dots opacity-40" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0A0A0A]/50 to-[#0A0A0A] pointer-events-none" />
 
-      {/* Floating glow orbs with parallax */}
-      <FloatingElement depth={0.5} className="absolute">
-        <div className="glow-orb glow-orb-blue w-[500px] h-[500px] -top-40 -left-40 animate-pulse-glow" />
-      </FloatingElement>
+        {/* Breathing Centerpiece */}
+        <BreathingCenterpiece scrollYProgress={scrollYProgress} />
 
-      <FloatingElement depth={0.8} className="absolute">
-        <div className="glow-orb glow-orb-gold w-[350px] h-[350px] top-1/4 -right-32 animate-pulse-glow" style={{ animationDelay: '1s' }} />
-      </FloatingElement>
-
-      <FloatingElement depth={0.3} className="absolute">
-        <div className="glow-orb glow-orb-blue w-[200px] h-[200px] bottom-32 left-1/4 animate-pulse-glow" style={{ animationDelay: '2s' }} />
-      </FloatingElement>
-
-      {/* Content with parallax */}
-      <div className="relative z-10 max-w-5xl">
-        {/* Badge */}
-        <FloatingElement depth={0.2}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="mb-8"
-          >
-            <span className="badge badge-accent text-sm">
+        {/* Content Layer */}
+        <motion.div
+          style={{ y: textY, opacity: textOpacity }}
+          className="relative z-10 w-full px-6 flex flex-col items-center"
+        >
+          {/* Badge */}
+          <div className="mb-12">
+            <span className="badge badge-accent text-sm backdrop-blur-md">
               <Sparkles className="w-4 h-4 mr-2" />
-              Nurturing Young Minds Since 1994
+              Est. 1994
             </span>
-          </motion.div>
-        </FloatingElement>
+          </div>
 
-        {/* School Name - MASSIVE with parallax layers */}
-        <div className="relative">
-          {/* Shadow/depth layer */}
-          <FloatingElement depth={0.1}>
-            <motion.h1
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.1 }}
-              transition={{ duration: 1, delay: 0.5 }}
-              className="font-bambi text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl leading-[0.9] tracking-tight text-white/10 absolute inset-0 blur-sm select-none"
+          {/* School Name - ONE LINE */}
+          <h1 className="w-full text-center mb-8">
+            <span className="font-bambi text-white text-[8vw] leading-none whitespace-nowrap tracking-tight drop-shadow-2xl filter blur-[0.5px]">
+              JESUS JUNIOR ACADEMY
+            </span>
+            {/* Mirror/Reflection Effect */}
+            <span
+              className="block font-bambi text-white/5 text-[8vw] leading-none whitespace-nowrap tracking-tight transform -scale-y-100 absolute left-0 right-0 top-full origin-top blur-sm select-none"
               aria-hidden="true"
             >
-              <span className="block">JESUS JUNIOR</span>
-              <span className="block">ACADEMY</span>
-            </motion.h1>
-          </FloatingElement>
+              JESUS JUNIOR ACADEMY
+            </span>
+          </h1>
 
-          {/* Main text */}
-          <FloatingElement depth={0.3}>
-            <motion.h1
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              className="font-bambi hero-title text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl mb-6 leading-[0.9] tracking-tight relative"
-            >
-              <span className="block text-white">JESUS JUNIOR</span>
-              <span className="block text-gradient-accent">ACADEMY</span>
-            </motion.h1>
-          </FloatingElement>
-        </div>
-
-        {/* Tagline */}
-        <FloatingElement depth={0.4}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
-            className="mb-12"
-          >
-            <p className="text-xl md:text-2xl lg:text-3xl font-medium text-white/90 mb-4">
-              "THE TRUTH SHALL MAKE YOU FREE."
+          {/* Tagline */}
+          <div className="max-w-2xl text-center space-y-6 mt-12 bg-[#0A0A0A]/30 backdrop-blur-sm p-6 rounded-2xl border border-white/5 mx-4">
+            <p className="text-2xl md:text-3xl font-medium text-white/90 font-serif italic">
+              "The Truth Shall Make You Free"
             </p>
-            <p className="text-base md:text-lg text-white/50 max-w-xl mx-auto">
-              Quality Education • Strong Values • Bright Futures
-            </p>
-          </motion.div>
-        </FloatingElement>
+            <div className="flex items-center justify-center gap-2 text-white/40 text-sm uppercase tracking-widest">
+              <span>Wisdom</span>
+              <span className="w-1 h-1 bg-[#6691E5] rounded-full" />
+              <span>Character</span>
+              <span className="w-1 h-1 bg-[#F5D76E] rounded-full" />
+              <span>Service</span>
+            </div>
+          </div>
 
-        {/* CTA Buttons */}
-        <FloatingElement depth={0.5}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.8 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
-          >
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 mt-12">
             <Link href="#admission">
-              <button className="btn btn-gold px-8 py-4 text-lg font-bold">
+              <button className="btn btn-gold px-8 py-4 text-lg font-bold min-w-[200px]">
                 Admission Enquiry
               </button>
             </Link>
-
             <Link href="/login">
-              <button className="btn btn-secondary px-8 py-4 text-lg">
-                Enter Campus
+              <button className="btn btn-secondary px-8 py-4 text-lg min-w-[200px] hover:bg-white/5">
+                Digital Campus
               </button>
             </Link>
-          </motion.div>
-        </FloatingElement>
+          </div>
+        </motion.div>
+
+        {/* Scroll Indicator */}
+        <motion.div
+          style={{ opacity: textOpacity }}
+          className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3"
+        >
+          <span className="text-[10px] uppercase tracking-[0.3em] text-white/30">Scroll to Explore</span>
+          <div className="w-[1px] h-12 bg-gradient-to-b from-white/50 to-transparent" />
+        </motion.div>
       </div>
-
-      {/* Scroll indicator */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.6, delay: 1.2 }}
-        className="absolute bottom-12 left-1/2 -translate-x-1/2 z-10"
-      >
-        <Link href="#about" className="flex flex-col items-center gap-3 group">
-          <span className="text-xs font-medium uppercase tracking-widest text-white/40 group-hover:text-white/60 transition-colors">
-            Scroll to explore
-          </span>
-          <motion.div
-            animate={{ y: [0, 8, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-            className="w-8 h-12 border border-white/20 rounded-full flex justify-center pt-3 group-hover:border-white/40 transition-colors"
-          >
-            <ChevronDown className="w-4 h-4 text-white/40 group-hover:text-white/60 transition-colors" />
-          </motion.div>
-        </Link>
-      </motion.div>
-
-      {/* Decorative lines */}
-      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
     </section>
   );
 }
