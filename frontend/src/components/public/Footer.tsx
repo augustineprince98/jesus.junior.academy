@@ -1,17 +1,28 @@
 'use client';
 
 /**
- * Footer Component - Igloo-Inspired Design
+ * Footer Component - Igloo.inc Inspired
  *
- * Dark elegant footer with gradient accent,
- * refined typography, and subtle glow effects.
+ * Enhanced with scroll-driven animations and
+ * a "continue scrolling" indicator for the infinite loop.
  */
 
 import Link from 'next/link';
-import { Phone, Mail, MapPin, ArrowRight, Heart, Sparkles } from 'lucide-react';
+import { Phone, Mail, MapPin, ArrowRight, Sparkles, ArrowUp } from 'lucide-react';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { useRef } from 'react';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const footerRef = useRef<HTMLElement>(null);
+
+  const { scrollYProgress } = useScroll({
+    target: footerRef,
+    offset: ['start end', 'end end'],
+  });
+
+  const contentOpacity = useTransform(scrollYProgress, [0, 0.4], [0, 1]);
+  const contentY = useTransform(scrollYProgress, [0, 0.4], [60, 0]);
 
   const quickLinks = [
     { href: '#about', label: 'About Us' },
@@ -23,16 +34,24 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="relative overflow-hidden">
+    <footer ref={footerRef} className="relative overflow-hidden">
       {/* Gradient accent line */}
-      <div className="h-px bg-gradient-to-r from-transparent via-[#6691E5] to-transparent" />
+      <div className="section-divider-glow" />
 
       {/* Main Footer */}
       <div className="bg-[#0A0A0A]">
-        <div className="max-w-6xl mx-auto px-6 py-16">
+        <motion.div
+          style={{ opacity: contentOpacity, y: contentY }}
+          className="max-w-6xl mx-auto px-6 py-16"
+        >
           <div className="grid md:grid-cols-3 gap-12">
             {/* School Info */}
-            <div>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+            >
               <h2 className="font-bambi text-2xl text-white mb-4">JESUS JUNIOR ACADEMY</h2>
               <p className="text-[#F5D76E] text-sm font-medium mb-4 flex items-center gap-2">
                 <Sparkles className="w-4 h-4" />
@@ -42,14 +61,25 @@ export default function Footer() {
                 Providing quality education rooted in Christian values. Nurturing young minds to
                 become responsible citizens and future leaders.
               </p>
-            </div>
+            </motion.div>
 
             {/* Quick Links */}
-            <div>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: 0.1 }}
+            >
               <h3 className="text-white font-bold text-lg mb-6">Quick Links</h3>
               <ul className="space-y-3">
-                {quickLinks.map((link) => (
-                  <li key={link.href}>
+                {quickLinks.map((link, index) => (
+                  <motion.li
+                    key={link.href}
+                    initial={{ opacity: 0, x: -15 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.2 + index * 0.05 }}
+                  >
                     <Link
                       href={link.href}
                       className="flex items-center gap-2 text-white/40 hover:text-white transition-colors group text-sm"
@@ -57,13 +87,18 @@ export default function Footer() {
                       <ArrowRight className="w-4 h-4 text-[#6691E5] group-hover:translate-x-1 transition-transform" />
                       {link.label}
                     </Link>
-                  </li>
+                  </motion.li>
                 ))}
               </ul>
-            </div>
+            </motion.div>
 
             {/* Contact Info */}
-            <div>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: 0.2 }}
+            >
               <h3 className="text-white font-bold text-lg mb-6">Contact Us</h3>
               <ul className="space-y-4">
                 <li className="flex items-start gap-3">
@@ -76,10 +111,7 @@ export default function Footer() {
                   </div>
                 </li>
                 <li>
-                  <a
-                    href="tel:+918059589595"
-                    className="flex items-center gap-3 group"
-                  >
+                  <a href="tel:+918059589595" className="flex items-center gap-3 group">
                     <div className="icon-circle icon-circle-sm icon-circle-gold flex-shrink-0">
                       <Phone className="w-4 h-4" />
                     </div>
@@ -89,10 +121,7 @@ export default function Footer() {
                   </a>
                 </li>
                 <li>
-                  <a
-                    href="mailto:info@jesusja.com"
-                    className="flex items-center gap-3 group"
-                  >
+                  <a href="mailto:info@jesusja.com" className="flex items-center gap-3 group">
                     <div className="icon-circle icon-circle-sm icon-circle-accent flex-shrink-0">
                       <Mail className="w-4 h-4" />
                     </div>
@@ -102,25 +131,38 @@ export default function Footer() {
                   </a>
                 </li>
               </ul>
-            </div>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
+
+        {/* Continue Scrolling Indicator - for infinite loop */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.5 }}
+          className="flex flex-col items-center pb-8 pt-4"
+        >
+          <motion.div
+            animate={{ y: [0, -8, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            className="flex flex-col items-center gap-2 text-white/20"
+          >
+            <ArrowUp className="w-4 h-4" />
+            <span className="text-[10px] uppercase tracking-[0.3em]">Keep scrolling</span>
+          </motion.div>
+          <div className="w-[1px] h-8 bg-gradient-to-b from-white/20 to-transparent mt-2" />
+        </motion.div>
 
         {/* Bottom Bar */}
         <div className="border-t border-white/5">
           <div className="max-w-6xl mx-auto px-6 py-6">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              {/* Copyright */}
               <p className="text-sm text-white/30">
-                © {currentYear} Jesus Junior Academy. All Rights Reserved.
+                &copy; {currentYear} Jesus Junior Academy. All Rights Reserved.
               </p>
-
-              {/* Policy Links */}
               <div className="flex gap-6 text-sm text-white/30">
-                <Link
-                  href="/privacy-policy"
-                  className="hover:text-white transition-colors"
-                >
+                <Link href="/privacy-policy" className="hover:text-white transition-colors">
                   Privacy Policy
                 </Link>
                 <Link href="/terms" className="hover:text-white transition-colors">

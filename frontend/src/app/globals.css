@@ -771,3 +771,158 @@ body {
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   IGLOO.INC INSPIRED EFFECTS
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+/* Chromatic Aberration Overlay - scroll transition effect */
+.chromatic-aberration-overlay {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(102, 145, 229, 0.08) 0%,
+      transparent 30%,
+      transparent 70%,
+      rgba(245, 215, 110, 0.06) 100%
+    );
+  mix-blend-mode: screen;
+}
+
+/* Hero chromatic shift on scroll */
+.chromatic-hero-scroll {
+  background:
+    linear-gradient(
+      0deg,
+      rgba(102, 145, 229, 0.12) 0%,
+      transparent 30%,
+      transparent 70%,
+      rgba(245, 215, 110, 0.08) 100%
+    );
+  mix-blend-mode: screen;
+}
+
+/* Hero text glow */
+.hero-text-glow {
+  text-shadow:
+    0 0 60px rgba(255, 255, 255, 0.1),
+    0 0 120px rgba(102, 145, 229, 0.05);
+}
+
+/* Frost glass effect for section transitions */
+.frost-glass {
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  background: rgba(10, 10, 10, 0.6);
+}
+
+/* Scan line animation */
+@keyframes scanLine {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+.scan-line {
+  animation: scanLine 3s linear infinite;
+}
+
+/* Section entrance glow pulse */
+@keyframes sectionGlow {
+  0% {
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.4);
+  }
+  50% {
+    box-shadow:
+      0 -10px 40px rgba(0, 0, 0, 0.4),
+      0 -2px 30px rgba(102, 145, 229, 0.15);
+  }
+  100% {
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* Text reveal animation for section headers */
+@keyframes textReveal {
+  0% {
+    clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
+  }
+  100% {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  }
+}
+
+.text-reveal {
+  animation: textReveal 0.8s cubic-bezier(0.77, 0, 0.175, 1) forwards;
+}
+
+/* Glitch text effect */
+@keyframes glitch {
+  0%, 100% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+}
+
+.glitch-text:hover {
+  animation: glitch 0.3s ease-in-out;
+}
+
+/* Noise texture overlay */
+.noise-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.4;
+}
+
+/* Smooth section snap hints */
+@supports (scroll-snap-type: y proximity) {
+  .snap-section {
+    scroll-snap-align: start;
+    scroll-snap-stop: normal;
+  }
+}
+
+/* Enhanced scrollbar for igloo theme */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--accent-blue), var(--accent-gold));
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #7BA1F0, #F7E08A);
+}
+
+/* Infinite scroll transition flash */
+@keyframes loopFlash {
+  0% { opacity: 0; }
+  15% { opacity: 1; }
+  50% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Section divider glow line */
+.section-divider-glow {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(102, 145, 229, 0.5) 20%,
+    rgba(245, 215, 110, 0.5) 50%,
+    rgba(102, 145, 229, 0.5) 80%,
+    transparent 100%
+  );
+  box-shadow: 0 0 20px rgba(102, 145, 229, 0.3);
+}

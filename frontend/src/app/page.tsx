@@ -1,16 +1,14 @@
 'use client';
 
 /**
- * Public Homepage
+ * Public Homepage - Igloo.inc Inspired
  *
- * Clean, professional landing page for Jesus Junior Academy.
- * - Navbar with navigation links
- * - Hero Section with school name and tagline
- * - About the School
- * - Achievers Club
- * - Activities & Celebrations
- * - Admission Enquiry
- * - Footer
+ * Full-page immersive scroll experience with:
+ * - Infinite scroll loop (footer -> hero seamless transition)
+ * - Scroll-driven section transitions (scale, blur, chromatic aberration)
+ * - Particle field hero background
+ * - Text scramble animations
+ * - Sticky stacking sections with dramatic entrances
  */
 
 import Navbar from '@/components/public/Navbar';
@@ -22,75 +20,55 @@ import AchieversSection from '@/components/public/AchieversSection';
 import ActivitiesSection from '@/components/public/ActivitiesSection';
 import AdmissionSection from '@/components/public/AdmissionSection';
 import Footer from '@/components/public/Footer';
-
-const SectionWrapper = ({
-  children,
-  zIndex
-}: {
-  children: React.ReactNode;
-  zIndex: number;
-}) => (
-  <div
-    className="sticky top-0 min-h-screen w-full flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.4)] rounded-t-[2.5rem] overflow-hidden border-t border-white/10"
-    style={{ zIndex }}
-  >
-    {children}
-  </div>
-);
+import InfiniteScrollWrapper from '@/components/public/InfiniteScrollWrapper';
+import ScrollSection from '@/components/public/ScrollSection';
 
 export default function HomePage() {
   return (
-    <main className="bg-[#0A0A0A] relative">
-      {/* Navigation Bar - Fixed on top */}
-      <Navbar />
+    <InfiniteScrollWrapper>
+      <main className="bg-[#0A0A0A] relative">
+        {/* Navigation Bar - Fixed on top */}
+        <Navbar />
 
-      {/* Hero Section - Base Layer */}
-      {/* Hero handles its own sticky behavior inside, so we keep it relative or z-0 */}
-      <div className="relative z-0">
-        <HeroSection />
-      </div>
+        {/* Hero Section - Base Layer with particles */}
+        <ScrollSection index={0} isEdge>
+          <HeroSection />
+        </ScrollSection>
 
-      {/* Stacking Sections */}
-      {/* Each subsequent section slides over the previous one */}
-
-      <SectionWrapper zIndex={10}>
-        <div className="bg-[#0A0A0A] min-h-screen flex flex-col justify-center">
+        {/* Notice Board */}
+        <ScrollSection index={1} bgColor="#0A0A0A">
           <PublicNoticeBoard />
-        </div>
-      </SectionWrapper>
+        </ScrollSection>
 
-      <SectionWrapper zIndex={20}>
-        <div className="bg-[#111111] min-h-screen flex flex-col justify-center relative">
+        {/* Discover Our Story */}
+        <ScrollSection index={2} bgColor="#111111">
           <FloatingShapes />
           <AboutSection />
-        </div>
-      </SectionWrapper>
+        </ScrollSection>
 
-      <SectionWrapper zIndex={30}>
-        <div className="bg-[#0A0A0A] min-h-screen flex flex-col justify-center">
+        {/* Achievers Club */}
+        <ScrollSection index={3} bgColor="#0A0A0A">
           <AchieversSection />
-        </div>
-      </SectionWrapper>
+        </ScrollSection>
 
-      <SectionWrapper zIndex={40}>
-        <div className="bg-[#111111] min-h-screen flex flex-col justify-center">
+        {/* Celebrations & Events */}
+        <ScrollSection index={4} bgColor="#111111">
           <ActivitiesSection />
-        </div>
-      </SectionWrapper>
+        </ScrollSection>
 
-      <SectionWrapper zIndex={50}>
-        <div className="bg-[#0A0A0A] min-h-screen flex flex-col justify-center relative">
+        {/* Start Your Journey */}
+        <ScrollSection index={5} bgColor="#0A0A0A">
           <FloatingShapes />
           <AdmissionSection />
-        </div>
-      </SectionWrapper>
+        </ScrollSection>
 
-      {/* Footer - Final Slide */}
-      <SectionWrapper zIndex={60}>
-        <div className="bg-[#0A0A0A] min-h-screen flex flex-col justify-end">
-          <Footer />
-        </div>
-      </SectionWrapper>
-    </main>
+        {/* Footer */}
+        <ScrollSection index={6} bgColor="#0A0A0A">
+          <div className="min-h-screen flex flex-col justify-end">
+            <Footer />
+          </div>
+        </ScrollSection>
+      </main>
+    </InfiniteScrollWrapper>
   );
 }

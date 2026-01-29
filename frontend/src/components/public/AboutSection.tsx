@@ -1,22 +1,34 @@
 'use client';
 
 /**
- * About Section - Igloo-Inspired Design
+ * About Section - Igloo.inc Inspired
  *
- * Dark section with glass cards, gradient borders,
- * and elegant animations.
+ * Enhanced with scroll-driven parallax,
+ * staggered reveals, and chromatic accents.
  */
 
-import { BookOpen, Target, Heart, Sparkles, GraduationCap, Users } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { BookOpen, Target, Heart, Sparkles } from 'lucide-react';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { useRef } from 'react';
 
 export default function AboutSection() {
-  const fadeInUp = {
-    initial: { opacity: 0, y: 40 },
-    whileInView: { opacity: 1, y: 0 },
-    viewport: { once: true, margin: '-100px' },
-    transition: { duration: 0.7 },
-  };
+  const sectionRef = useRef<HTMLElement>(null);
+
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start end', 'end start'],
+  });
+
+  const headerY = useTransform(scrollYProgress, [0, 0.3], [80, 0]);
+  const headerOpacity = useTransform(scrollYProgress, [0, 0.2], [0, 1]);
+  const lineWidth = useTransform(scrollYProgress, [0.1, 0.35], ['0%', '100%']);
+
+  const fadeInUp = (delay: number = 0) => ({
+    initial: { opacity: 0, y: 50, filter: 'blur(10px)' },
+    whileInView: { opacity: 1, y: 0, filter: 'blur(0px)' },
+    viewport: { once: true, margin: '-80px' },
+    transition: { duration: 0.8, delay, ease: [0.25, 0.46, 0.45, 0.94] },
+  });
 
   const cards = [
     {
@@ -42,32 +54,42 @@ export default function AboutSection() {
     },
   ];
 
-
-
   return (
-    <section id="about" className="section-elevated py-24 md:py-32 relative overflow-hidden">
+    <section id="about" ref={sectionRef} className="section-elevated py-24 md:py-32 relative overflow-hidden">
       {/* Background pattern */}
       <div className="absolute inset-0 bg-grid opacity-50" />
+      <div className="absolute top-0 left-0 right-0 section-divider-glow" />
 
       <div className="max-w-6xl mx-auto px-6 relative z-10">
-        {/* Section Header */}
-        <motion.div {...fadeInUp} className="text-center mb-20">
-          <span className="badge badge-gold text-sm mb-6">
+        {/* Section Header - scroll parallax */}
+        <motion.div
+          style={{ y: headerY, opacity: headerOpacity }}
+          className="text-center mb-20"
+        >
+          <motion.span
+            {...fadeInUp(0)}
+            className="badge badge-gold text-sm mb-6 inline-flex"
+          >
             <Sparkles className="w-4 h-4 mr-2" />
             Discover Our Story
-          </span>
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+          </motion.span>
+          <motion.h2
+            {...fadeInUp(0.1)}
+            className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight"
+          >
             Excellence in Education
             <br />
             <span className="text-gradient-accent">Rooted in Values</span>
-          </h2>
-          <div className="w-24 h-1 bg-gradient-to-r from-[#6691E5] to-[#F5D76E] mx-auto rounded-full" />
+          </motion.h2>
+          <motion.div
+            style={{ width: lineWidth }}
+            className="h-1 bg-gradient-to-r from-[#6691E5] to-[#F5D76E] mx-auto rounded-full"
+          />
         </motion.div>
 
         {/* Main Description */}
         <motion.p
-          {...fadeInUp}
-          transition={{ delay: 0.1 }}
+          {...fadeInUp(0.2)}
           className="text-center text-lg md:text-xl text-white/60 max-w-3xl mx-auto mb-20 leading-relaxed"
         >
           Jesus Junior Academy is committed to nurturing young minds through quality education,
@@ -75,20 +97,24 @@ export default function AboutSection() {
           development through academics and co-curricular activities.
         </motion.p>
 
-
-
         {/* History & Philosophy Grid */}
         <div className="grid md:grid-cols-2 gap-8 mb-20">
           {/* History */}
           <motion.div
-            {...fadeInUp}
-            transition={{ delay: 0.3 }}
+            {...fadeInUp(0.3)}
+            whileHover={{ y: -6, transition: { duration: 0.3 } }}
             className="gradient-border p-8 group"
           >
             <div className="flex items-center gap-4 mb-6">
-              <div className="icon-circle icon-circle-md icon-circle-gold group-hover:scale-110 transition-transform">
+              <motion.div
+                initial={{ scale: 0, rotate: -90 }}
+                whileInView={{ scale: 1, rotate: 0 }}
+                viewport={{ once: true }}
+                transition={{ type: 'spring', stiffness: 200, delay: 0.4 }}
+                className="icon-circle icon-circle-md icon-circle-gold group-hover:scale-110 transition-transform"
+              >
                 <BookOpen className="w-6 h-6" />
-              </div>
+              </motion.div>
               <h3 className="text-2xl font-bold text-white">Our History</h3>
             </div>
             <p className="text-white/60 leading-relaxed mb-4">
@@ -105,14 +131,20 @@ export default function AboutSection() {
 
           {/* Philosophy */}
           <motion.div
-            {...fadeInUp}
-            transition={{ delay: 0.4 }}
+            {...fadeInUp(0.4)}
+            whileHover={{ y: -6, transition: { duration: 0.3 } }}
             className="gradient-border p-8 group"
           >
             <div className="flex items-center gap-4 mb-6">
-              <div className="icon-circle icon-circle-md icon-circle-accent group-hover:scale-110 transition-transform">
+              <motion.div
+                initial={{ scale: 0, rotate: 90 }}
+                whileInView={{ scale: 1, rotate: 0 }}
+                viewport={{ once: true }}
+                transition={{ type: 'spring', stiffness: 200, delay: 0.5 }}
+                className="icon-circle icon-circle-md icon-circle-accent group-hover:scale-110 transition-transform"
+              >
                 <Sparkles className="w-6 h-6" />
-              </div>
+              </motion.div>
               <h3 className="text-2xl font-bold text-white">Educational Philosophy</h3>
             </div>
             <p className="text-white/60 leading-relaxed mb-4">
@@ -136,16 +168,26 @@ export default function AboutSection() {
             return (
               <motion.div
                 key={card.title}
-                {...fadeInUp}
-                transition={{ delay: 0.5 + index * 0.1 }}
+                initial={{ opacity: 0, y: 60, scale: 0.85 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: true, margin: '-60px' }}
+                transition={{
+                  delay: 0.5 + index * 0.15,
+                  duration: 0.8,
+                  ease: [0.25, 0.46, 0.45, 0.94],
+                }}
+                whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.3 } }}
                 className="glass-card p-8 text-center"
               >
-                <div
-                  className={`icon-circle icon-circle-lg mx-auto mb-6 ${isGold ? 'icon-circle-gold' : 'icon-circle-accent'
-                    }`}
+                <motion.div
+                  initial={{ scale: 0 }}
+                  whileInView={{ scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ type: 'spring', stiffness: 200, delay: 0.6 + index * 0.15 }}
+                  className={`icon-circle icon-circle-lg mx-auto mb-6 ${isGold ? 'icon-circle-gold' : 'icon-circle-accent'}`}
                 >
                   <Icon className="w-7 h-7" />
-                </div>
+                </motion.div>
                 <h4 className="text-xl font-bold text-white mb-4">{card.title}</h4>
                 <p className="text-white/60 leading-relaxed text-sm">{card.description}</p>
               </motion.div>

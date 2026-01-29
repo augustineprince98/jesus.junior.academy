@@ -1,15 +1,15 @@
 'use client';
 
 /**
- * Public Notice Board - Igloo-Inspired Design
+ * Public Notice Board - Igloo.inc Inspired
  *
- * Dark elegant notice cards with glass styling,
- * smooth animations, and accent colors.
+ * Enhanced with scroll-driven reveal animations,
+ * staggered card entrances, and chromatic effects.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { eventsApi } from '@/lib/api';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { Bell, Calendar, Pin, AlertCircle, ArrowRight } from 'lucide-react';
 
 interface Notice {
@@ -24,6 +24,15 @@ interface Notice {
 export default function PublicNoticeBoard() {
     const [notices, setNotices] = useState<Notice[]>([]);
     const [loading, setLoading] = useState(true);
+    const sectionRef = useRef<HTMLElement>(null);
+
+    const { scrollYProgress } = useScroll({
+        target: sectionRef,
+        offset: ['start end', 'end start'],
+    });
+
+    const headerY = useTransform(scrollYProgress, [0, 0.3], [60, 0]);
+    const headerOpacity = useTransform(scrollYProgress, [0, 0.2], [0, 1]);
 
     useEffect(() => {
         loadNotices();
@@ -56,7 +65,7 @@ export default function PublicNoticeBoard() {
 
     if (loading) {
         return (
-            <section className="section-elevated py-16">
+            <section ref={sectionRef} className="section-elevated py-16">
                 <div className="max-w-7xl mx-auto px-6">
                     <div className="flex justify-center py-12">
                         <div className="loading-spinner" />
@@ -66,10 +75,9 @@ export default function PublicNoticeBoard() {
         );
     }
 
-    // If no notices, show empty state instead of null to maintain layout
     if (!loading && notices.length === 0) {
         return (
-            <section className="section-elevated py-20 relative overflow-hidden">
+            <section ref={sectionRef} className="section-elevated py-20 relative overflow-hidden">
                 <div className="absolute inset-0 bg-grid opacity-30" />
                 <div className="max-w-7xl mx-auto px-6 relative z-10 text-center text-white/40">
                     <div className="icon-circle icon-circle-lg icon-circle-gold mx-auto mb-4 opacity-50">
@@ -83,50 +91,70 @@ export default function PublicNoticeBoard() {
     }
 
     return (
-        <section className="section-elevated py-20 relative overflow-hidden">
+        <section ref={sectionRef} className="section-elevated py-20 relative overflow-hidden noise-overlay">
             {/* Background */}
             <div className="absolute inset-0 bg-grid opacity-30" />
 
+            {/* Section glow line at top */}
+            <div className="absolute top-0 left-0 right-0 section-divider-glow" />
+
             <div className="max-w-7xl mx-auto px-6 relative z-10">
-                {/* Header */}
+                {/* Header with scroll parallax */}
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
+                    style={{ y: headerY, opacity: headerOpacity }}
                     className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-12"
                 >
                     <div className="flex items-center gap-4">
-                        <div className="icon-circle icon-circle-lg icon-circle-gold">
+                        <motion.div
+                            initial={{ scale: 0, rotate: -180 }}
+                            whileInView={{ scale: 1, rotate: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+                            className="icon-circle icon-circle-lg icon-circle-gold"
+                        >
                             <Bell className="w-6 h-6" />
-                        </div>
+                        </motion.div>
                         <div>
-                            <h2 className="text-3xl md:text-4xl font-bold text-white">Notice Board</h2>
+                            <h2 className="text-3xl md:text-4xl font-bold text-white glitch-text">Notice Board</h2>
                             <p className="text-white/50">Latest Updates & Announcements</p>
                         </div>
                     </div>
-                    <button className="btn btn-secondary text-sm flex items-center gap-2 group">
+                    <motion.button
+                        whileHover={{ x: 5 }}
+                        className="btn btn-secondary text-sm flex items-center gap-2 group"
+                    >
                         View All Notices
                         <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </button>
+                    </motion.button>
                 </motion.div>
 
-                {/* Notice Cards Grid */}
+                {/* Notice Cards Grid - staggered entrance */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {notices.map((notice, index) => (
                         <motion.div
                             key={notice.id}
-                            initial={{ opacity: 0, y: 30 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ delay: index * 0.1, duration: 0.5 }}
+                            initial={{ opacity: 0, y: 60, scale: 0.9 }}
+                            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                            viewport={{ once: true, margin: '-50px' }}
+                            transition={{
+                                delay: index * 0.12,
+                                duration: 0.7,
+                                ease: [0.25, 0.46, 0.45, 0.94],
+                            }}
+                            whileHover={{ y: -8, transition: { duration: 0.3 } }}
                             className="glass-card p-6 group cursor-pointer relative"
                         >
                             {/* Featured Badge */}
                             {notice.is_featured && (
-                                <div className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-rose-500 text-white text-xs px-3 py-1.5 rounded-full font-semibold flex items-center gap-1 shadow-lg">
+                                <motion.div
+                                    initial={{ scale: 0 }}
+                                    whileInView={{ scale: 1 }}
+                                    transition={{ type: 'spring', delay: index * 0.12 + 0.3 }}
+                                    className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-rose-500 text-white text-xs px-3 py-1.5 rounded-full font-semibold flex items-center gap-1 shadow-lg"
+                                >
                                     <AlertCircle className="w-3 h-3" />
                                     Important
-                                </div>
+                                </motion.div>
                             )}
 
                             <div className="flex items-start gap-4 mb-4">

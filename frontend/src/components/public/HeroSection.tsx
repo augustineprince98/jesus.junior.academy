@@ -1,42 +1,92 @@
 'use client';
 
 /**
- * Hero Section - Igloo-Inspired with Breathing Centerpiece & Scroll Transition
+ * Hero Section - Igloo.inc Inspired
  *
- * - Single line massive header
- * - Breathing "Shield" centerpiece
- * - Scroll-linked zoom/parallax effects
+ * Full-viewport immersive hero with:
+ * - Particle field background (canvas)
+ * - Text scramble/reveal animation on load
+ * - Scroll-driven zoom-out + chromatic aberration
+ * - Breathing geometric centerpiece
+ * - Smooth parallax content layers
  */
 
 import Link from 'next/link';
-import { motion, useScroll, useTransform, useSpring, useMotionValue } from 'framer-motion';
-import { ChevronDown, Shield, Sparkles } from 'lucide-react';
+import { motion, useScroll, useTransform, useSpring, AnimatePresence } from 'framer-motion';
+import { ChevronDown, Sparkles } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import ParticleField from './ParticleField';
 
-// Geometric Shield Component that "Breathes"
+// Text scramble effect - igloo.inc style
+function useTextScramble(text: string, delay: number = 0) {
+  const [displayed, setDisplayed] = useState('');
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%';
+
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    let frame = 0;
+    const totalFrames = text.length * 3;
+
+    timeout = setTimeout(() => {
+      const interval = setInterval(() => {
+        frame++;
+        const progress = frame / totalFrames;
+        const revealedCount = Math.floor(progress * text.length);
+
+        let result = '';
+        for (let i = 0; i < text.length; i++) {
+          if (text[i] === ' ') {
+            result += ' ';
+          } else if (i < revealedCount) {
+            result += text[i];
+          } else if (i < revealedCount + 3) {
+            result += chars[Math.floor(Math.random() * chars.length)];
+          } else {
+            result += ' ';
+          }
+        }
+        setDisplayed(result);
+
+        if (frame >= totalFrames) {
+          setDisplayed(text);
+          clearInterval(interval);
+        }
+      }, 30);
+
+      return () => clearInterval(interval);
+    }, delay);
+
+    return () => clearTimeout(timeout);
+  }, [text, delay]);
+
+  return displayed;
+}
+
+// Breathing shield centerpiece
 function BreathingCenterpiece({ scrollYProgress }: { scrollYProgress: any }) {
-  // Map scroll to scale/opacity
-  // Scale UP as we scroll down to create a "portal" effect or just fade out
-  const scale = useTransform(scrollYProgress, [0, 0.5], [1, 20]);
-  const opacity = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
-  const rotate = useTransform(scrollYProgress, [0, 1], [0, 45]);
+  const scale = useTransform(scrollYProgress, [0, 0.5], [1, 25]);
+  const opacity = useTransform(scrollYProgress, [0, 0.25], [1, 0]);
+  const rotate = useTransform(scrollYProgress, [0, 1], [0, 90]);
 
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-      <motion.div
-        style={{ scale, opacity, rotate }}
-        className="relative"
-      >
-        {/* Core Shield */}
+      <motion.div style={{ scale, opacity, rotate }} className="relative">
         <div className="relative w-64 h-64 md:w-96 md:h-96">
-          {/* Breathing Animation Layer */}
+          {/* Breathing pulse */}
           <motion.div
-            animate={{ scale: [1, 1.05, 1], opacity: [0.5, 0.8, 0.5] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute inset-0 bg-gradient-to-b from-[#6691E5]/20 to-transparent rounded-full blur-xl"
+            animate={{ scale: [1, 1.08, 1], opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+            className="absolute inset-0 bg-gradient-to-b from-[#6691E5]/20 to-transparent rounded-full blur-2xl"
           />
 
-          {/* Geometric Shield Icon */}
+          {/* Secondary pulse - gold */}
+          <motion.div
+            animate={{ scale: [1.05, 1, 1.05], opacity: [0.15, 0.35, 0.15] }}
+            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+            className="absolute inset-0 bg-gradient-to-t from-[#F5D76E]/15 to-transparent rounded-full blur-3xl"
+          />
+
+          {/* Shield SVG */}
           <svg viewBox="0 0 200 200" className="w-full h-full">
             <defs>
               <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -48,20 +98,29 @@ function BreathingCenterpiece({ scrollYProgress }: { scrollYProgress: any }) {
                 <stop offset="0%" stopColor="#6691E5" />
                 <stop offset="100%" stopColor="#F5D76E" />
               </linearGradient>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                <feMerge>
+                  <feMergeNode in="coloredBlur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
             </defs>
 
-            {/* Outer Ring */}
+            {/* Outer rings */}
+            <circle cx="100" cy="100" r="95" fill="none" stroke="url(#borderGrad)" strokeWidth="0.5" strokeOpacity="0.15" />
             <circle cx="100" cy="100" r="90" fill="none" stroke="url(#borderGrad)" strokeWidth="1" strokeOpacity="0.3" />
 
-            {/* Inner Shield Shape */}
+            {/* Shield shape */}
             <path
               d="M100 15 L170 45 V105 C170 150 100 185 100 185 C100 185 30 150 30 105 V45 L100 15 Z"
               fill="url(#shieldGrad)"
               stroke="url(#borderGrad)"
               strokeWidth="2"
+              filter="url(#glow)"
             />
 
-            {/* Inner Symbol - "JJ" Monogram or Cross */}
+            {/* Cross symbol */}
             <path
               d="M100 45 V145 M70 75 H130"
               stroke="white"
@@ -78,73 +137,155 @@ function BreathingCenterpiece({ scrollYProgress }: { scrollYProgress: any }) {
 
 export default function HeroSection() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  // Track scroll for parallax
   const { scrollYProgress } = useScroll({
     target: containerRef,
-    offset: ["start start", "end start"]
+    offset: ['start start', 'end start'],
   });
 
-  const textY = useTransform(scrollYProgress, [0, 0.5], [0, -200]);
-  const textOpacity = useTransform(scrollYProgress, [0, 0.4], [1, 0]);
+  const smoothScroll = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001,
+  });
+
+  // Parallax transforms
+  const textY = useTransform(smoothScroll, [0, 0.5], [0, -250]);
+  const textOpacity = useTransform(smoothScroll, [0, 0.35], [1, 0]);
+  const textScale = useTransform(smoothScroll, [0, 0.5], [1, 0.8]);
+
+  // Chromatic aberration intensity on scroll
+  const chromaticIntensity = useTransform(smoothScroll, [0, 0.1, 0.4], [0, 0.5, 1]);
+
+  // Background zoom
+  const bgScale = useTransform(smoothScroll, [0, 0.5], [1, 1.15]);
+
+  // Scramble text
+  const schoolName = useTextScramble('JESUS JUNIOR ACADEMY', 500);
+  const tagline = useTextScramble('The Truth Shall Make You Free', 1200);
+
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
 
   return (
     <section
       ref={containerRef}
-      className="relative h-[150vh] bg-[#0A0A0A]" // Extra height for scroll distance
+      className="relative h-[200vh] bg-[#0A0A0A]"
     >
-      <div className="sticky top-0 h-screen flex flex-col items-center justify-center overflow-hidden">
+      <motion.div
+        style={{ scale: bgScale }}
+        className="sticky top-0 h-screen flex flex-col items-center justify-center overflow-hidden"
+      >
+        {/* Particle Field Background */}
+        <ParticleField />
 
-        {/* Background Effects */}
-        <div className="absolute inset-0 bg-dots opacity-40" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0A0A0A]/50 to-[#0A0A0A] pointer-events-none" />
+        {/* Gradient overlays */}
+        <div className="absolute inset-0 bg-dots opacity-30 z-[1]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0A0A0A]/30 to-[#0A0A0A] pointer-events-none z-[1]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-[#0A0A0A]/50 pointer-events-none z-[1]" />
+
+        {/* Chromatic aberration overlay on scroll */}
+        <motion.div
+          style={{ opacity: chromaticIntensity }}
+          className="absolute inset-0 pointer-events-none z-[2] chromatic-hero-scroll"
+        />
 
         {/* Breathing Centerpiece */}
-        <BreathingCenterpiece scrollYProgress={scrollYProgress} />
+        <BreathingCenterpiece scrollYProgress={smoothScroll} />
 
         {/* Content Layer */}
         <motion.div
-          style={{ y: textY, opacity: textOpacity }}
+          style={{ y: textY, opacity: textOpacity, scale: textScale }}
           className="relative z-10 w-full px-6 flex flex-col items-center"
         >
-          {/* Badge */}
-          <div className="mb-12">
+          {/* Badge - fade in */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={isLoaded ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="mb-12"
+          >
             <span className="badge badge-accent text-sm backdrop-blur-md">
               <Sparkles className="w-4 h-4 mr-2" />
               Est. 1994
             </span>
-          </div>
+          </motion.div>
 
-          {/* School Name - ONE LINE */}
-          <h1 className="w-full text-center mb-8 px-4">
-            <span className="font-bambi text-white text-[5vw] leading-none whitespace-nowrap tracking-tight drop-shadow-2xl filter blur-[0.5px]">
-              JESUS JUNIOR ACADEMY
+          {/* School Name with scramble effect */}
+          <motion.h1
+            initial={{ opacity: 0 }}
+            animate={isLoaded ? { opacity: 1 } : {}}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="w-full text-center mb-8 px-4 relative"
+          >
+            <span className="font-bambi text-white text-[5vw] leading-none whitespace-nowrap tracking-tight drop-shadow-2xl hero-text-glow">
+              {schoolName}
             </span>
-            {/* Mirror/Reflection Effect */}
+            {/* Reflection */}
             <span
               className="block font-bambi text-white/5 text-[5vw] leading-none whitespace-nowrap tracking-tight transform -scale-y-100 absolute left-0 right-0 top-full origin-top blur-sm select-none"
               aria-hidden="true"
             >
               JESUS JUNIOR ACADEMY
             </span>
-          </h1>
+          </motion.h1>
 
-          {/* Tagline */}
-          <div className="max-w-2xl text-center space-y-6 mt-16 bg-[#0A0A0A]/30 backdrop-blur-sm p-6 rounded-2xl border border-white/5 mx-4">
+          {/* Tagline with scramble */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={isLoaded ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, delay: 1.0 }}
+            className="max-w-2xl text-center space-y-6 mt-16 bg-[#0A0A0A]/30 backdrop-blur-sm p-6 rounded-2xl border border-white/5 mx-4"
+          >
             <p className="text-2xl md:text-3xl font-medium text-white/90 font-serif">
-              The Truth Shall Make You Free
+              {tagline}
             </p>
             <div className="flex items-center justify-center gap-2 text-white/40 text-sm uppercase tracking-widest">
-              <span>Wisdom</span>
-              <span className="w-1 h-1 bg-[#6691E5] rounded-full" />
-              <span>Character</span>
-              <span className="w-1 h-1 bg-[#F5D76E] rounded-full" />
-              <span>Service</span>
+              <motion.span
+                initial={{ opacity: 0 }}
+                animate={isLoaded ? { opacity: 1 } : {}}
+                transition={{ delay: 1.8 }}
+              >
+                Wisdom
+              </motion.span>
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={isLoaded ? { scale: 1 } : {}}
+                transition={{ delay: 2.0, type: 'spring' }}
+                className="w-1.5 h-1.5 bg-[#6691E5] rounded-full"
+              />
+              <motion.span
+                initial={{ opacity: 0 }}
+                animate={isLoaded ? { opacity: 1 } : {}}
+                transition={{ delay: 2.2 }}
+              >
+                Character
+              </motion.span>
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={isLoaded ? { scale: 1 } : {}}
+                transition={{ delay: 2.4, type: 'spring' }}
+                className="w-1.5 h-1.5 bg-[#F5D76E] rounded-full"
+              />
+              <motion.span
+                initial={{ opacity: 0 }}
+                animate={isLoaded ? { opacity: 1 } : {}}
+                transition={{ delay: 2.6 }}
+              >
+                Service
+              </motion.span>
             </div>
-          </div>
+          </motion.div>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 mt-12">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={isLoaded ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, delay: 1.8 }}
+            className="flex flex-col sm:flex-row gap-4 mt-12"
+          >
             <Link href="#admission">
               <button className="btn btn-gold px-8 py-4 text-lg font-bold min-w-[200px]">
                 Admission Enquiry
@@ -155,7 +296,7 @@ export default function HeroSection() {
                 Digital Campus
               </button>
             </Link>
-          </div>
+          </motion.div>
         </motion.div>
 
         {/* Scroll Indicator */}
@@ -163,10 +304,21 @@ export default function HeroSection() {
           style={{ opacity: textOpacity }}
           className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 z-20"
         >
-          <span className="text-[10px] uppercase tracking-[0.3em] text-white/30 whitespace-nowrap">Scroll to Explore</span>
-          <div className="w-[1px] h-12 bg-gradient-to-b from-white/50 to-transparent" />
+          <motion.span
+            initial={{ opacity: 0 }}
+            animate={isLoaded ? { opacity: 1 } : {}}
+            transition={{ delay: 2.5 }}
+            className="text-[10px] uppercase tracking-[0.3em] text-white/30 whitespace-nowrap"
+          >
+            Scroll to Explore
+          </motion.span>
+          <motion.div
+            animate={{ y: [0, 8, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            className="w-[1px] h-12 bg-gradient-to-b from-white/50 to-transparent"
+          />
         </motion.div>
-      </div>
+      </motion.div>
     </section>
   );
 }
