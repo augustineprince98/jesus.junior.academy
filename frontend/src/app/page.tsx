@@ -16,13 +16,13 @@
 import Navbar from '@/components/public/Navbar';
 import HeroSection from '@/components/public/HeroSection';
 import PublicNoticeBoard from '@/components/public/PublicNoticeBoard';
+import FloatingShapes from '@/components/public/FloatingShapes';
 import AboutSection from '@/components/public/AboutSection';
 import AchieversSection from '@/components/public/AchieversSection';
 import ActivitiesSection from '@/components/public/ActivitiesSection';
 import AdmissionSection from '@/components/public/AdmissionSection';
 import Footer from '@/components/public/Footer';
 
-// Wrapper for Stacking Effect
 const SectionWrapper = ({
   children,
   zIndex
@@ -31,7 +31,7 @@ const SectionWrapper = ({
   zIndex: number;
 }) => (
   <div
-    className="sticky top-0 min-h-screen w-full flex flex-col"
+    className="sticky top-0 min-h-screen w-full flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.4)] rounded-t-[2.5rem] overflow-hidden border-t border-white/10"
     style={{ zIndex }}
   >
     {children}
@@ -60,7 +60,8 @@ export default function HomePage() {
       </SectionWrapper>
 
       <SectionWrapper zIndex={20}>
-        <div className="bg-[#111111] min-h-screen flex flex-col justify-center">
+        <div className="bg-[#111111] min-h-screen flex flex-col justify-center relative">
+          <FloatingShapes />
           <AboutSection />
         </div>
       </SectionWrapper>
@@ -78,7 +79,8 @@ export default function HomePage() {
       </SectionWrapper>
 
       <SectionWrapper zIndex={50}>
-        <div className="bg-[#0A0A0A] min-h-screen flex flex-col justify-center">
+        <div className="bg-[#0A0A0A] min-h-screen flex flex-col justify-center relative">
+          <FloatingShapes />
           <AdmissionSection />
         </div>
       </SectionWrapper>
