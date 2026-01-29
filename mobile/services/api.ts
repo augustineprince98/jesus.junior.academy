@@ -8,10 +8,10 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
-// API Base URL - Update this for production
+// API Base URL - Production backend on Render
 const API_BASE_URL = __DEV__
     ? 'http://192.168.1.100:8000'  // Local development (update with your IP)
-    : 'https://jesus-junior-academy.railway.app';  // Production
+    : 'https://jja-backend.onrender.com';  // Production on Render
 
 // Token storage keys
 const ACCESS_TOKEN_KEY = 'access_token';
