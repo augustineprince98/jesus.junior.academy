@@ -33,11 +33,11 @@ function BreathingCenterpiece({ scrollYProgress }: { scrollYProgress: any }) {
           <motion.div
             animate={{ scale: [1, 1.05, 1], opacity: [0.5, 0.8, 0.5] }}
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute inset-0 bg-gradient-to-b from-[#6691E5]/20 to-transparent rounded-full blur-3xl"
+            className="absolute inset-0 bg-gradient-to-b from-[#6691E5]/20 to-transparent rounded-full blur-xl"
           />
 
           {/* Geometric Shield Icon */}
-          <svg viewBox="0 0 200 200" className="w-full h-full drop-shadow-[0_0_30px_rgba(102,145,229,0.3)]">
+          <svg viewBox="0 0 200 200" className="w-full h-full">
             <defs>
               <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#222" />
@@ -116,13 +116,13 @@ export default function HeroSection() {
           </div>
 
           {/* School Name - ONE LINE */}
-          <h1 className="w-full text-center mb-8">
-            <span className="font-bambi text-white text-[8vw] leading-none whitespace-nowrap tracking-tight drop-shadow-2xl filter blur-[0.5px]">
+          <h1 className="w-full text-center mb-8 px-4">
+            <span className="font-bambi text-white text-[5vw] leading-none whitespace-nowrap tracking-tight drop-shadow-2xl filter blur-[0.5px]">
               JESUS JUNIOR ACADEMY
             </span>
             {/* Mirror/Reflection Effect */}
             <span
-              className="block font-bambi text-white/5 text-[8vw] leading-none whitespace-nowrap tracking-tight transform -scale-y-100 absolute left-0 right-0 top-full origin-top blur-sm select-none"
+              className="block font-bambi text-white/5 text-[5vw] leading-none whitespace-nowrap tracking-tight transform -scale-y-100 absolute left-0 right-0 top-full origin-top blur-sm select-none"
               aria-hidden="true"
             >
               JESUS JUNIOR ACADEMY
@@ -130,9 +130,9 @@ export default function HeroSection() {
           </h1>
 
           {/* Tagline */}
-          <div className="max-w-2xl text-center space-y-6 mt-12 bg-[#0A0A0A]/30 backdrop-blur-sm p-6 rounded-2xl border border-white/5 mx-4">
-            <p className="text-2xl md:text-3xl font-medium text-white/90 font-serif italic">
-              "The Truth Shall Make You Free"
+          <div className="max-w-2xl text-center space-y-6 mt-16 bg-[#0A0A0A]/30 backdrop-blur-sm p-6 rounded-2xl border border-white/5 mx-4">
+            <p className="text-2xl md:text-3xl font-medium text-white/90 font-serif">
+              The Truth Shall Make You Free
             </p>
             <div className="flex items-center justify-center gap-2 text-white/40 text-sm uppercase tracking-widest">
               <span>Wisdom</span>
@@ -161,9 +161,9 @@ export default function HeroSection() {
         {/* Scroll Indicator */}
         <motion.div
           style={{ opacity: textOpacity }}
-          className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3"
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 z-20"
         >
-          <span className="text-[10px] uppercase tracking-[0.3em] text-white/30">Scroll to Explore</span>
+          <span className="text-[10px] uppercase tracking-[0.3em] text-white/30 whitespace-nowrap">Scroll to Explore</span>
           <div className="w-[1px] h-12 bg-gradient-to-b from-white/50 to-transparent" />
         </motion.div>
       </div>

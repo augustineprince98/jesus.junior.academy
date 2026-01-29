@@ -42,11 +42,7 @@ export default function AboutSection() {
     },
   ];
 
-  const stats = [
-    { value: '30+', label: 'Years of Excellence', icon: GraduationCap },
-    { value: '500+', label: 'Students & Alumni', icon: Users },
-    { value: '50+', label: 'Expert Teachers', icon: Sparkles },
-  ];
+
 
   return (
     <section id="about" className="section-elevated py-24 md:py-32 relative overflow-hidden">
@@ -79,32 +75,7 @@ export default function AboutSection() {
           development through academics and co-curricular activities.
         </motion.p>
 
-        {/* Stats Row */}
-        <motion.div
-          {...fadeInUp}
-          transition={{ delay: 0.2 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20"
-        >
-          {stats.map((stat, index) => {
-            const Icon = stat.icon;
-            return (
-              <div
-                key={stat.label}
-                className="glass-card p-8 text-center group"
-              >
-                <div className="icon-circle icon-circle-lg icon-circle-accent mx-auto mb-4">
-                  <Icon className="w-7 h-7" />
-                </div>
-                <div className="text-4xl md:text-5xl font-bold text-white mb-2">
-                  {stat.value}
-                </div>
-                <div className="text-white/50 text-sm uppercase tracking-wider">
-                  {stat.label}
-                </div>
-              </div>
-            );
-          })}
-        </motion.div>
+
 
         {/* History & Philosophy Grid */}
         <div className="grid md:grid-cols-2 gap-8 mb-20">
