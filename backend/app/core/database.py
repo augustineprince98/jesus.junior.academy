@@ -1,7 +1,8 @@
 """
 Database Configuration
 
-Optimized SQLAlchemy setup with connection pooling for Neon.tech PostgreSQL.
+Optimized SQLAlchemy setup with connection pooling.
+Auto-detects Supabase vs Neon.tech and uses optimal settings for each.
 """
 
 from sqlalchemy import create_engine, event, text
@@ -24,28 +25,81 @@ if not DATABASE_URL:
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Engine Configuration
+# Auto-detect Database Provider
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-# Optimized connection pool settings for Neon.tech (serverless PostgreSQL)
-# Tuned for faster connections and reduced cold start impact
+def detect_db_provider(url: str) -> str:
+    """Detect database provider from connection URL."""
+    url_lower = url.lower()
+    if "supabase.co" in url_lower:
+        return "supabase"
+    elif "neon.tech" in url_lower:
+        return "neon"
+    elif "railway.app" in url_lower:
+        return "railway"
+    elif "localhost" in url_lower or "127.0.0.1" in url_lower:
+        return "local"
+    else:
+        return "unknown"
+
+DB_PROVIDER = detect_db_provider(DATABASE_URL)
+logger.info(f"Database provider detected: {DB_PROVIDER}")
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Engine Configuration (Provider-Optimized)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Provider-specific pool settings
+if DB_PROVIDER == "supabase":
+    # Supabase: Always-on, larger pool, no cold starts
+    POOL_SETTINGS = {
+        "pool_size": 5,  # More connections for always-on DB
+        "max_overflow": 10,
+        "pool_recycle": 1800,  # 30 minutes
+        "pool_timeout": 30,
+        "connect_timeout": 10,
+    }
+    logger.info("Using Supabase-optimized connection pool (always-on mode)")
+elif DB_PROVIDER == "neon":
+    # Neon.tech: Serverless, smaller pool, faster timeouts
+    POOL_SETTINGS = {
+        "pool_size": 3,  # Smaller for serverless
+        "max_overflow": 7,
+        "pool_recycle": 300,  # 5 minutes
+        "pool_timeout": 15,
+        "connect_timeout": 5,
+    }
+    logger.info("Using Neon.tech-optimized connection pool (serverless mode)")
+else:
+    # Default settings for Railway, local, or unknown
+    POOL_SETTINGS = {
+        "pool_size": 5,
+        "max_overflow": 10,
+        "pool_recycle": 1800,
+        "pool_timeout": 30,
+        "connect_timeout": 10,
+    }
+    logger.info("Using default connection pool settings")
+
+# Create engine with provider-optimized settings
 engine = create_engine(
     DATABASE_URL,
     poolclass=QueuePool,
-    pool_size=3,  # Smaller pool for serverless (reduces connection overhead)
-    max_overflow=7,  # Allow up to 10 total connections
-    pool_pre_ping=True,  # Verify connections before using (prevents stale connections)
-    pool_recycle=300,  # Recycle connections every 5 minutes (keeps connections fresh)
-    pool_timeout=15,  # Faster timeout - fail fast if no connection available
+    pool_size=POOL_SETTINGS["pool_size"],
+    max_overflow=POOL_SETTINGS["max_overflow"],
+    pool_pre_ping=True,  # Verify connections before using
+    pool_recycle=POOL_SETTINGS["pool_recycle"],
+    pool_timeout=POOL_SETTINGS["pool_timeout"],
     connect_args={
-        "connect_timeout": 5,  # Quick connection timeout
-        "sslmode": "require",  # Ensure SSL is required
-        "keepalives": 1,  # Enable TCP keepalives
-        "keepalives_idle": 30,  # Start keepalive after 30s idle
-        "keepalives_interval": 10,  # Send keepalive every 10s
-        "keepalives_count": 5,  # Disconnect after 5 failed keepalives
+        "connect_timeout": POOL_SETTINGS["connect_timeout"],
+        "sslmode": "require",  # Ensure SSL for all cloud DBs
+        "keepalives": 1,
+        "keepalives_idle": 30,
+        "keepalives_interval": 10,
+        "keepalives_count": 5,
     },
-    echo=False,  # Set to True for SQL query logging
+    echo=False,
 )
 
 
