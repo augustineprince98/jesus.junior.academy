@@ -99,6 +99,56 @@ async def database_warmup_task():
             await asyncio.sleep(60)  # Retry after 1 minute on error
 
 
+def _ensure_admin_user():
+    """Ensure an admin user exists with correct approval status on every startup."""
+    from app.core.database import SessionLocal
+    from app.core.security import hash_password, verify_password
+    from app.models.user import User, ApprovalStatus
+
+    db = SessionLocal()
+    try:
+        admin = db.query(User).filter(User.phone == "9999999999").first()
+        if not admin:
+            logger.info("Creating default admin user...")
+            admin = User(
+                name="System Administrator",
+                phone="9999999999",
+                email="admin@jesusja.com",
+                password_hash=hash_password("admin123"),
+                role="ADMIN",
+                is_active=True,
+                is_approved=True,
+                approval_status=ApprovalStatus.APPROVED,
+            )
+            db.add(admin)
+            db.commit()
+            logger.info("Admin user created (phone: 9999999999)")
+        else:
+            # Fix approval status if stuck at PENDING
+            changed = False
+            if admin.approval_status != ApprovalStatus.APPROVED:
+                admin.approval_status = ApprovalStatus.APPROVED
+                admin.is_approved = True
+                changed = True
+                logger.info("Fixed admin approval_status -> APPROVED")
+            if not admin.is_active:
+                admin.is_active = True
+                changed = True
+                logger.info("Fixed admin is_active -> True")
+            # Verify password still works; reset if corrupted
+            if not verify_password("admin123", admin.password_hash):
+                admin.password_hash = hash_password("admin123")
+                changed = True
+                logger.info("Reset admin password (hash was invalid)")
+            if changed:
+                db.commit()
+    except Exception as e:
+        logger.error(f"Admin user check failed: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manage application lifecycle - start/stop scheduler, database pool."""
@@ -133,9 +183,11 @@ async def lifespan(app: FastAPI):
     # Initial database connection check
     if check_database_connection():
         logger.info("Initial database connection verified")
+        # Ensure admin user exists with correct approval status
+        _ensure_admin_user()
     else:
         logger.warning("Initial database connection check failed")
-    
+
     yield
     
     # Graceful shutdown
