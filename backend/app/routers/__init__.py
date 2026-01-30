@@ -32,6 +32,7 @@ from .uploads import router as uploads_router
 
 # Subjects
 from .subjects import router as subjects_router
+from .settings import router as settings_router
 
 # Academic year management
 from .academic_year import router as academic_year_router

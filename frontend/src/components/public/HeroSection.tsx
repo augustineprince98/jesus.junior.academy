@@ -17,50 +17,7 @@ import { ChevronDown, Sparkles } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import ParticleField from './ParticleField';
 
-// Text scramble effect - igloo.inc style
-function useTextScramble(text: string, delay: number = 0) {
-  const [displayed, setDisplayed] = useState('');
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%';
-
-  useEffect(() => {
-    let timeout: NodeJS.Timeout;
-    let frame = 0;
-    const totalFrames = text.length * 3;
-
-    timeout = setTimeout(() => {
-      const interval = setInterval(() => {
-        frame++;
-        const progress = frame / totalFrames;
-        const revealedCount = Math.floor(progress * text.length);
-
-        let result = '';
-        for (let i = 0; i < text.length; i++) {
-          if (text[i] === ' ') {
-            result += ' ';
-          } else if (i < revealedCount) {
-            result += text[i];
-          } else if (i < revealedCount + 3) {
-            result += chars[Math.floor(Math.random() * chars.length)];
-          } else {
-            result += ' ';
-          }
-        }
-        setDisplayed(result);
-
-        if (frame >= totalFrames) {
-          setDisplayed(text);
-          clearInterval(interval);
-        }
-      }, 30);
-
-      return () => clearInterval(interval);
-    }, delay);
-
-    return () => clearTimeout(timeout);
-  }, [text, delay]);
-
-  return displayed;
-}
+// Clean fade-in animation (minimalist approach)
 
 // Breathing shield centerpiece
 function BreathingCenterpiece({ scrollYProgress }: { scrollYProgress: any }) {
@@ -107,9 +64,9 @@ function BreathingCenterpiece({ scrollYProgress }: { scrollYProgress: any }) {
               </filter>
             </defs>
 
-            {/* Outer rings */}
-            <circle cx="100" cy="100" r="95" fill="none" stroke="url(#borderGrad)" strokeWidth="0.5" strokeOpacity="0.15" />
-            <circle cx="100" cy="100" r="90" fill="none" stroke="url(#borderGrad)" strokeWidth="1" strokeOpacity="0.3" />
+            {/* Outer rings - enlarged to center shield properly */}
+            <circle cx="100" cy="100" r="98" fill="none" stroke="url(#borderGrad)" strokeWidth="0.5" strokeOpacity="0.15" />
+            <circle cx="100" cy="100" r="94" fill="none" stroke="url(#borderGrad)" strokeWidth="1" strokeOpacity="0.3" />
 
             {/* Shield shape */}
             <path
@@ -161,9 +118,9 @@ export default function HeroSection() {
   // Background zoom
   const bgScale = useTransform(smoothScroll, [0, 0.5], [1, 1.15]);
 
-  // Scramble text
-  const schoolName = useTextScramble('JESUS JUNIOR ACADEMY', 500);
-  const tagline = useTextScramble('The Truth Shall Make You Free', 1200);
+  // Static text (clean, no scramble)
+  const schoolName = 'JESUS JUNIOR ACADEMY';
+  const tagline = 'The Truth Shall Make You Free';
 
   useEffect(() => {
     setIsLoaded(true);

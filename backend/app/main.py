@@ -59,6 +59,7 @@ from app.routers import (
     push_subscriptions_router,
     classes_router,
     subjects_router,
+    settings_router,
 )
 from app.core.config import settings
 from app.core.constants import API_TAGS_METADATA
@@ -437,6 +438,9 @@ app.include_router(events_router)
 
 # Files
 app.include_router(uploads_router)
+
+# System Settings
+app.include_router(settings_router)
 
 # Mount static files for uploads
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "uploads")

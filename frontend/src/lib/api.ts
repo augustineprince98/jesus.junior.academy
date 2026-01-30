@@ -57,12 +57,11 @@ async function request<T>(endpoint: string, options: ApiOptions = {}): Promise<T
   // Handle errors
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
-    
-    // Handle FastAPI validation errors (422) - detail can be an array or object
+
     let errorMessage = 'Request failed';
     if (error.detail) {
       if (Array.isArray(error.detail)) {
-        // Validation errors are arrays of objects
+        // FastAPI validation errors (422) - detail is array of objects
         errorMessage = error.detail.map((e: any) => {
           if (typeof e === 'string') return e;
           if (e.msg) return `${e.loc?.join('.') || ''}: ${e.msg}`;
@@ -71,11 +70,17 @@ async function request<T>(endpoint: string, options: ApiOptions = {}): Promise<T
       } else if (typeof error.detail === 'string') {
         errorMessage = error.detail;
       } else if (typeof error.detail === 'object') {
-        // Try to extract a meaningful message
         errorMessage = error.detail.message || error.detail.error || JSON.stringify(error.detail);
       }
+    } else if (error.message) {
+      // Custom exception handler format: { message: "...", errors: [...] }
+      errorMessage = error.message;
+      if (error.errors && Array.isArray(error.errors)) {
+        const fieldErrors = error.errors.map((e: any) => e.msg || JSON.stringify(e)).join(', ');
+        if (fieldErrors) errorMessage = fieldErrors;
+      }
     }
-    
+
     throw new ApiError(response.status, errorMessage);
   }
 
@@ -957,9 +962,9 @@ export const classesApi = {
 export const adminNotificationsApi = {
   // List all notifications
   list: (token: string, limit = 50, offset = 0) =>
-    request<{ notifications: any[]; total: number }>("/notifications/list", { 
-      token, 
-      params: { limit, offset } 
+    request<{ notifications: any[]; total: number }>("/notifications/list", {
+      token,
+      params: { limit, offset }
     }),
 
   // Create notification
@@ -989,4 +994,32 @@ export const adminNotificationsApi = {
     end_date?: string;
   }) =>
     request("/notifications/send-notice", { method: "POST", token, body: data }),
+};
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// SYSTEM SETTINGS API
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+export const settingsApi = {
+  get: (token: string) =>
+    request<{
+      school: any;
+      notifications: any;
+      security: any;
+      updated_at: string | null;
+    }>('/settings/', { token }),
+
+  update: (token: string, data: {
+    school?: any;
+    notifications?: any;
+    security?: any;
+  }) =>
+    request<{
+      school: any;
+      notifications: any;
+      security: any;
+      updated_at: string | null;
+    }>('/settings/', { method: 'PUT', token, body: data }),
+
+  getPublic: () => request<any>('/settings/public'),
 };

@@ -42,6 +42,7 @@ import {
   ToggleLeft,
   ToggleRight,
 } from 'lucide-react';
+import { settingsApi } from '@/lib/api';
 
 // Types
 interface SchoolSettings {
@@ -81,11 +82,14 @@ type SettingsTab = 'general' | 'notifications' | 'security' | 'database';
 
 export default function AdminSettingsPage() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
+
+
+  const { user, token, isAuthenticated } = useAuthStore();
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   // Settings state
   const [schoolSettings, setSchoolSettings] = useState<SchoolSettings>({
@@ -124,23 +128,50 @@ export default function AdminSettingsPage() {
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'ADMIN') {
       router.push('/login');
+      return;
     }
-  }, [isAuthenticated, user, router]);
+
+    // Load settings from API
+    if (token) {
+      settingsApi.get(token)
+        .then(data => {
+          if (data.school) setSchoolSettings(data.school);
+          if (data.notifications) setNotificationSettings(data.notifications);
+          if (data.security) setSecuritySettings(data.security);
+        })
+        .catch(err => console.error("Failed to load settings", err))
+        .finally(() => setLoading(false));
+    }
+  }, [isAuthenticated, user, router, token]);
 
   if (!isAuthenticated || user?.role !== 'ADMIN') return null;
 
+  if (loading) {
+    return (
+      <AdminLayout activeSection="settings">
+        <div className="flex items-center justify-center h-full min-h-[400px]">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        </div>
+      </AdminLayout>
+    );
+  }
+
   const handleSave = async () => {
+    if (!token) return;
     setSaving(true);
     setError('');
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await settingsApi.update(token, {
+        school: schoolSettings,
+        notifications: notificationSettings,
+        security: securitySettings
+      });
 
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
-    } catch (err) {
-      setError('Failed to save settings. Please try again.');
+    } catch (err: any) {
+      setError(err.message || 'Failed to save settings. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -175,8 +206,8 @@ export default function AdminSettingsPage() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all whitespace-nowrap ${isActive
-                    ? 'bg-blue-50 text-blue-700 shadow-sm'
-                    : 'text-gray-600 hover:bg-gray-100'
+                  ? 'bg-blue-50 text-blue-700 shadow-sm'
+                  : 'text-gray-600 hover:bg-gray-100'
                   }`}
               >
                 <Icon className={`w-4 h-4 ${isActive ? tab.color : ''}`} />

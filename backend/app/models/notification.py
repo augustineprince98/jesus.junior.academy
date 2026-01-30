@@ -91,7 +91,7 @@ class Notification(Base):
     # Relationships
     target_class = relationship("SchoolClass")
     academic_year = relationship("AcademicYear")
-    created_by = relationship("User")
+    created_by = relationship("User", foreign_keys=[created_by_id])
     recipients = relationship("NotificationRecipient", back_populates="notification", cascade="all, delete-orphan")
 
     def __repr__(self):
