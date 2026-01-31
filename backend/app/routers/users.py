@@ -12,6 +12,7 @@ from pydantic import BaseModel
 from app.core.database import get_db
 from app.core.auth import require_role_at_least
 from app.core.roles import Role
+from app.core.obfuscate import mask_phone, mask_email, SecurityLevel
 from datetime import datetime
 from app.models.user import User, ApprovalStatus
 from app.services import user_service
@@ -184,8 +185,8 @@ def list_users(
             {
                 "id": u.id,
                 "name": u.name,
-                "phone": u.phone,
-                "email": u.email,
+                "phone": mask_phone(u.phone, security_level=SecurityLevel.USER_API),
+                "email": mask_email(u.email),
                 "role": u.role,
                 "is_active": u.is_active,
                 "is_approved": u.is_approved,
@@ -442,11 +443,15 @@ def get_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
+    # Admin viewing own profile gets full access, others get masked data
+    is_own_profile = admin.id == user_id
+    security_level = SecurityLevel.ADMIN if is_own_profile else SecurityLevel.USER_API
+
     return {
         "id": user.id,
         "name": user.name,
-        "phone": user.phone,
-        "email": user.email,
+        "phone": mask_phone(user.phone, security_level=security_level),
+        "email": mask_email(user.email) if not is_own_profile else user.email,
         "role": user.role,
         "is_active": user.is_active,
         "student_id": user.student_id,

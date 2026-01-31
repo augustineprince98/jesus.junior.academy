@@ -3,31 +3,55 @@ Data Obfuscation Utilities
 
 Security utilities for masking sensitive data in API responses.
 Protects against OSINT attacks by hiding full phone numbers, emails, etc.
+
+Security Levels:
+- OSINT: Maximum protection, show only 2 digits (public endpoints)
+- USER_API: Standard protection, show 4 digits (authenticated user responses)
+- ADMIN: No masking for admins viewing their own data
 """
 
 from typing import Optional
+from enum import Enum
 import re
 
 
-def mask_phone(phone: Optional[str], show_last: int = 4) -> Optional[str]:
+class SecurityLevel(str, Enum):
+    """Security levels for data obfuscation."""
+    OSINT = "osint"         # Public/unauthenticated - show 2 digits
+    USER_API = "user_api"   # Authenticated user - show 4 digits
+    ADMIN = "admin"         # Full access - no masking
+
+
+# Digit visibility by security level
+PHONE_DIGITS = {
+    SecurityLevel.OSINT: 2,
+    SecurityLevel.USER_API: 4,
+    SecurityLevel.ADMIN: 10,  # Full number
+}
+
+
+def mask_phone(phone: Optional[str], show_last: int = 4, security_level: SecurityLevel = SecurityLevel.USER_API) -> Optional[str]:
     """
-    Mask a phone number, showing only the last N digits.
+    Mask a phone number based on security level.
     
-    Example:
-        mask_phone("9876543210") -> "******3210"
-        mask_phone("9876543210", show_last=2) -> "********10"
+    Examples:
+        mask_phone("9876543210", security_level=SecurityLevel.OSINT) -> "********10"
+        mask_phone("9876543210", security_level=SecurityLevel.USER_API) -> "******3210"
     """
     if not phone:
         return None
     
+    # Use security level to determine digits to show
+    digits_to_show = PHONE_DIGITS.get(security_level, show_last)
+    
     # Remove any non-digit characters for processing
     digits_only = re.sub(r'[^\d]', '', phone)
     
-    if len(digits_only) <= show_last:
+    if len(digits_only) <= digits_to_show:
         return phone  # Too short to mask meaningfully
     
-    masked_length = len(digits_only) - show_last
-    return '*' * masked_length + digits_only[-show_last:]
+    masked_length = len(digits_only) - digits_to_show
+    return '*' * masked_length + digits_only[-digits_to_show:]
 
 
 def mask_email(email: Optional[str]) -> Optional[str]:
@@ -84,25 +108,29 @@ def mask_aadhaar(aadhaar: Optional[str]) -> Optional[str]:
     return f"XXXX-XXXX-{digits_only[-4:]}"
 
 
-def obfuscate_user_data(user_dict: dict, full_access: bool = False) -> dict:
+def obfuscate_user_data(user_dict: dict, security_level: SecurityLevel = SecurityLevel.USER_API) -> dict:
     """
     Obfuscate sensitive fields in a user dictionary.
     
     Args:
         user_dict: Dictionary containing user data
-        full_access: If True, return unmasked data (for admin view of own data)
+        security_level: SecurityLevel enum (OSINT, USER_API, or ADMIN)
     
     Returns:
-        Dictionary with sensitive fields masked
+        Dictionary with sensitive fields masked based on security level
     """
-    if full_access:
-        return user_dict
+    if security_level == SecurityLevel.ADMIN:
+        # Remove password fields but don't mask other data
+        result = user_dict.copy()
+        for field in ['password', 'password_hash', 'hashed_password']:
+            result.pop(field, None)
+        return result
     
     result = user_dict.copy()
     
-    # Mask sensitive fields if present
+    # Mask sensitive fields based on security level
     if 'phone' in result:
-        result['phone'] = mask_phone(result['phone'])
+        result['phone'] = mask_phone(result['phone'], security_level=security_level)
     
     if 'email' in result:
         result['email'] = mask_email(result['email'])
