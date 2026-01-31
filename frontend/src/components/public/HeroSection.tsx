@@ -170,24 +170,46 @@ export default function HeroSection() {
             </span>
           </motion.div>
 
-          {/* School Name with scramble effect */}
-          <motion.h1
-            initial={{ opacity: 0 }}
-            animate={isLoaded ? { opacity: 1 } : {}}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="w-full text-center mb-8 px-4 relative"
-          >
-            <span className="font-bambi text-white text-[5vw] leading-none whitespace-nowrap tracking-tight drop-shadow-2xl hero-text-glow">
-              {schoolName}
-            </span>
-            {/* Reflection */}
-            <span
-              className="block font-bambi text-white/5 text-[5vw] leading-none whitespace-nowrap tracking-tight transform -scale-y-100 absolute left-0 right-0 top-full origin-top blur-sm select-none"
-              aria-hidden="true"
-            >
-              JESUS JUNIOR ACADEMY
-            </span>
-          </motion.h1>
+          {/* School Name - Elegant Letter Reveal Animation */}
+          <div className="w-full text-center mb-8 px-4 relative overflow-hidden">
+            <h1 className="flex justify-center items-center flex-wrap gap-x-[0.15em]">
+              {schoolName.split('').map((char, i) => (
+                <motion.span
+                  key={i}
+                  initial={{ opacity: 0, y: 40, filter: 'blur(10px)' }}
+                  animate={isLoaded ? {
+                    opacity: 1,
+                    y: 0,
+                    filter: 'blur(0px)',
+                  } : {}}
+                  transition={{
+                    duration: 0.6,
+                    delay: 0.4 + (i * 0.04),
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
+                  className={`font-bambi text-white text-[5vw] leading-none tracking-tight inline-block ${char === ' ' ? 'w-[0.3em]' : ''
+                    }`}
+                  style={{
+                    textShadow: '0 0 40px rgba(102, 145, 229, 0.3), 0 0 80px rgba(245, 215, 110, 0.15)'
+                  }}
+                >
+                  {char === ' ' ? '\u00A0' : char}
+                </motion.span>
+              ))}
+            </h1>
+
+            {/* Elegant underline reveal */}
+            <motion.div
+              initial={{ scaleX: 0, opacity: 0 }}
+              animate={isLoaded ? { scaleX: 1, opacity: 1 } : {}}
+              transition={{
+                duration: 1.2,
+                delay: 0.8 + schoolName.length * 0.04,
+                ease: [0.22, 1, 0.36, 1]
+              }}
+              className="h-[2px] w-48 mx-auto mt-6 bg-gradient-to-r from-transparent via-white/40 to-transparent origin-center"
+            />
+          </div>
 
           {/* Tagline with scramble */}
           <motion.div
