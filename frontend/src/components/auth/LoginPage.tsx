@@ -53,15 +53,19 @@ export default function AccessGate() {
       login(res.user as any, res.access_token);
       router.push('/campus');
     } catch (err: any) {
-      const detail = err?.detail || err?.message || '';
-      if (detail.includes('pending approval')) {
+      const detail = (err?.detail || err?.message || '').toLowerCase();
+      if (detail.includes('pending approval') || detail.includes('pending')) {
         setErrorMessage('Account pending approval. Please wait for admin approval.');
       } else if (detail.includes('rejected')) {
         setErrorMessage('Account was rejected. Please contact the school office.');
       } else if (detail.includes('deactivated')) {
         setErrorMessage('Account has been deactivated. Please contact admin.');
-      } else {
+      } else if (detail.includes('invalid credentials') || detail.includes('invalid')) {
         setErrorMessage('Invalid phone number or password.');
+      } else if (detail.includes('rate') || detail.includes('too many')) {
+        setErrorMessage('Too many login attempts. Please wait a minute and try again.');
+      } else {
+        setErrorMessage(err?.detail || err?.message || 'Login failed. Please try again.');
       }
       setVerifying(false);
     }
@@ -89,7 +93,7 @@ export default function AccessGate() {
             <div className="icon-circle icon-circle-lg icon-circle-accent mx-auto mb-6">
               <Sparkles className="w-7 h-7" />
             </div>
-            <h1 className="font-bambi text-2xl text-white mb-2">JESUS JUNIOR ACADEMY</h1>
+            <h1 className="font-bambi text-lg sm:text-2xl text-white mb-2 whitespace-nowrap">JESUS JUNIOR ACADEMY</h1>
             <p className="text-white/40 text-sm tracking-wide">Digital Campus Access</p>
           </div>
 
