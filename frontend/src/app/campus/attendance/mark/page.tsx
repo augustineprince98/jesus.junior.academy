@@ -72,13 +72,28 @@ export default function MarkAttendancePage() {
 
     try {
       setLoading(true);
-      const data = await teacherSubjectsApi.getMyAssignments(token);
-      const classList: ClassInfo[] = data.classes.map((cls: any) => ({
-        class_id: cls.class_id,
-        class_name: cls.class_name,
-        academic_year_id: 1, // TODO: Get from API
-        academic_year_name: data.academic_year,
-      }));
+      let classList: ClassInfo[] = [];
+
+      if (user?.role === 'ADMIN') {
+        // Admins can see ALL classes
+        const data = await enrollmentApi.getClasses(token);
+        classList = data.classes.map((cls: any) => ({
+          class_id: cls.id,
+          class_name: cls.name,
+          academic_year_id: 1, // TODO: Get from global state or API
+          academic_year_name: 'Current Year',
+        }));
+      } else {
+        // Teachers only see their assigned classes
+        const data = await teacherSubjectsApi.getMyAssignments(token);
+        classList = data.classes.map((cls: any) => ({
+          class_id: cls.class_id,
+          class_name: cls.class_name,
+          academic_year_id: 1,
+          academic_year_name: data.academic_year,
+        }));
+      }
+
       setClasses(classList);
 
       // Auto-select first class if available
@@ -86,7 +101,8 @@ export default function MarkAttendancePage() {
         setSelectedClass(classList[0]);
       }
     } catch (err: any) {
-      setError(err.detail || 'Failed to load classes');
+      console.error('Failed to load classes:', err);
+      setError('Failed to load classes. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -224,12 +240,12 @@ export default function MarkAttendancePage() {
                       const cls = classes.find(c => c.class_id === classId);
                       setSelectedClass(cls || null);
                     }}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                   >
                     <option value="">Select a class</option>
                     {classes.map(cls => (
                       <option key={cls.class_id} value={cls.class_id}>
-                        {cls.class_name} ({cls.academic_year_name})
+                        {cls.class_name}
                       </option>
                     ))}
                   </select>
@@ -244,7 +260,7 @@ export default function MarkAttendancePage() {
                     value={selectedDate}
                     onChange={(e) => setSelectedDate(e.target.value)}
                     max={new Date().toISOString().split('T')[0]}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                   />
                 </div>
               </div>
@@ -383,28 +399,26 @@ export default function MarkAttendancePage() {
                                 placeholder="Remarks (optional)"
                                 value={remarks[student.id] || ''}
                                 onChange={(e) => handleRemarksChange(student.id, e.target.value)}
-                                className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                               />
 
                               <div className="flex gap-2">
                                 <button
                                   onClick={() => handleAttendanceChange(student.id, true)}
-                                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                                    attendance[student.id]
-                                      ? 'bg-green-600 text-white'
-                                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                  }`}
+                                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${attendance[student.id]
+                                    ? 'bg-green-600 text-white'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                    }`}
                                 >
                                   <CheckCircle2 className="w-4 h-4" />
                                   Present
                                 </button>
                                 <button
                                   onClick={() => handleAttendanceChange(student.id, false)}
-                                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                                    !attendance[student.id]
-                                      ? 'bg-red-600 text-white'
-                                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                  }`}
+                                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${!attendance[student.id]
+                                    ? 'bg-red-600 text-white'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                    }`}
                                 >
                                   <XCircle className="w-4 h-4" />
                                   Absent
