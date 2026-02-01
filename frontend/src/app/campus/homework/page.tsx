@@ -499,133 +499,131 @@ export default function HomeworkPage() {
                         class_id: Number(e.target.value),
                         subject_id: 0, // Reset subject when class changes
                       })}
-                      })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white text-gray-900"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white text-gray-900"
                     >
-                    <option value={0}>Select a class</option>
-                    {teacherAssignments.map(assignment => (
-                      <option key={assignment.class_id} value={assignment.class_id}>
-                        {assignment.class_name}
+                      <option value={0}>Select a class</option>
+                      {teacherAssignments.map(assignment => (
+                        <option key={assignment.class_id} value={assignment.class_id}>
+                          {assignment.class_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Subject Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Subject <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={formData.subject_id}
+                      onChange={(e) => setFormData({ ...formData, subject_id: Number(e.target.value) })}
+                      disabled={!formData.class_id}
+                      disabled={!formData.class_id}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400 bg-white text-gray-900"
+                    >
+                      <option value={0}>
+                        {formData.class_id ? 'Select a subject' : 'Select class first'}
                       </option>
-                    ))}
-                  </select>
-                </div>
+                      {availableSubjects.map(subject => (
+                        <option key={subject.subject_id} value={subject.subject_id}>
+                          {subject.subject_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-              {/* Subject Selection */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Subject <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={formData.subject_id}
-                  onChange={(e) => setFormData({ ...formData, subject_id: Number(e.target.value) })}
-                  disabled={!formData.class_id}
-                  disabled={!formData.class_id}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400 bg-white text-gray-900"
-                >
-                  <option value={0}>
-                    {formData.class_id ? 'Select a subject' : 'Select class first'}
-                  </option>
-                  {availableSubjects.map(subject => (
-                    <option key={subject.subject_id} value={subject.subject_id}>
-                      {subject.subject_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  {/* Title */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Title <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      placeholder="e.g., Chapter 5 Exercise Questions"
+                      placeholder="e.g., Chapter 5 Exercise Questions"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white text-gray-900"
+                    />
+                  </div>
 
-              {/* Title */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Title <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="e.g., Chapter 5 Exercise Questions"
-                  placeholder="e.g., Chapter 5 Exercise Questions"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white text-gray-900"
-                />
-              </div>
+                  {/* Description */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Description
+                    </label>
+                    <textarea
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      placeholder="Add details about the homework..."
+                      rows={3}
+                      placeholder="Add details about the homework..."
+                      rows={3}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none bg-white text-gray-900"
+                    />
+                  </div>
 
-              {/* Description */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Add details about the homework..."
-                  rows={3}
-                  placeholder="Add details about the homework..."
-                  rows={3}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none bg-white text-gray-900"
-                />
-              </div>
+                  {/* Dates */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Assigned Date
+                      </label>
+                      <input
+                        type="date"
+                        value={formData.assigned_date}
+                        onChange={(e) => setFormData({ ...formData, assigned_date: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white text-gray-900"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Due Date <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="date"
+                        value={formData.due_date}
+                        onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                        min={formData.assigned_date}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white text-gray-900"
+                      />
+                    </div>
+                  </div>
 
-              {/* Dates */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Assigned Date
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.assigned_date}
-                    onChange={(e) => setFormData({ ...formData, assigned_date: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white text-gray-900"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Due Date <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.due_date}
-                    onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                    min={formData.assigned_date}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white text-gray-900"
-                  />
-                </div>
-              </div>
-
-              {/* Submit Button */}
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="flex-1 px-4 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="flex-1 px-4 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {submitting ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Assigning...
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="w-4 h-4" />
-                      Assign Homework
-                    </>
-                  )}
-                </button>
-              </div>
-            </>
+                  {/* Submit Button */}
+                  <div className="flex gap-3 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => setShowModal(false)}
+                      className="flex-1 px-4 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="flex-1 px-4 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      {submitting ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          Assigning...
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="w-4 h-4" />
+                          Assign Homework
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </>
               )}
-          </form>
-        </motion.div>
+            </form>
+          </motion.div>
         </div>
-  )
-}
-    </div >
+      )}
+    </div>
   );
 }
