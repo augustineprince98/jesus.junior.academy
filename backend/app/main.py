@@ -181,6 +181,16 @@ async def lifespan(app: FastAPI):
     # Initial database connection check
     if check_database_connection():
         logger.info("Initial database connection verified")
+        
+        # Auto-create tables if missing (ensure DB schema matches models)
+        try:
+            from app.models import Base
+            from app.core.database import engine
+            Base.metadata.create_all(bind=engine)
+            logger.info("Database tables verified/created")
+        except Exception as e:
+            logger.error(f"Table creation failed: {e}")
+
         # Ensure admin user exists with correct approval status
         _ensure_admin_user()
     else:
