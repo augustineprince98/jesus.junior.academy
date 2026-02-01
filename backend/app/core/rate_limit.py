@@ -17,20 +17,37 @@ import threading
 
 class RateLimiter:
     """
-    Simple in-memory rate limiter.
+    Simple in-memory rate limiter with automatic cleanup.
 
     For production with multiple backend instances, replace with Redis-based implementation.
     """
 
-    def __init__(self):
+    def __init__(self, cleanup_interval: int = 300):
         # key -> list of timestamps
         self._requests: dict = defaultdict(list)
         self._lock = threading.Lock()
+        self._last_cleanup = time.time()
+        self._cleanup_interval = cleanup_interval  # seconds between full cleanups
 
     def _clean_old_requests(self, key: str, window_seconds: int):
         """Remove requests older than the time window."""
         cutoff = time.time() - window_seconds
         self._requests[key] = [ts for ts in self._requests[key] if ts > cutoff]
+
+    def _periodic_cleanup(self):
+        """Remove stale keys to prevent unbounded memory growth."""
+        now = time.time()
+        if now - self._last_cleanup < self._cleanup_interval:
+            return
+        self._last_cleanup = now
+        # Remove keys with no recent requests (older than 1 hour)
+        stale_cutoff = now - 3600
+        stale_keys = [
+            k for k, timestamps in self._requests.items()
+            if not timestamps or max(timestamps) < stale_cutoff
+        ]
+        for k in stale_keys:
+            del self._requests[k]
 
     def is_allowed(self, key: str, max_requests: int, window_seconds: int) -> bool:
         """
@@ -45,6 +62,7 @@ class RateLimiter:
             True if request is allowed, False if rate limited
         """
         with self._lock:
+            self._periodic_cleanup()
             self._clean_old_requests(key, window_seconds)
 
             if len(self._requests[key]) >= max_requests:

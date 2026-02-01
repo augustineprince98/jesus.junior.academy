@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from typing import Optional
 from pydantic import BaseModel
@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from app.core.database import get_db
 from app.core.auth import get_current_user, require_role_at_least
 from app.core.roles import Role
+from app.core.rate_limit import rate_limit
 from app.models.user import User
 from app.models.admission import AdmissionEnquiry
 from app.schemas.admission import (
@@ -26,7 +27,9 @@ class EnquiryStatusUpdate(BaseModel):
     "/enquiry",
     response_model=AdmissionEnquiryResponse,
 )
-def create_admission_enquiry(
+@rate_limit(max_requests=5, window_seconds=3600)  # 5 enquiries per hour per IP
+async def create_admission_enquiry(
+    request: Request,
     payload: AdmissionEnquiryCreate,
     db: Session = Depends(get_db),
 ):

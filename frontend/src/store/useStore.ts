@@ -62,6 +62,45 @@ export const useAuthStore = create<AuthState>()(
 );
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ACADEMIC YEAR STORE
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+interface AcademicYearInfo {
+  id: number;
+  year: string;
+  is_current: boolean;
+}
+
+interface AcademicYearState {
+  selectedYearId: number | null;
+  years: AcademicYearInfo[];
+  loading: boolean;
+  setSelectedYearId: (id: number) => void;
+  setYears: (years: AcademicYearInfo[]) => void;
+  setLoading: (loading: boolean) => void;
+}
+
+export const useAcademicYearStore = create<AcademicYearState>()(
+  persist(
+    (set) => ({
+      selectedYearId: null,
+      years: [],
+      loading: false,
+
+      setSelectedYearId: (id) => set({ selectedYearId: id }),
+      setYears: (years) => set({ years }),
+      setLoading: (loading) => set({ loading }),
+    }),
+    {
+      name: 'jja-academic-year',
+      partialize: (state) => ({
+        selectedYearId: state.selectedYearId,
+      }),
+    }
+  )
+);
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // CAMPUS NAVIGATION STORE
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

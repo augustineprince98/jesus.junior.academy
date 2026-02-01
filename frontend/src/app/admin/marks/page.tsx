@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useStore';
 import AdminLayout from '@/components/admin/AdminLayout';
+import YearSelector from '@/components/admin/YearSelector';
 import {
   FileSpreadsheet,
   Users,
@@ -231,9 +232,15 @@ export default function MarksPage() {
   return (
     <AdminLayout activeSection="marks">
       <div className="max-w-6xl">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Upload Marks</h1>
-          <p className="text-gray-600">Enter student marks for exams</p>
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800 mb-2">Upload Marks</h1>
+            <p className="text-gray-600">Enter student marks for exams</p>
+          </div>
+          <YearSelector
+            selectedYearId={academicYearId}
+            onChange={setAcademicYearId}
+          />
         </div>
 
         {error && (

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useStore';
 import AdminLayout from '@/components/admin/AdminLayout';
+import YearSelector from '@/components/admin/YearSelector';
 import {
   Calendar,
   Users,
@@ -202,9 +203,15 @@ export default function AttendancePage() {
   return (
     <AdminLayout activeSection="attendance">
       <div className="max-w-6xl">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Attendance Management</h1>
-          <p className="text-gray-600">Mark and manage student attendance for any class</p>
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800 mb-2">Attendance Management</h1>
+            <p className="text-gray-600">Mark and manage student attendance for any class</p>
+          </div>
+          <YearSelector
+            selectedYearId={academicYearId}
+            onChange={setAcademicYearId}
+          />
         </div>
 
         {error && (
@@ -339,11 +346,10 @@ export default function AttendancePage() {
                     <td className="px-6 py-4 text-center">
                       <button
                         onClick={() => toggleAttendance(student.id)}
-                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                          attendance[student.id]
+                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${attendance[student.id]
                             ? 'bg-red-100 text-red-700 hover:bg-red-200'
                             : 'bg-green-100 text-green-700 hover:bg-green-200'
-                        }`}
+                          }`}
                       >
                         {attendance[student.id] ? 'Mark Absent' : 'Mark Present'}
                       </button>

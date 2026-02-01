@@ -413,8 +413,9 @@ async def request_password_reset(
     return {"message": "OTP sent if phone exists"}
 
 @router.post("/password-reset/verify")
+@rate_limit(max_requests=5, window_seconds=600)  # 5 attempts per 10 minutes
 def verify_password_reset(
-    payload: OTPVerify, db: Session = Depends(get_db)
+    request: Request, payload: OTPVerify, db: Session = Depends(get_db)
 ):
     record = (
         db.query(PasswordResetOTP)

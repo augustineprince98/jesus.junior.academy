@@ -18,12 +18,20 @@ import {
 interface AcademicYear {
   id: number;
   year: string;
+  start_date: string;
+  end_date: string;
   is_current: boolean;
   classes_count: number;
   enrollments_count: number;
 }
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://jja-backend.onrender.com';
+
+function formatDate(dateStr: string): string {
+  if (!dateStr) return '';
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+}
 
 export default function AcademicYearPage() {
   const router = useRouter();
@@ -35,7 +43,12 @@ export default function AcademicYearPage() {
   // Modal state
   const [showModal, setShowModal] = useState(false);
   const [editingYear, setEditingYear] = useState<AcademicYear | null>(null);
-  const [formData, setFormData] = useState({ year: '', is_current: false });
+  const [formData, setFormData] = useState({
+    year: '',
+    start_date: '',
+    end_date: '',
+    is_current: false,
+  });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -49,6 +62,7 @@ export default function AcademicYearPage() {
   const loadYears = async () => {
     try {
       setLoading(true);
+      setError('');
       const response = await fetch(`${API_BASE}/academic-years/`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -60,11 +74,12 @@ export default function AcademicYearPage() {
         const data = await response.json();
         setYears(Array.isArray(data) ? data : []);
       } else {
-        setError('Failed to load academic years');
+        const errData = await response.json().catch(() => null);
+        setError(errData?.detail || 'Failed to load academic years');
       }
     } catch (err) {
       console.error('Failed to load academic years:', err);
-      setError('Failed to load academic years');
+      setError('Failed to load academic years. Please check your connection.');
     } finally {
       setLoading(false);
     }
@@ -72,20 +87,55 @@ export default function AcademicYearPage() {
 
   const openCreateModal = () => {
     setEditingYear(null);
-    setFormData({ year: '', is_current: false });
+    setFormData({ year: '', start_date: '', end_date: '', is_current: false });
     setShowModal(true);
+    setError('');
   };
 
   const openEditModal = (year: AcademicYear) => {
     setEditingYear(year);
-    setFormData({ year: year.year, is_current: year.is_current });
+    setFormData({
+      year: year.year,
+      start_date: year.start_date,
+      end_date: year.end_date,
+      is_current: year.is_current,
+    });
     setShowModal(true);
+    setError('');
+  };
+
+  const handleYearLabelChange = (value: string) => {
+    setFormData((prev) => {
+      const updated = { ...prev, year: value };
+
+      // Auto-fill dates when a valid year label is entered (e.g. "2025-2026")
+      const match = value.match(/^(\d{4})-(\d{4})$/);
+      if (match) {
+        const startYear = parseInt(match[1]);
+        const endYear = parseInt(match[2]);
+        if (endYear === startYear + 1) {
+          // Default: April 1 to March 31 (Indian academic year)
+          if (!prev.start_date) {
+            updated.start_date = `${startYear}-04-01`;
+          }
+          if (!prev.end_date) {
+            updated.end_date = `${endYear}-03-31`;
+          }
+        }
+      }
+
+      return updated;
+    });
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.year) {
       setError('Please enter a year');
+      return;
+    }
+    if (!formData.start_date || !formData.end_date) {
+      setError('Please enter both start and end dates');
       return;
     }
 
@@ -111,8 +161,8 @@ export default function AcademicYearPage() {
         setShowModal(false);
         loadYears();
       } else {
-        const data = await response.json();
-        setError(data.detail || 'Failed to save academic year');
+        const data = await response.json().catch(() => null);
+        setError(data?.detail || 'Failed to save academic year');
       }
     } catch (err) {
       console.error('Failed to save academic year:', err);
@@ -124,6 +174,7 @@ export default function AcademicYearPage() {
 
   const handleSetActive = async (yearId: number) => {
     try {
+      setError('');
       const response = await fetch(`${API_BASE}/academic-years/${yearId}/set-active`, {
         method: 'POST',
         headers: {
@@ -135,8 +186,8 @@ export default function AcademicYearPage() {
       if (response.ok) {
         loadYears();
       } else {
-        const data = await response.json();
-        setError(data.detail || 'Failed to set active year');
+        const data = await response.json().catch(() => null);
+        setError(data?.detail || 'Failed to set active year');
       }
     } catch (err) {
       console.error('Failed to set active year:', err);
@@ -148,6 +199,7 @@ export default function AcademicYearPage() {
     if (!confirm('Are you sure you want to delete this academic year?')) return;
 
     try {
+      setError('');
       const response = await fetch(`${API_BASE}/academic-years/${yearId}`, {
         method: 'DELETE',
         headers: {
@@ -159,8 +211,8 @@ export default function AcademicYearPage() {
       if (response.ok) {
         loadYears();
       } else {
-        const data = await response.json();
-        setError(data.detail || 'Failed to delete academic year');
+        const data = await response.json().catch(() => null);
+        setError(data?.detail || 'Failed to delete academic year');
       }
     } catch (err) {
       console.error('Failed to delete academic year:', err);
@@ -203,6 +255,7 @@ export default function AcademicYearPage() {
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Year</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Duration</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Classes</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Enrollments</th>
@@ -217,6 +270,9 @@ export default function AcademicYearPage() {
                         <Calendar className="w-5 h-5 text-primary-600" />
                         <span className="font-semibold text-gray-800">{year.year}</span>
                       </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {formatDate(year.start_date)} — {formatDate(year.end_date)}
                     </td>
                     <td className="px-6 py-4">
                       {year.is_current ? (
@@ -268,7 +324,7 @@ export default function AcademicYearPage() {
               <div className="text-center py-12 text-gray-500">
                 <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                 <p>No academic years found</p>
-                <p className="text-sm mt-1">Click "Add Academic Year" to create one</p>
+                <p className="text-sm mt-1">Click &quot;Add Academic Year&quot; to create one</p>
               </div>
             )}
           </div>
@@ -293,18 +349,48 @@ export default function AcademicYearPage() {
               <form onSubmit={handleSave} className="p-6 space-y-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">
-                    Year <span className="text-red-500">*</span>
+                    Year Label <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={formData.year}
-                    onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                    onChange={(e) => handleYearLabelChange(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                     placeholder="2025-2026"
                     required
                   />
                   <p className="text-xs text-gray-500 mt-1">Format: YYYY-YYYY (e.g., 2025-2026)</p>
                 </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Start Date <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.start_date}
+                      onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      End Date <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.end_date}
+                      onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      required
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500">
+                  Indian academic year: April 1 to March 31 (auto-filled when you enter the year label)
+                </p>
 
                 <div className="flex items-center gap-2">
                   <input

@@ -32,6 +32,7 @@ import {
   FileSpreadsheet,
   ExternalLink,
 } from 'lucide-react';
+import YearSelector from './YearSelector';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -189,7 +190,8 @@ export default function AdminLayout({ children, activeSection }: AdminLayoutProp
               {menuItems.find((item) => item.id === activeSection)?.label || 'Admin Panel'}
             </h2>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <YearSelector />
             <button
               onClick={() => router.push('/campus')}
               className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"

@@ -4,7 +4,7 @@
  * Clean, type-safe API calls with automatic token management
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://jja-backend.onrender.com';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
@@ -909,8 +909,8 @@ export const schoolApi = {
     ),
 
   getAcademicYears: (token: string) =>
-    request<{ id: number; year: string; is_current: boolean }[]>('/academic-years/', { token }).then(
-      (data: any) => (data || []).map((y: any) => ({ id: y.id, name: y.year, is_current: y.is_current }))
+    request<{ id: number; year: string; start_date: string; end_date: string; is_current: boolean }[]>('/academic-years/', { token }).then(
+      (data: any) => (data || []).map((y: any) => ({ id: y.id, name: y.year, start_date: y.start_date, end_date: y.end_date, is_current: y.is_current }))
     ),
 
   getSubjects: (token: string) =>

@@ -13,6 +13,7 @@ import re
 from app.core.database import get_db
 from app.core.security import hash_password
 from app.core.rate_limit import rate_limit
+from app.core.auth import get_current_user, require_role_at_least
 from app.core.roles import Role
 from app.models.user import User, ApprovalStatus
 from app.models.people import Student
@@ -214,7 +215,9 @@ async def register_user(
 
 
 @router.get("/diagnostics")
-def registration_diagnostics(
+@rate_limit(max_requests=10, window_seconds=60)
+async def registration_diagnostics(
+    request: Request,
     db: Session = Depends(get_db),
 ):
     """
@@ -234,37 +237,12 @@ def registration_diagnostics(
     else:
         classes = []
 
-    # Get user counts for debugging
-    total_users = db.query(User).count()
-    pending_users = db.query(User).filter(User.approval_status == ApprovalStatus.PENDING).count()
-    approved_users = db.query(User).filter(User.approval_status == ApprovalStatus.APPROVED).count()
-
-    # Get list of all phones (masked) for debugging
-    all_users = db.query(User).all()
-    user_list = [
-        {
-            "id": u.id,
-            "phone_masked": u.phone[-4:].rjust(len(u.phone), "*") if u.phone else "N/A",
-            "role": u.role,
-            "status": u.approval_status,
-            "is_active": u.is_active,
-        }
-        for u in all_users
-    ]
-
     return {
         "registration_enabled": True,
-        "database_status": {
-            "total_users": total_users,
-            "pending_users": pending_users,
-            "approved_users": approved_users,
-            "user_list": user_list,
-        },
         "academic_year": {
             "configured": academic_year is not None,
             "name": academic_year.year if academic_year else None,
-            "id": academic_year.id if academic_year else None,
-        } if True else None,
+        },
         "classes": {
             "count": len(classes),
             "available": [
@@ -277,53 +255,45 @@ def registration_diagnostics(
             issue for issue in [
                 "No current academic year configured" if not academic_year else None,
                 "No active classes available" if len(classes) == 0 else None,
-                "No users in database" if total_users == 0 else None,
             ] if issue is not None
         ],
     }
 
 
 @router.get("/check-phone/{phone}")
-def check_phone_exists(
+@rate_limit(max_requests=5, window_seconds=60)
+async def check_phone_exists(
+    request: Request,
     phone: str,
     db: Session = Depends(get_db),
 ):
     """
-    Debug endpoint to check if a phone number exists in the database.
+    Check if a phone number is already registered.
 
-    Returns detailed information about the user if found.
+    Returns only whether the phone exists and its approval status (no sensitive data).
     """
     # Clean phone number
     clean_phone = re.sub(r"\D", "", phone)
-    logger.info(f"Checking phone existence: {clean_phone}")
 
     user = db.query(User).filter(User.phone == clean_phone).first()
 
     if not user:
-        logger.info(f"Phone {clean_phone} NOT found in database")
         return {
             "exists": False,
-            "phone": clean_phone,
-            "message": "Phone number NOT found in database",
+            "message": "Phone number is available for registration",
         }
 
-    logger.info(f"Phone {clean_phone} FOUND: user_id={user.id}, status={user.approval_status}")
     return {
         "exists": True,
-        "phone": clean_phone,
-        "user_id": user.id,
-        "name": user.name,
-        "role": user.role,
-        "approval_status": user.approval_status,
-        "is_approved": user.is_approved,
-        "is_active": user.is_active,
-        "created_at": user.created_at.isoformat() if user.created_at else None,
-        "message": f"Phone number found - User ID: {user.id}, Status: {user.approval_status}",
+        "status": user.approval_status,
+        "message": "Phone number already registered",
     }
 
 
 @router.get("/status/{phone}")
-def check_registration_status(
+@rate_limit(max_requests=10, window_seconds=60)
+async def check_registration_status(
+    request: Request,
     phone: str,
     db: Session = Depends(get_db),
 ):

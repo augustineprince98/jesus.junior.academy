@@ -106,6 +106,8 @@ def _ensure_admin_user():
     from app.core.security import hash_password, verify_password
     from app.models.user import User, ApprovalStatus
 
+    default_admin_password = os.getenv("ADMIN_DEFAULT_PASSWORD", "admin123")
+
     db = SessionLocal()
     try:
         admin = db.query(User).filter(User.phone == "9999999999").first()
@@ -115,7 +117,7 @@ def _ensure_admin_user():
                 name="System Administrator",
                 phone="9999999999",
                 email="admin@jesusja.com",
-                password_hash=hash_password("admin123"),
+                password_hash=hash_password(default_admin_password),
                 role="ADMIN",
                 is_active=True,
                 is_approved=True,
@@ -136,11 +138,6 @@ def _ensure_admin_user():
                 admin.is_active = True
                 changed = True
                 logger.info("Fixed admin is_active -> True")
-            # Verify password still works; reset if corrupted
-            if not verify_password("admin123", admin.password_hash):
-                admin.password_hash = hash_password("admin123")
-                changed = True
-                logger.info("Reset admin password (hash was invalid)")
             if changed:
                 db.commit()
     except Exception as e:

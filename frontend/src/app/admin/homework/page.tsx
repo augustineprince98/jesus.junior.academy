@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useStore';
 import AdminLayout from '@/components/admin/AdminLayout';
+import YearSelector from '@/components/admin/YearSelector';
 import {
   Plus,
   BookOpen,
@@ -308,14 +309,20 @@ export default function HomeworkPage() {
             <h1 className="text-2xl font-bold text-gray-800 mb-2">Homework Management</h1>
             <p className="text-gray-600">Create, manage, and publish homework assignments</p>
           </div>
-          <button
-            onClick={openCreateModal}
-            disabled={!selectedClassId}
-            className="flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Plus className="w-5 h-5" />
-            Add Homework
-          </button>
+          <div className="flex gap-3 items-center">
+            <YearSelector
+              selectedYearId={academicYearId}
+              onChange={setAcademicYearId}
+            />
+            <button
+              onClick={openCreateModal}
+              disabled={!selectedClassId}
+              className="flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Plus className="w-5 h-5" />
+              Add Homework
+            </button>
+          </div>
         </div>
 
         {error && (
