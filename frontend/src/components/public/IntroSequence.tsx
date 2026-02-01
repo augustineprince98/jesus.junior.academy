@@ -80,7 +80,9 @@ export default function IntroSequence({ children, skipIntro = false }: IntroSequ
 
     useEffect(() => {
         // Check if intro was already shown this session
-        if (skipIntro || sessionStorage.getItem('intro-shown') === 'true') {
+        // Check if intro was already shown this session
+        // MOD: User requested to show intro every time (disabled "show once" feature)
+        if (skipIntro) {
             setPhase('done');
             return;
         }
@@ -231,24 +233,71 @@ export default function IntroSequence({ children, skipIntro = false }: IntroSequ
                             </div>
                         </motion.div>
 
-                        {/* School Name with Scramble */}
+                        {/* School Name with Cinematic Reveal */}
                         <motion.div
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{
-                                opacity: phase === 'text' || phase === 'zoom' ? 1 : 0,
-                                y: phase === 'text' || phase === 'zoom' ? 0 : 30,
+                            initial="hidden"
+                            animate={phase === 'text' || phase === 'zoom' ? "visible" : "hidden"}
+                            variants={{
+                                hidden: { opacity: 0 },
+                                visible: { opacity: 1, transition: { staggerChildren: 0.08 } }
                             }}
-                            transition={{ duration: 0.6 }}
-                            className="mt-8 text-center z-10"
+                            className="mt-8 text-center z-10 relative overflow-visible"
                         >
-                            <h1 className="font-bambi text-3xl md:text-5xl text-white tracking-wider">
-                                {schoolName}
+                            <h1 className="flex justify-center flex-wrap gap-x-[0.1em]">
+                                {"JESUS JUNIOR ACADEMY".split("").map((char, i) => (
+                                    <motion.span
+                                        key={i}
+                                        variants={{
+                                            hidden: {
+                                                opacity: 0,
+                                                y: 20,
+                                                filter: "blur(12px)",
+                                                scale: 1.1
+                                            },
+                                            visible: {
+                                                opacity: 1,
+                                                y: 0,
+                                                filter: "blur(0px)",
+                                                scale: 1,
+                                                transition: {
+                                                    duration: 1.2,
+                                                    ease: [0.2, 0.65, 0.3, 0.9]
+                                                }
+                                            }
+                                        }}
+                                        className="font-bambi text-3xl md:text-5xl text-white tracking-wider inline-block"
+                                        style={{
+                                            textShadow: '0 0 30px rgba(255,255,255,0.3)'
+                                        }}
+                                    >
+                                        {char === " " ? "\u00A0" : char}
+                                    </motion.span>
+                                ))}
                             </h1>
+
+                            <motion.div
+                                variants={{
+                                    hidden: { opacity: 0, width: "0%" },
+                                    visible: {
+                                        opacity: 1,
+                                        width: "140%",
+                                        transition: { delay: 1.2, duration: 1.5, ease: "circOut" }
+                                    }
+                                }}
+                                className="h-[1px] bg-gradient-to-r from-transparent via-[#F5D76E]/50 to-transparent absolute -bottom-4 left-1/2 -translate-x-1/2"
+                            />
+
                             <motion.p
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: phase === 'text' || phase === 'zoom' ? 0.6 : 0 }}
-                                transition={{ delay: 0.5 }}
-                                className="text-white/60 text-sm md:text-base mt-3 tracking-[0.3em] uppercase"
+                                variants={{
+                                    hidden: { opacity: 0, y: 10, letterSpacing: "0.2em" },
+                                    visible: {
+                                        opacity: 0.7,
+                                        y: 0,
+                                        letterSpacing: "0.4em",
+                                        transition: { delay: 1.5, duration: 1.5, ease: "easeOut" }
+                                    }
+                                }}
+                                className="text-white/60 text-xs md:text-sm mt-6 uppercase font-light"
                             >
                                 The Truth Shall Make You Free
                             </motion.p>
