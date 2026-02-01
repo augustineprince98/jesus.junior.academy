@@ -575,7 +575,7 @@ export default function HomeworkPage() {
                     type="date"
                     value={formData.assigned_date}
                     onChange={(e) => setFormData({ ...formData, assigned_date: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white text-gray-900"
                   />
                 </div>
                 <div>
@@ -587,7 +587,7 @@ export default function HomeworkPage() {
                     value={formData.due_date}
                     onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
                     min={formData.assigned_date}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white text-gray-900"
                   />
                 </div>
               </div>
