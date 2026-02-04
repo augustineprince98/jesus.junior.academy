@@ -325,7 +325,7 @@ export default function RegisterPage() {
             <div>
               <h2 className="text-xl font-bold text-[var(--text-primary)] mb-6">Create Account</h2>
 
-              <form onSubmit={handleRegister} className="space-y-5">
+              <form onSubmit={handleRegister} className="space-y-5" autoComplete="off">
                 {/* Name */}
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] mb-2">
@@ -339,6 +339,7 @@ export default function RegisterPage() {
                       onChange={(e) => setName(e.target.value)}
                       placeholder="Enter your full name"
                       className="input pl-12"
+                      autoComplete="off"
                     />
                   </div>
                 </div>
@@ -358,6 +359,7 @@ export default function RegisterPage() {
                       className="input pl-12 pr-16"
                       maxLength={10}
                       pattern="[0-9]{10}"
+                      autoComplete="off"
                     />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-white/30">
                       {phone.length}/10
@@ -373,11 +375,13 @@ export default function RegisterPage() {
                   <div className="relative">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-secondary)]" />
                     <input
-                      type="email"
+                      type="text"
+                      inputMode="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Enter your email"
                       className="input pl-12"
+                      autoComplete="off"
                     />
                   </div>
                 </div>
@@ -506,6 +510,7 @@ export default function RegisterPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Enter your password"
                       className="input pl-12 pr-12"
+                      autoComplete="new-password"
                     />
                     <button
                       type="button"
@@ -530,6 +535,7 @@ export default function RegisterPage() {
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Confirm your password"
                       className="input pl-12"
+                      autoComplete="new-password"
                     />
                   </div>
                 </div>
