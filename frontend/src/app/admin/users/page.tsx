@@ -73,6 +73,7 @@ export default function UsersPage() {
     role: 'STUDENT',
     father_name: '',
     mother_name: '',
+    class_id: null as number | null,
   });
   const [addingUser, setAddingUser] = useState(false);
   const [addError, setAddError] = useState('');
@@ -82,6 +83,18 @@ export default function UsersPage() {
   const [selectedTeacher, setSelectedTeacher] = useState<User | null>(null);
   const [selectedTeacherClassIds, setSelectedTeacherClassIds] = useState<number[]>([]);
   const [assigningClassTeacher, setAssigningClassTeacher] = useState(false);
+
+  // Edit user modal state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editUser, setEditUser] = useState<User | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    is_active: true,
+  });
+  const [editingUser, setEditingUser] = useState(false);
+  const [editError, setEditError] = useState('');
 
   // Delete user
   const handleDeleteUser = async (userId: number, userName: string) => {
@@ -181,7 +194,7 @@ export default function UsersPage() {
   };
 
   const openAddModal = () => {
-    setNewUser({ name: '', phone: '', password: '', email: '', role: 'STUDENT', father_name: '', mother_name: '' });
+    setNewUser({ name: '', phone: '', password: '', email: '', role: 'STUDENT', father_name: '', mother_name: '', class_id: null });
     setAddError('');
     setShowAddModal(true);
   };
@@ -238,6 +251,7 @@ export default function UsersPage() {
         email: newUser.email || undefined,
         father_name: newUser.role === 'STUDENT' && newUser.father_name ? newUser.father_name : undefined,
         mother_name: newUser.role === 'STUDENT' && newUser.mother_name ? newUser.mother_name : undefined,
+        class_id: newUser.role === 'STUDENT' && newUser.class_id ? newUser.class_id : undefined,
       });
       setShowAddModal(false);
       loadUsers(); // Refresh users list
@@ -246,6 +260,44 @@ export default function UsersPage() {
       setAddError(error.detail || 'Failed to add user');
     } finally {
       setAddingUser(false);
+    }
+  };
+
+  const openEditModal = (u: User) => {
+    setEditUser(u);
+    setEditForm({
+      name: u.name,
+      phone: u.phone,
+      email: u.email || '',
+      is_active: u.is_active,
+    });
+    setEditError('');
+    setShowEditModal(true);
+  };
+
+  const handleEditUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editUser || !editForm.name || !editForm.phone) {
+      setEditError('Name and phone are required');
+      return;
+    }
+
+    try {
+      setEditingUser(true);
+      setEditError('');
+      await adminApi.updateUser(token!, editUser.id, {
+        name: editForm.name.trim(),
+        phone: editForm.phone.trim(),
+        email: editForm.email.trim() || undefined,
+        is_active: editForm.is_active,
+      });
+      setShowEditModal(false);
+      loadUsers(); // Refresh users list
+    } catch (error: any) {
+      console.error('Failed to update user:', error);
+      setEditError(error.detail || 'Failed to update user');
+    } finally {
+      setEditingUser(false);
     }
   };
 
@@ -364,6 +416,17 @@ export default function UsersPage() {
                     </td>
                     <td className="px-6 py-4 text-center">
                       <div className="flex items-center justify-center gap-2">
+                        {/* Edit button - available for all users except self */}
+                        {u.id !== user?.id && (
+                          <button
+                            onClick={() => openEditModal(u)}
+                            className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors font-medium inline-flex items-center gap-1"
+                            title="Edit User"
+                          >
+                            <Edit className="w-3 h-3" />
+                            Edit
+                          </button>
+                        )}
                         {(u.role === 'STUDENT' || u.role === 'PARENT') && (
                           <button
                             onClick={() => openAssignModal(u)}
@@ -597,6 +660,28 @@ export default function UsersPage() {
                 {/* Parent Names - Only for STUDENT role */}
                 {newUser.role === 'STUDENT' && (
                   <>
+                    {/* Class Selection */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">
+                        Class
+                      </label>
+                      <select
+                        value={newUser.class_id || ''}
+                        onChange={(e) => setNewUser({ ...newUser, class_id: e.target.value ? Number(e.target.value) : null })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      >
+                        <option value="">-- Select Class (Optional) --</option>
+                        {classes.map((cls) => (
+                          <option key={cls.id} value={cls.id}>
+                            {cls.name}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Student will be auto-enrolled in this class
+                      </p>
+                    </div>
+
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-1">
                         Father's Name
@@ -723,6 +808,114 @@ export default function UsersPage() {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Edit User Modal */}
+        {showEditModal && editUser && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl max-w-md w-full">
+              <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+                <h2 className="text-xl font-bold text-gray-800">Edit User</h2>
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleEditUser} className="p-6 space-y-4">
+                {editError && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                    {editError}
+                  </div>
+                )}
+
+                {/* User Info */}
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <p className="text-sm text-gray-600">
+                    Role: <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getRoleBadge(editUser.role)}`}>
+                      {editUser.role}
+                    </span>
+                  </p>
+                </div>
+
+                {/* Name */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Full Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={editForm.name}
+                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    required
+                  />
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Phone Number <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    value={editForm.phone}
+                    onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    required
+                  />
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Email (Optional)
+                  </label>
+                  <input
+                    type="email"
+                    value={editForm.email}
+                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  />
+                </div>
+
+                {/* Active Status */}
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="is_active"
+                    checked={editForm.is_active}
+                    onChange={(e) => setEditForm({ ...editForm, is_active: e.target.checked })}
+                    className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+                  />
+                  <label htmlFor="is_active" className="text-sm font-semibold text-gray-700">
+                    Account Active
+                  </label>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowEditModal(false)}
+                    className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={editingUser}
+                    className="flex-1 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    <Save className="w-5 h-5" />
+                    {editingUser ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

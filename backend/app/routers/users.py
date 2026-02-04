@@ -33,6 +33,7 @@ class UserCreate(BaseModel):
     father_name: Optional[str] = None  # For STUDENT role
     mother_name: Optional[str] = None  # For STUDENT role
     child_name: Optional[str] = None   # For PARENT role (optional, for display)
+    class_id: Optional[int] = None     # For STUDENT role - auto-enroll in class
 
 
 class UserRoleUpdate(BaseModel):
@@ -48,6 +49,14 @@ class UserLinkEntity(BaseModel):
     student_id: Optional[int] = None
     parent_id: Optional[int] = None
     teacher_id: Optional[int] = None
+
+
+class UserUpdate(BaseModel):
+    """For editing user details by admin"""
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    is_active: Optional[bool] = None
 
 
 @router.post("/create")
@@ -81,6 +90,7 @@ def create_user(
         teacher_id=payload.teacher_id,
         father_name=payload.father_name,
         mother_name=payload.mother_name,
+        class_id=payload.class_id,
     )
 
     return {
@@ -134,6 +144,60 @@ def assign_class_teacher(
         "user_id": user.id,
         "role": user.role,
         "class_id": payload.class_id,
+    }
+
+
+@router.put("/{user_id}")
+def update_user(
+    user_id: int,
+    payload: UserUpdate,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_role_at_least(Role.ADMIN)),
+):
+    """
+    [ADMIN] Update user details (name, phone, email, is_active).
+    """
+    user = db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Update fields if provided
+    if payload.name is not None:
+        user.name = payload.name.strip()
+    if payload.phone is not None:
+        # Check phone uniqueness
+        existing = db.query(User).filter(
+            User.phone == payload.phone.strip(),
+            User.id != user_id
+        ).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Phone number already in use by another user")
+        user.phone = payload.phone.strip()
+    if payload.email is not None:
+        if payload.email:
+            # Check email uniqueness
+            existing = db.query(User).filter(
+                User.email == payload.email.strip(),
+                User.id != user_id
+            ).first()
+            if existing:
+                raise HTTPException(status_code=400, detail="Email already in use by another user")
+            user.email = payload.email.strip()
+        else:
+            user.email = None
+    if payload.is_active is not None:
+        user.is_active = payload.is_active
+    
+    db.commit()
+    db.refresh(user)
+    
+    return {
+        "status": "user_updated",
+        "user_id": user.id,
+        "name": user.name,
+        "phone": user.phone,
+        "email": user.email,
+        "is_active": user.is_active,
     }
 
 

@@ -619,6 +619,7 @@ export const adminApi = {
       teacher_id?: number;
       father_name?: string;  // For STUDENT role
       mother_name?: string;  // For STUDENT role
+      class_id?: number;     // For STUDENT role - auto-enroll in class
     }
   ) =>
     request('/users/create', { method: 'POST', token, body: data }),
@@ -632,6 +633,18 @@ export const adminApi = {
       token,
       body: { class_id: classId },
     }),
+
+  updateUser: (
+    token: string,
+    userId: number,
+    data: {
+      name?: string;
+      phone?: string;
+      email?: string;
+      is_active?: boolean;
+    }
+  ) =>
+    request(`/users/${userId}`, { method: 'PUT', token, body: data }),
 
   // Leave management
   getPendingLeaves: (token: string) =>

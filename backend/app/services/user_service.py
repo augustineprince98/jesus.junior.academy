@@ -16,6 +16,9 @@ from app.core.security import hash_password
 from app.core.roles import Role
 from app.models.user import User, ApprovalStatus
 from app.models.people import Student, Parent, Teacher
+from app.models.enrollment import Enrollment
+from app.models.school_class import SchoolClass
+from app.models.academic_year import AcademicYear
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +36,7 @@ def create_user(
     teacher_id: Optional[int] = None,
     father_name: Optional[str] = None,
     mother_name: Optional[str] = None,
+    class_id: Optional[int] = None,
 ) -> User:
     """
     Create a new user with specified role and entity linking.
@@ -122,6 +126,30 @@ def create_user(
             db.flush()  # Get the ID
             student_id = student.id
             logger.info(f"Auto-created Student record: id={student_id}, father={father_name}, mother={mother_name}")
+            
+            # Auto-enroll student in class if class_id provided
+            if class_id:
+                school_class = db.get(SchoolClass, class_id)
+                if not school_class:
+                    raise HTTPException(status_code=404, detail="Class not found")
+                
+                # Get current academic year
+                academic_year = db.query(AcademicYear).filter(
+                    AcademicYear.is_current == True
+                ).first()
+                
+                if academic_year:
+                    enrollment = Enrollment(
+                        student_id=student_id,
+                        class_id=class_id,
+                        academic_year_id=academic_year.id,
+                        status="ACTIVE"
+                    )
+                    db.add(enrollment)
+                    db.flush()
+                    logger.info(f"Auto-enrolled student {student_id} in class {class_id}")
+                else:
+                    logger.warning("No current academic year found - skipping enrollment")
 
     # Create user - AUTOMATICALLY APPROVED since created by admin
     user = User(
