@@ -175,7 +175,13 @@ def delete_file(file_path: str) -> bool:
     if file_path.startswith("/"):
         file_path = file_path[1:]
 
-    full_path = Path(file_path)
+    full_path = Path(file_path).resolve()
+    allowed_dir = Path(UPLOAD_DIR).resolve()
+
+    # Prevent path traversal — file must be inside UPLOAD_DIR
+    if not str(full_path).startswith(str(allowed_dir)):
+        logger.warning(f"Path traversal attempt blocked: {file_path}")
+        return False
 
     if full_path.exists():
         full_path.unlink()
