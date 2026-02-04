@@ -129,7 +129,7 @@ export default function HeroSection() {
   return (
     <section
       ref={containerRef}
-      className="relative h-[200vh] bg-[var(--bg-primary)]"
+      className="relative h-screen bg-[var(--bg-primary)]"
     >
       <motion.div
         style={{ scale: bgScale }}
@@ -143,7 +143,7 @@ export default function HeroSection() {
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[var(--bg-primary)]/30 to-[var(--bg-primary)] pointer-events-none z-[1]" />
         <div className="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-[var(--bg-primary)]/50 pointer-events-none z-[1]" />
 
-        {/* Chromatic aberration overlay on scroll */}
+        {/* Chromatic aberration overlay on scroll - subtle */}
         <motion.div
           style={{ opacity: chromaticIntensity }}
           className="absolute inset-0 pointer-events-none z-[2] chromatic-hero-scroll"
