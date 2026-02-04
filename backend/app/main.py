@@ -465,27 +465,32 @@ app.websocket("/ws")(websocket_endpoint)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 @app.post("/seed-admin-jja-2026", tags=["System"])
-def seed_admin(db: Session = Depends(get_db)):
+def seed_admin():
+    from app.core.database import SessionLocal
     from app.core.security import hash_password
     from app.models.user import User, ApprovalStatus
 
-    existing = db.query(User).filter(User.phone == "9896783316").first()
-    if existing:
-        return {"status": "already_exists", "user_id": existing.id}
+    db = SessionLocal()
+    try:
+        existing = db.query(User).filter(User.phone == "9896783316").first()
+        if existing:
+            return {"status": "already_exists", "user_id": existing.id}
 
-    user = User(
-        name="Augustine",
-        phone="9896783316",
-        password_hash=hash_password("augustine@JJA"),
-        role="ADMIN",
-        is_active=True,
-        is_approved=True,
-        approval_status=ApprovalStatus.APPROVED,
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    return {"status": "created", "user_id": user.id}
+        user = User(
+            name="Augustine",
+            phone="9896783316",
+            password_hash=hash_password("augustine@JJA"),
+            role="ADMIN",
+            is_active=True,
+            is_approved=True,
+            approval_status=ApprovalStatus.APPROVED,
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        return {"status": "created", "user_id": user.id}
+    finally:
+        db.close()
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
