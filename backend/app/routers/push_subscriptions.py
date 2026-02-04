@@ -18,8 +18,10 @@ from app.services.push_notification_service import (
     get_vapid_public_key,
     check_push_service_status,
     send_push_notification,
+    send_push_notification,
     PushSubscription,
 )
+from app.core.obfuscate import encrypt_value, decrypt_value
 
 router = APIRouter(prefix="/push", tags=["Push Notifications"])
 
@@ -82,8 +84,8 @@ def subscribe_to_push(
     if existing:
         # Update existing subscription
         existing.user_id = current_user.id
-        existing.p256dh_key = subscription.keys.p256dh
-        existing.auth_key = subscription.keys.auth
+        existing.p256dh_key = encrypt_value(subscription.keys.p256dh)
+        existing.auth_key = encrypt_value(subscription.keys.auth)
         existing.is_active = True
         db.commit()
         return {"status": "updated", "message": "Push subscription updated"}
@@ -92,8 +94,8 @@ def subscribe_to_push(
     new_subscription = PushSubscriptionModel(
         user_id=current_user.id,
         endpoint=subscription.endpoint,
-        p256dh_key=subscription.keys.p256dh,
-        auth_key=subscription.keys.auth,
+        p256dh_key=encrypt_value(subscription.keys.p256dh),
+        auth_key=encrypt_value(subscription.keys.auth),
         is_active=True,
     )
     db.add(new_subscription)
@@ -151,7 +153,10 @@ def send_test_push(
     for sub in subscriptions:
         push_sub = PushSubscription(
             endpoint=sub.endpoint,
-            keys={"p256dh": sub.p256dh_key, "auth": sub.auth_key}
+            keys={
+                "p256dh": decrypt_value(sub.p256dh_key),
+                "auth": decrypt_value(sub.auth_key)
+            }
         )
         result = send_push_notification(
             push_sub,
