@@ -37,7 +37,7 @@ export default function ParticleField() {
   const animRef = useRef<number>(0);
   const dimensionsRef = useRef({ w: 0, h: 0 });
 
-  const PARTICLE_COUNT = 80;
+  const PARTICLE_COUNT = 150;
   const CONNECTION_DISTANCE = 120;
   const MOUSE_RADIUS = 150;
 
@@ -53,7 +53,7 @@ export default function ParticleField() {
       size: (1 + Math.random() * 2) * (0.5 + z * 0.5),
       color: isGold ? '#F5D76E' : '#6691E5',
       alpha: 0,
-      baseAlpha: (0.15 + Math.random() * 0.4) * (0.3 + z * 0.7),
+      baseAlpha: (0.3 + Math.random() * 0.5) * (0.4 + z * 0.6),
     };
   }, []);
 
@@ -168,7 +168,7 @@ export default function ParticleField() {
         glow.addColorStop(0, p.color);
         glow.addColorStop(1, 'transparent');
         ctx.fillStyle = glow;
-        ctx.globalAlpha = p.alpha * 0.3;
+        ctx.globalAlpha = p.alpha * 0.4;
         ctx.fill();
       }
 
@@ -183,7 +183,7 @@ export default function ParticleField() {
           const dist = Math.sqrt(dx * dx + dy * dy);
 
           if (dist < CONNECTION_DISTANCE) {
-            const alpha = (1 - dist / CONNECTION_DISTANCE) * 0.08 * Math.min(a.alpha, b.alpha) / Math.max(a.baseAlpha, 0.01);
+            const alpha = (1 - dist / CONNECTION_DISTANCE) * 0.12 * Math.min(a.alpha, b.alpha) / Math.max(a.baseAlpha, 0.01);
             ctx.beginPath();
             ctx.moveTo(a.x, a.y);
             ctx.lineTo(b.x, b.y);

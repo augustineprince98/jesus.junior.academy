@@ -519,7 +519,6 @@ export default function HomeworkPage() {
                       value={formData.subject_id}
                       onChange={(e) => setFormData({ ...formData, subject_id: Number(e.target.value) })}
                       disabled={!formData.class_id}
-                      disabled={!formData.class_id}
                       className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400 bg-white text-gray-900"
                     >
                       <option value={0}>
@@ -543,7 +542,6 @@ export default function HomeworkPage() {
                       value={formData.title}
                       onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                       placeholder="e.g., Chapter 5 Exercise Questions"
-                      placeholder="e.g., Chapter 5 Exercise Questions"
                       className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white text-gray-900"
                     />
                   </div>
@@ -556,8 +554,6 @@ export default function HomeworkPage() {
                     <textarea
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      placeholder="Add details about the homework..."
-                      rows={3}
                       placeholder="Add details about the homework..."
                       rows={3}
                       className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none bg-white text-gray-900"

@@ -33,7 +33,7 @@ interface ScrollSectionProps {
 export default function ScrollSection({
   children,
   index,
-  bgColor = '#0A0A0A',
+  bgColor = 'var(--bg-primary)',
   isEdge = false,
   totalSections = 7,
 }: ScrollSectionProps) {
@@ -127,6 +127,7 @@ export default function ScrollSection({
         style={{
           zIndex: totalSections - index,
           background: bgColor,
+          scrollSnapAlign: 'start',
         }}
       >
         {children}
@@ -141,6 +142,7 @@ export default function ScrollSection({
       style={{
         zIndex: totalSections - index + 10,
         marginTop: index === 1 ? '-2rem' : '-4rem', // Overlap sections
+        scrollSnapAlign: 'start',
       }}
     >
       {/* Shadow beneath card */}
@@ -167,8 +169,8 @@ export default function ScrollSection({
           style={{ opacity: borderOpacity }}
           className="absolute inset-0 rounded-t-[2rem] pointer-events-none z-10"
         >
-          <div className="absolute inset-0 rounded-t-[2rem] border-t-2 border-x border-white/15" />
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+          <div className="absolute inset-0 rounded-t-[2rem] border-t-2 border-x border-[var(--glass-border)]" />
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--glass-highlight)] to-transparent" />
         </motion.div>
 
         <div
@@ -187,11 +189,11 @@ export default function ScrollSection({
             className="absolute inset-0 pointer-events-none z-50"
             aria-hidden
           >
-            <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-[#6691E5]/50 to-transparent shadow-[0_0_20px_rgba(102,145,229,0.4)]" />
+            <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-[var(--accent-blue)]/50 to-transparent shadow-[0_0_20px_var(--accent-blue-glow)]" />
           </motion.div>
 
           {/* Inner glow at top */}
-          <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
+          <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-[var(--text-primary)]/[0.02] to-transparent pointer-events-none" />
 
           {children}
         </div>

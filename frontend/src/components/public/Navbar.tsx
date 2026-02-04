@@ -42,7 +42,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-6 md:px-12 flex items-center justify-between">
         {/* Logo / School Name */}
         <Link href="/" className="group">
-          <h1 className="font-bambi text-xl md:text-2xl text-white tracking-wide transition-all duration-300 group-hover:text-[#6691E5]">
+          <h1 className="font-bambi text-xl md:text-2xl text-[var(--text-primary)] tracking-wide transition-all duration-300 group-hover:text-[var(--accent-blue)]">
             JESUS JUNIOR ACADEMY
           </h1>
         </Link>
@@ -65,7 +65,7 @@ export default function Navbar() {
         {/* Mobile Menu Button */}
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden p-2 text-white/70 hover:text-white transition-colors rounded-lg hover:bg-white/5"
+          className="md:hidden p-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors rounded-lg hover:bg-[var(--glass-hover)]"
           aria-label="Toggle menu"
         >
           {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -94,10 +94,10 @@ export default function Navbar() {
                     <Link
                       href={link.href}
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center justify-between px-4 py-3 text-white/80 font-medium hover:text-white hover:bg-white/5 rounded-xl transition-all"
+                      className="flex items-center justify-between px-4 py-3 text-[var(--text-primary)]/80 font-medium hover:text-[var(--text-primary)] hover:bg-[var(--glass-hover)] rounded-xl transition-all"
                     >
                       {link.label}
-                      <ArrowRight className="w-4 h-4 text-white/40" />
+                      <ArrowRight className="w-4 h-4 text-[var(--text-secondary)]" />
                     </Link>
                   </motion.div>
                 ))}

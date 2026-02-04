@@ -96,7 +96,7 @@ export default function ActivitiesSection() {
             whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.1 }}
-            className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6"
+            className="text-4xl md:text-5xl lg:text-6xl font-bold text-[var(--text-primary)] mb-6"
           >
             Celebrations & <span className="text-gradient-accent">Events</span>
           </motion.h2>
@@ -105,7 +105,7 @@ export default function ActivitiesSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-white/50 max-w-2xl mx-auto text-lg"
+            className="text-[var(--text-secondary)] max-w-2xl mx-auto text-lg"
           >
             Festivals, events, and special moments that make our school vibrant
           </motion.p>
@@ -145,7 +145,7 @@ export default function ActivitiesSection() {
             <div className="icon-circle icon-circle-lg icon-circle-accent mx-auto mb-6">
               <CalendarDays className="w-8 h-8" />
             </div>
-            <p className="text-xl text-white/50 font-medium">
+            <p className="text-xl text-[var(--text-secondary)] font-medium">
               Upcoming events will be displayed here soon!
             </p>
           </motion.div>
@@ -166,7 +166,7 @@ export default function ActivitiesSection() {
                 className="glass-card overflow-hidden group"
               >
                 {/* Gradient Bar */}
-                <div className="h-1 bg-gradient-to-r from-[#6691E5] to-[#F5D76E]" />
+                <div className="h-1 bg-gradient-to-r from-[var(--accent-blue)] to-[var(--accent-gold)]" />
 
                 {/* Content */}
                 <div className="p-6">
@@ -176,7 +176,7 @@ export default function ActivitiesSection() {
                       {getEventIcon(event.event_type)}
                       <span className="ml-1.5">{event.event_type}</span>
                     </span>
-                    <span className="text-xs text-white/40 font-medium flex items-center gap-1">
+                    <span className="text-xs text-[var(--text-secondary)] font-medium flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
                       {new Date(event.date).toLocaleDateString('en-IN', {
                         day: 'numeric',
@@ -187,29 +187,29 @@ export default function ActivitiesSection() {
                   </div>
 
                   {/* Title */}
-                  <h3 className="text-lg font-bold text-white mb-3 group-hover:text-[#6691E5] transition-colors line-clamp-2">
+                  <h3 className="text-lg font-bold text-[var(--text-primary)] mb-3 group-hover:text-[var(--accent-blue)] transition-colors line-clamp-2">
                     {event.title}
                   </h3>
 
                   {/* Description */}
-                  <p className="text-sm text-white/50 leading-relaxed mb-4 line-clamp-3">
+                  <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-4 line-clamp-3">
                     {event.description}
                   </p>
 
                   {/* Audience Tags */}
-                  <div className="flex flex-wrap gap-2 pt-4 border-t border-white/10">
+                  <div className="flex flex-wrap gap-2 pt-4 border-t border-[var(--glass-border)]">
                     {event.audience_students && (
-                      <span className="px-2.5 py-1 bg-[#6691E5]/15 text-[#6691E5] text-xs font-medium rounded-full border border-[#6691E5]/30">
+                      <span className="px-2.5 py-1 bg-[var(--accent-blue)]/15 text-[var(--accent-blue)] text-xs font-medium rounded-full border border-[var(--accent-blue)]/30">
                         Students
                       </span>
                     )}
                     {event.audience_parents && (
-                      <span className="px-2.5 py-1 bg-[#F5D76E]/15 text-[#F5D76E] text-xs font-medium rounded-full border border-[#F5D76E]/30">
+                      <span className="px-2.5 py-1 bg-[var(--accent-gold)]/15 text-[var(--accent-gold)] text-xs font-medium rounded-full border border-[var(--accent-gold)]/30">
                         Parents
                       </span>
                     )}
                     {event.audience_teachers && (
-                      <span className="px-2.5 py-1 bg-white/10 text-white/70 text-xs font-medium rounded-full border border-white/20">
+                      <span className="px-2.5 py-1 bg-[var(--text-primary)]/10 text-[var(--text-secondary)] text-xs font-medium rounded-full border border-[var(--text-primary)]/20">
                         Teachers
                       </span>
                     )}

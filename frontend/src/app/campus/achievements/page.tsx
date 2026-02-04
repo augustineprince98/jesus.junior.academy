@@ -104,24 +104,24 @@ export default function AchievementsPage() {
   if (!isAuthenticated || !user) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-yellow-50 to-amber-50">
+    <div className="min-h-screen bg-[var(--bg-primary)]">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+      <header className="bg-[var(--bg-card)] border-b border-[var(--glass-border)] sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => router.push('/campus')}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-[var(--glass-hover)] rounded-lg transition-colors"
               >
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
+                <ArrowLeft className="w-5 h-5 text-[var(--text-secondary)]" />
               </button>
               <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-amber-600 rounded-xl flex items-center justify-center">
                 <Trophy className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-lg font-bold text-gray-900">Achievements</h1>
-                <p className="text-xs text-gray-500">Our proud moments</p>
+                <h1 className="text-lg font-bold text-[var(--text-primary)]">Achievements</h1>
+                <p className="text-xs text-[var(--text-secondary)]">Our proud moments</p>
               </div>
             </div>
           </div>
@@ -160,11 +160,10 @@ export default function AchievementsPage() {
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                selectedCategory === category
-                  ? 'bg-amber-600 text-white'
-                  : 'bg-white text-gray-600 hover:bg-gray-50'
-              }`}
+              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${selectedCategory === category
+                ? 'bg-amber-600 text-white'
+                : 'bg-[var(--bg-card)] text-[var(--text-secondary)] hover:bg-[var(--glass-hover)] border border-[var(--glass-border)]'
+                }`}
             >
               {category === 'all' ? 'All' : category.charAt(0) + category.slice(1).toLowerCase()}
             </button>
@@ -186,9 +185,9 @@ export default function AchievementsPage() {
             </button>
           </div>
         ) : filteredAchievements.length === 0 ? (
-          <div className="bg-white rounded-xl p-12 text-center shadow-sm border border-gray-100">
-            <Trophy className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">No achievements found</p>
+          <div className="bg-[var(--bg-card)] rounded-xl p-12 text-center shadow-sm border border-[var(--glass-border)]">
+            <Trophy className="w-12 h-12 text-[var(--text-secondary)] mx-auto mb-4" />
+            <p className="text-[var(--text-secondary)]">No achievements found</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -198,10 +197,10 @@ export default function AchievementsPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow"
+                className="bg-[var(--bg-card)] rounded-xl shadow-sm border border-[var(--glass-border)] overflow-hidden hover:shadow-md transition-shadow"
               >
                 {achievement.image_url && (
-                  <div className="h-48 bg-gray-200">
+                  <div className="h-48 bg-[var(--glass-border)]">
                     <img
                       src={achievement.image_url}
                       alt={achievement.title}
@@ -221,10 +220,10 @@ export default function AchievementsPage() {
                     )}
                   </div>
 
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">{achievement.title}</h3>
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">{achievement.description}</p>
+                  <h3 className="text-lg font-bold text-[var(--text-primary)] mb-2">{achievement.title}</h3>
+                  <p className="text-[var(--text-secondary)] text-sm mb-4 line-clamp-2">{achievement.description}</p>
 
-                  <div className="flex items-center justify-between text-sm text-gray-500">
+                  <div className="flex items-center justify-between text-sm text-[var(--text-secondary)]">
                     {achievement.student_name ? (
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4" />

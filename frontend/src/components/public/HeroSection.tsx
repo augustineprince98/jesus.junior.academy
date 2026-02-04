@@ -33,14 +33,14 @@ function BreathingCenterpiece({ scrollYProgress }: { scrollYProgress: any }) {
           <motion.div
             animate={{ scale: [1, 1.08, 1], opacity: [0.3, 0.6, 0.3] }}
             transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-            className="absolute inset-0 bg-gradient-to-b from-[#6691E5]/20 to-transparent rounded-full blur-2xl"
+            className="absolute inset-0 bg-gradient-to-b from-[var(--accent-blue)]/20 to-transparent rounded-full blur-2xl"
           />
 
           {/* Secondary pulse - gold */}
           <motion.div
             animate={{ scale: [1.05, 1, 1.05], opacity: [0.15, 0.35, 0.15] }}
             transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-            className="absolute inset-0 bg-gradient-to-t from-[#F5D76E]/15 to-transparent rounded-full blur-3xl"
+            className="absolute inset-0 bg-gradient-to-t from-[var(--accent-gold)]/15 to-transparent rounded-full blur-3xl"
           />
 
           {/* Shield SVG */}
@@ -52,8 +52,8 @@ function BreathingCenterpiece({ scrollYProgress }: { scrollYProgress: any }) {
                 <stop offset="100%" stopColor="#000" />
               </linearGradient>
               <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#6691E5" />
-                <stop offset="100%" stopColor="#F5D76E" />
+                <stop offset="0%" stopColor="var(--accent-blue)" />
+                <stop offset="100%" stopColor="var(--accent-gold)" />
               </linearGradient>
               <filter id="glow">
                 <feGaussianBlur stdDeviation="2" result="coloredBlur" />
@@ -80,7 +80,7 @@ function BreathingCenterpiece({ scrollYProgress }: { scrollYProgress: any }) {
             {/* Cross symbol */}
             <path
               d="M100 45 V145 M70 75 H130"
-              stroke="white"
+              stroke="var(--text-primary)"
               strokeWidth="2"
               strokeLinecap="round"
               opacity="0.8"
@@ -129,7 +129,7 @@ export default function HeroSection() {
   return (
     <section
       ref={containerRef}
-      className="relative h-[200vh] bg-[#0A0A0A]"
+      className="relative h-[200vh] bg-[var(--bg-primary)]"
     >
       <motion.div
         style={{ scale: bgScale }}
@@ -140,8 +140,8 @@ export default function HeroSection() {
 
         {/* Gradient overlays */}
         <div className="absolute inset-0 bg-dots opacity-30 z-[1]" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0A0A0A]/30 to-[#0A0A0A] pointer-events-none z-[1]" />
-        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-[#0A0A0A]/50 pointer-events-none z-[1]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[var(--bg-primary)]/30 to-[var(--bg-primary)] pointer-events-none z-[1]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-[var(--bg-primary)]/50 pointer-events-none z-[1]" />
 
         {/* Chromatic aberration overlay on scroll */}
         <motion.div
@@ -187,10 +187,10 @@ export default function HeroSection() {
                     delay: 0.4 + (i * 0.04),
                     ease: [0.22, 1, 0.36, 1],
                   }}
-                  className={`font-bambi text-white text-[5vw] leading-none tracking-tight inline-block ${char === ' ' ? 'w-[0.3em]' : ''
+                  className={`font-bambi text-[var(--text-primary)] text-[5vw] leading-none tracking-tight inline-block ${char === ' ' ? 'w-[0.3em]' : ''
                     }`}
                   style={{
-                    textShadow: '0 0 40px rgba(102, 145, 229, 0.3), 0 0 80px rgba(245, 215, 110, 0.15)'
+                    textShadow: '0 0 40px var(--accent-blue-glow), 0 0 80px var(--accent-gold-glow)'
                   }}
                 >
                   {char === ' ' ? '\u00A0' : char}
@@ -207,7 +207,7 @@ export default function HeroSection() {
                 delay: 0.8 + schoolName.length * 0.04,
                 ease: [0.22, 1, 0.36, 1]
               }}
-              className="h-[2px] w-48 mx-auto mt-6 bg-gradient-to-r from-transparent via-white/40 to-transparent origin-center"
+              className="h-[2px] w-48 mx-auto mt-6 bg-gradient-to-r from-transparent via-[var(--text-primary)]/40 to-transparent origin-center"
             />
           </div>
 
@@ -216,12 +216,12 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 30 }}
             animate={isLoaded ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.8, delay: 1.0 }}
-            className="max-w-2xl text-center space-y-6 mt-16 bg-[#0A0A0A]/30 backdrop-blur-sm p-6 rounded-2xl border border-white/5 mx-4"
+            className="max-w-2xl text-center space-y-6 mt-16 bg-[var(--bg-primary)]/30 backdrop-blur-sm p-6 rounded-2xl border border-[var(--glass-border)] mx-4"
           >
-            <p className="text-2xl md:text-3xl font-medium text-white/90 font-serif">
+            <p className="text-2xl md:text-3xl font-medium text-[var(--text-primary)]/90 font-serif">
               {tagline}
             </p>
-            <div className="flex items-center justify-center gap-2 text-white/40 text-sm uppercase tracking-widest">
+            <div className="flex items-center justify-center gap-2 text-[var(--text-secondary)] text-sm uppercase tracking-widest">
               <motion.span
                 initial={{ opacity: 0 }}
                 animate={isLoaded ? { opacity: 1 } : {}}
@@ -233,7 +233,7 @@ export default function HeroSection() {
                 initial={{ scale: 0 }}
                 animate={isLoaded ? { scale: 1 } : {}}
                 transition={{ delay: 2.0, type: 'spring' }}
-                className="w-1.5 h-1.5 bg-[#6691E5] rounded-full"
+                className="w-1.5 h-1.5 bg-[var(--accent-blue)] rounded-full"
               />
               <motion.span
                 initial={{ opacity: 0 }}
@@ -246,7 +246,7 @@ export default function HeroSection() {
                 initial={{ scale: 0 }}
                 animate={isLoaded ? { scale: 1 } : {}}
                 transition={{ delay: 2.4, type: 'spring' }}
-                className="w-1.5 h-1.5 bg-[#F5D76E] rounded-full"
+                className="w-1.5 h-1.5 bg-[var(--accent-gold)] rounded-full"
               />
               <motion.span
                 initial={{ opacity: 0 }}
@@ -271,7 +271,7 @@ export default function HeroSection() {
               </button>
             </Link>
             <Link href="/login">
-              <button className="btn btn-secondary px-8 py-4 text-lg min-w-[200px] hover:bg-white/5">
+              <button className="btn btn-secondary px-8 py-4 text-lg min-w-[200px] hover:bg-[var(--glass-hover)]">
                 Digital Campus
               </button>
             </Link>
@@ -287,14 +287,14 @@ export default function HeroSection() {
             initial={{ opacity: 0 }}
             animate={isLoaded ? { opacity: 1 } : {}}
             transition={{ delay: 2.5 }}
-            className="text-[10px] uppercase tracking-[0.3em] text-white/30 whitespace-nowrap"
+            className="text-[10px] uppercase tracking-[0.3em] text-[var(--text-muted)] whitespace-nowrap"
           >
             Scroll to Explore
           </motion.span>
           <motion.div
             animate={{ y: [0, 8, 0] }}
             transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-            className="w-[1px] h-12 bg-gradient-to-b from-white/50 to-transparent"
+            className="w-[1px] h-12 bg-gradient-to-b from-[var(--text-primary)]/50 to-transparent"
           />
         </motion.div>
       </motion.div>

@@ -123,7 +123,7 @@ export default function AdmissionSection() {
             whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.1 }}
-            className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6"
+            className="text-4xl md:text-5xl lg:text-6xl font-bold text-[var(--text-primary)] mb-6"
           >
             Admission <span className="text-gradient-gold">Enquiry</span>
           </motion.h2>
@@ -132,7 +132,7 @@ export default function AdmissionSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-white/50 max-w-2xl mx-auto text-lg"
+            className="text-[var(--text-secondary)] max-w-2xl mx-auto text-lg"
           >
             Take the first step towards your child's bright future with quality education
           </motion.p>
@@ -156,7 +156,7 @@ export default function AdmissionSection() {
               >
                 <Users className="w-5 h-5" />
               </motion.div>
-              Get in Touch
+              <span className="text-[var(--text-primary)]">Get in Touch</span>
             </h3>
 
             {/* Contact Cards */}
@@ -185,8 +185,8 @@ export default function AdmissionSection() {
                         <Icon className="w-5 h-5" />
                       </div>
                       <div>
-                        <h4 className="font-bold text-white mb-1">{item.title}</h4>
-                        <p className={`text-sm leading-relaxed ${item.href ? 'text-[#6691E5] group-hover:text-white' : 'text-white/60'} transition-colors`}>
+                        <h4 className="font-bold text-[var(--text-primary)] mb-1">{item.title}</h4>
+                        <p className={`text-sm leading-relaxed ${item.href ? 'text-[var(--accent-blue)] group-hover:text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'} transition-colors`}>
                           {item.content}
                         </p>
                       </div>
@@ -204,11 +204,11 @@ export default function AdmissionSection() {
               transition={{ delay: 0.5, duration: 0.7 }}
               className="mt-8 gradient-border p-6"
             >
-              <h4 className="font-bold text-white mb-4 flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-[#F5D76E]" />
+              <h4 className="font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-[var(--accent-gold)]" />
                 Why Choose Us?
               </h4>
-              <ul className="space-y-3 text-sm text-white/60">
+              <ul className="space-y-3 text-sm text-[var(--text-secondary)]">
                 {[
                   'Experienced & Dedicated Teachers',
                   'Value-Based Education',
@@ -221,9 +221,9 @@ export default function AdmissionSection() {
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: 0.6 + i * 0.1 }}
-                    className="flex items-center gap-3"
+                    className="flex items-center gap-3 text-[var(--text-secondary)]"
                   >
-                    <CheckCircle className="w-4 h-4 text-[#F5D76E] flex-shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-[var(--accent-gold)] flex-shrink-0" />
                     {item}
                   </motion.li>
                 ))}
@@ -252,8 +252,8 @@ export default function AdmissionSection() {
                 >
                   <CheckCircle className="w-8 h-8" />
                 </motion.div>
-                <h3 className="text-2xl font-bold text-white mb-3">Thank You!</h3>
-                <p className="text-white/60 mb-8">
+                <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-3">Thank You!</h3>
+                <p className="text-[var(--text-secondary)] mb-8">
                   We have received your enquiry. Our team will contact you shortly.
                 </p>
                 <button
@@ -268,8 +268,8 @@ export default function AdmissionSection() {
                 <div className="space-y-5">
                   {/* Student Name */}
                   <div>
-                    <label className="block text-sm font-medium text-white/80 mb-2">
-                      Student Name <span className="text-[#F5D76E]">*</span>
+                    <label className="block text-sm font-medium text-[var(--text-primary)]/80 mb-2">
+                      Student Name <span className="text-[var(--accent-gold)]">*</span>
                     </label>
                     <input
                       type="text"
@@ -284,8 +284,8 @@ export default function AdmissionSection() {
 
                   {/* Parent Name */}
                   <div>
-                    <label className="block text-sm font-medium text-white/80 mb-2">
-                      Parent/Guardian Name <span className="text-[#F5D76E]">*</span>
+                    <label className="block text-sm font-medium text-[var(--text-primary)]/80 mb-2">
+                      Parent/Guardian Name <span className="text-[var(--accent-gold)]">*</span>
                     </label>
                     <input
                       type="text"
@@ -300,8 +300,8 @@ export default function AdmissionSection() {
 
                   {/* Phone */}
                   <div>
-                    <label className="block text-sm font-medium text-white/80 mb-2">
-                      Contact Number <span className="text-[#F5D76E]">*</span>
+                    <label className="block text-sm font-medium text-[var(--text-primary)]/80 mb-2">
+                      Contact Number <span className="text-[var(--accent-gold)]">*</span>
                     </label>
                     <input
                       type="tel"
@@ -317,8 +317,8 @@ export default function AdmissionSection() {
 
                   {/* Desired Class */}
                   <div>
-                    <label className="block text-sm font-medium text-white/80 mb-2">
-                      Class Seeking Admission <span className="text-[#F5D76E]">*</span>
+                    <label className="block text-sm font-medium text-[var(--text-primary)]/80 mb-2">
+                      Class Seeking Admission <span className="text-[var(--accent-gold)]">*</span>
                     </label>
                     <select
                       name="seeking_class"

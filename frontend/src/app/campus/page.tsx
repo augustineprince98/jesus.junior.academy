@@ -244,12 +244,12 @@ export default function ModernCampusPage() {
         transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
         className="mb-12 relative"
       >
-        <div className="absolute -left-20 -top-20 w-64 h-64 bg-blue-500/20 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute -left-20 -top-20 w-64 h-64 bg-[var(--accent-blue)]/20 rounded-full blur-[100px] pointer-events-none" />
 
-        <h2 className="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">
+        <h2 className="text-4xl md:text-5xl font-bold text-[var(--text-primary)] mb-4 tracking-tight">
           {greeting}, <span className="text-gradient-accent">{user.name.split(' ')[0]}</span>
         </h2>
-        <p className="text-white/60 text-lg max-w-2xl">
+        <p className="text-[var(--text-secondary)] text-lg max-w-2xl">
           Welcome to your digital campus. Access your tools, track progress, and stay updated with the latest announcements.
         </p>
       </motion.div>
@@ -267,20 +267,20 @@ export default function ModernCampusPage() {
             >
               <button
                 onClick={() => router.push(card.href)}
-                className="w-full group relative glass-card p-8 h-full text-left overflow-hidden hover:bg-white/[0.04] transition-all duration-500"
+                className="w-full group relative glass-card p-8 h-full text-left overflow-hidden hover:bg-[var(--glass-hover)] transition-all duration-500"
               >
                 {/* Gradient Glow Effect on Hover */}
                 <div className={`absolute inset-0 bg-gradient-to-br ${card.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
                 <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform translate-x-2 group-hover:translate-x-0">
-                  <ChevronRight className="w-5 h-5 text-white/40" />
+                  <ChevronRight className="w-5 h-5 text-[var(--text-secondary)]" />
                 </div>
 
                 {/* Content */}
                 <div className="relative z-10">
                   <div className="flex items-start justify-between mb-6">
                     <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${card.color} p-[1px] group-hover:scale-110 transition-transform duration-500`}>
-                      <div className="w-full h-full rounded-2xl bg-[#151515] flex items-center justify-center">
-                        <Icon className="w-7 h-7 text-white" />
+                      <div className="w-full h-full rounded-2xl bg-[var(--bg-card)] flex items-center justify-center">
+                        <Icon className="w-7 h-7 text-[var(--text-primary)]" />
                       </div>
                     </div>
                     {card.badge && (
@@ -290,10 +290,10 @@ export default function ModernCampusPage() {
                     )}
                   </div>
 
-                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-blue-400 transition-colors">
+                  <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2 group-hover:text-[var(--accent-blue)] transition-colors">
                     {card.title}
                   </h3>
-                  <p className="text-white/50 text-sm leading-relaxed mb-4 group-hover:text-white/70 transition-colors">
+                  <p className="text-[var(--text-secondary)] text-sm leading-relaxed mb-4 group-hover:text-[var(--text-primary)]/70 transition-colors">
                     {card.description}
                   </p>
 
@@ -314,7 +314,7 @@ export default function ModernCampusPage() {
           transition={{ delay: 0.4 }}
           className="mt-12"
         >
-          <div className="flex items-center gap-2 mb-6 text-white/40 text-sm uppercase tracking-widest font-semibold">
+          <div className="flex items-center gap-2 mb-6 text-[var(--text-secondary)] text-sm uppercase tracking-widest font-semibold">
             <Sparkles className="w-4 h-4" />
             <span>Quick Insights</span>
           </div>
@@ -322,8 +322,8 @@ export default function ModernCampusPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="glass-card p-6 flex items-center justify-between border-l-4 border-l-green-500">
               <div>
-                <p className="text-sm text-white/50 mb-1">Attendance</p>
-                <p className="text-3xl font-bold text-white">92%</p>
+                <p className="text-sm text-[var(--text-secondary)] mb-1">Attendance</p>
+                <p className="text-3xl font-bold text-[var(--text-primary)]">92%</p>
               </div>
               <div className="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center">
                 <TrendingUp className="w-6 h-6 text-green-500" />
@@ -332,8 +332,8 @@ export default function ModernCampusPage() {
 
             <div className="glass-card p-6 flex items-center justify-between border-l-4 border-l-blue-500">
               <div>
-                <p className="text-sm text-white/50 mb-1">Assigned Homework</p>
-                <p className="text-3xl font-bold text-white">3</p>
+                <p className="text-sm text-[var(--text-secondary)] mb-1">Assigned Homework</p>
+                <p className="text-3xl font-bold text-[var(--text-primary)]">3</p>
               </div>
               <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center">
                 <BookOpen className="w-6 h-6 text-blue-500" />
@@ -342,8 +342,8 @@ export default function ModernCampusPage() {
 
             <div className="glass-card p-6 flex items-center justify-between border-l-4 border-l-yellow-500">
               <div>
-                <p className="text-sm text-white/50 mb-1">Performance</p>
-                <p className="text-3xl font-bold text-white">A</p>
+                <p className="text-sm text-[var(--text-secondary)] mb-1">Performance</p>
+                <p className="text-3xl font-bold text-[var(--text-primary)]">A</p>
               </div>
               <div className="w-12 h-12 rounded-full bg-yellow-500/10 flex items-center justify-center">
                 <Star className="w-6 h-6 text-yellow-500" />

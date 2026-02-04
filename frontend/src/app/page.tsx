@@ -39,7 +39,7 @@ export default function HomePage() {
   return (
     <IntroSequence>
       <InfiniteScrollWrapper>
-        <main className="bg-[#0A0A0A] relative">
+        <main className="bg-[var(--bg-primary)] relative">
           {/* 3D Background Scene - Floating Geometric Shapes */}
           <div className="fixed inset-0 z-0">
             <Scene3D />
@@ -54,34 +54,34 @@ export default function HomePage() {
           </ScrollSection>
 
           {/* Notice Board */}
-          <ScrollSection index={1} bgColor="#0A0A0A" totalSections={TOTAL_SECTIONS}>
+          <ScrollSection index={1} bgColor="var(--bg-primary)" totalSections={TOTAL_SECTIONS}>
             <PublicNoticeBoard />
           </ScrollSection>
 
           {/* Discover Our Story */}
-          <ScrollSection index={2} bgColor="#111111" totalSections={TOTAL_SECTIONS}>
+          <ScrollSection index={2} bgColor="var(--bg-secondary)" totalSections={TOTAL_SECTIONS}>
             <FloatingShapes />
             <AboutSection />
           </ScrollSection>
 
           {/* Achievers Club */}
-          <ScrollSection index={3} bgColor="#0A0A0A" totalSections={TOTAL_SECTIONS}>
+          <ScrollSection index={3} bgColor="var(--bg-primary)" totalSections={TOTAL_SECTIONS}>
             <AchieversSection />
           </ScrollSection>
 
           {/* Celebrations & Events */}
-          <ScrollSection index={4} bgColor="#111111" totalSections={TOTAL_SECTIONS}>
+          <ScrollSection index={4} bgColor="var(--bg-secondary)" totalSections={TOTAL_SECTIONS}>
             <ActivitiesSection />
           </ScrollSection>
 
           {/* Start Your Journey */}
-          <ScrollSection index={5} bgColor="#0A0A0A" totalSections={TOTAL_SECTIONS}>
+          <ScrollSection index={5} bgColor="var(--bg-primary)" totalSections={TOTAL_SECTIONS}>
             <FloatingShapes />
             <AdmissionSection />
           </ScrollSection>
 
           {/* Footer */}
-          <ScrollSection index={6} bgColor="#0A0A0A" totalSections={TOTAL_SECTIONS}>
+          <ScrollSection index={6} bgColor="var(--bg-primary)" totalSections={TOTAL_SECTIONS}>
             <div className="min-h-screen flex flex-col justify-end">
               <Footer />
             </div>

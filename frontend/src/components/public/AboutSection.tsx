@@ -75,7 +75,7 @@ export default function AboutSection() {
           </motion.span>
           <motion.h2
             {...fadeInUp(0.1)}
-            className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight"
+            className="text-4xl md:text-5xl lg:text-6xl font-bold text-[var(--text-primary)] mb-6 leading-tight"
           >
             Excellence in Education
             <br />
@@ -83,14 +83,14 @@ export default function AboutSection() {
           </motion.h2>
           <motion.div
             style={{ width: lineWidth }}
-            className="h-1 bg-gradient-to-r from-[#6691E5] to-[#F5D76E] mx-auto rounded-full"
+            className="h-1 bg-gradient-to-r from-[var(--accent-blue)] to-[var(--accent-gold)] mx-auto rounded-full"
           />
         </motion.div>
 
         {/* Main Description */}
         <motion.p
           {...fadeInUp(0.2)}
-          className="text-center text-lg md:text-xl text-white/60 max-w-3xl mx-auto mb-20 leading-relaxed"
+          className="text-center text-lg md:text-xl text-[var(--text-secondary)] max-w-3xl mx-auto mb-20 leading-relaxed"
         >
           Jesus Junior Academy is committed to nurturing young minds through quality education,
           strong moral values, and a disciplined learning environment. We believe in holistic
@@ -115,15 +115,15 @@ export default function AboutSection() {
               >
                 <BookOpen className="w-6 h-6" />
               </motion.div>
-              <h3 className="text-2xl font-bold text-white">Our History</h3>
+              <h3 className="text-2xl font-bold text-[var(--text-primary)]">Our History</h3>
             </div>
-            <p className="text-white/60 leading-relaxed mb-4">
+            <p className="text-[var(--text-secondary)] leading-relaxed mb-4">
               Founded with a vision to provide quality education rooted in Christian values,
               Jesus Junior Academy has been nurturing young minds and building strong character
               for years. Located in the heart of Rewari, near SBI Bank at Church House, we serve
               as a beacon of educational excellence in the community.
             </p>
-            <p className="text-white/60 leading-relaxed">
+            <p className="text-[var(--text-secondary)] leading-relaxed">
               Our institution stands on the foundation of truth, integrity, and academic excellence,
               preparing students not just for examinations but for life itself.
             </p>
@@ -145,14 +145,14 @@ export default function AboutSection() {
               >
                 <Sparkles className="w-6 h-6" />
               </motion.div>
-              <h3 className="text-2xl font-bold text-white">Educational Philosophy</h3>
+              <h3 className="text-2xl font-bold text-[var(--text-primary)]">Educational Philosophy</h3>
             </div>
-            <p className="text-white/60 leading-relaxed mb-4">
+            <p className="text-[var(--text-secondary)] leading-relaxed mb-4">
               We believe education is more than memorizing facts. It's about developing critical
               thinking, moral values, and a lifelong love for learning. Our curriculum balances
               academic rigor with character development.
             </p>
-            <p className="text-white/60 leading-relaxed">
+            <p className="text-[var(--text-secondary)] leading-relaxed">
               Every child is unique, and we strive to unlock their potential through personalized
               attention, innovative teaching methods, and a nurturing environment.
             </p>
@@ -188,8 +188,8 @@ export default function AboutSection() {
                 >
                   <Icon className="w-7 h-7" />
                 </motion.div>
-                <h4 className="text-xl font-bold text-white mb-4">{card.title}</h4>
-                <p className="text-white/60 leading-relaxed text-sm">{card.description}</p>
+                <h4 className="text-xl font-bold text-[var(--text-primary)] mb-4">{card.title}</h4>
+                <p className="text-[var(--text-secondary)] leading-relaxed text-sm">{card.description}</p>
               </motion.div>
             );
           })}

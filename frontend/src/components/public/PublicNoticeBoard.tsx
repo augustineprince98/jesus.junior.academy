@@ -83,7 +83,7 @@ export default function PublicNoticeBoard() {
                     <div className="icon-circle icon-circle-lg icon-circle-gold mx-auto mb-4 opacity-50">
                         <Bell className="w-6 h-6" />
                     </div>
-                    <h2 className="text-2xl font-bold text-white mb-2">Notice Board</h2>
+                    <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-2">Notice Board</h2>
                     <p>No new announcements at this time.</p>
                 </div>
             </section>
@@ -115,8 +115,8 @@ export default function PublicNoticeBoard() {
                             <Bell className="w-6 h-6" />
                         </motion.div>
                         <div>
-                            <h2 className="text-3xl md:text-4xl font-bold text-white glitch-text">Notice Board</h2>
-                            <p className="text-white/50">Latest Updates & Announcements</p>
+                            <h2 className="text-3xl md:text-4xl font-bold text-[var(--text-primary)] glitch-text">Notice Board</h2>
+                            <p className="text-[var(--text-secondary)]">Latest Updates & Announcements</p>
                         </div>
                     </div>
                     <motion.button
@@ -162,17 +162,17 @@ export default function PublicNoticeBoard() {
                                     <Pin className="w-5 h-5" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <h3 className="font-bold text-white line-clamp-2 group-hover:text-[#F5D76E] transition-colors">
+                                    <h3 className="font-bold text-[var(--text-primary)] line-clamp-2 group-hover:text-[var(--accent-gold)] transition-colors">
                                         {notice.title}
                                     </h3>
-                                    <div className="flex items-center gap-2 text-sm text-white/40 mt-1">
+                                    <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)] mt-1">
                                         <Calendar className="w-3.5 h-3.5" />
                                         {formatDate(notice.event_date)}
                                     </div>
                                 </div>
                             </div>
 
-                            <p className="text-white/50 text-sm line-clamp-3 mb-4 leading-relaxed">
+                            <p className="text-[var(--text-secondary)] text-sm line-clamp-3 mb-4 leading-relaxed">
                                 {notice.description}
                             </p>
 
@@ -181,7 +181,7 @@ export default function PublicNoticeBoard() {
                                 <span className="badge text-xs">
                                     {notice.type?.replace('_', ' ')}
                                 </span>
-                                <ArrowRight className="w-4 h-4 text-white/30 group-hover:text-[#F5D76E] group-hover:translate-x-1 transition-all" />
+                                <ArrowRight className="w-4 h-4 text-[var(--text-secondary)] group-hover:text-[var(--accent-gold)] group-hover:translate-x-1 transition-all" />
                             </div>
                         </motion.div>
                     ))}

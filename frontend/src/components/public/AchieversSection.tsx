@@ -109,7 +109,7 @@ export default function AchieversSection() {
             whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.1 }}
-            className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6"
+            className="text-4xl md:text-5xl lg:text-6xl font-bold text-[var(--text-primary)] mb-6"
           >
             Achievers' <span className="text-gradient-gold">Club</span>
           </motion.h2>
@@ -118,7 +118,7 @@ export default function AchieversSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-white/50 max-w-2xl mx-auto text-lg"
+            className="text-[var(--text-secondary)] max-w-2xl mx-auto text-lg"
           >
             Celebrating students who excel in academics and co-curricular activities
           </motion.p>
@@ -158,7 +158,7 @@ export default function AchieversSection() {
             <div className="icon-circle icon-circle-lg icon-circle-gold mx-auto mb-6">
               <Trophy className="w-8 h-8" />
             </div>
-            <p className="text-xl text-white/50 font-medium">
+            <p className="text-xl text-[var(--text-secondary)] font-medium">
               Achievements will be showcased here soon!
             </p>
           </motion.div>
@@ -188,7 +188,7 @@ export default function AchieversSection() {
                       {getCategoryIcon(achievement.category)}
                       <span className="ml-1.5">{achievement.category}</span>
                     </span>
-                    <span className="text-xs text-white/40 font-medium">
+                    <span className="text-xs text-[var(--text-secondary)] font-medium">
                       {new Date(achievement.date).toLocaleDateString('en-IN', {
                         month: 'short',
                         year: 'numeric',
@@ -200,30 +200,30 @@ export default function AchieversSection() {
                   <div className="flex items-center gap-3 mb-4">
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${isGold
-                          ? 'bg-gradient-to-br from-[#F5D76E] to-[#D4AF37] text-[#1A1A1A]'
-                          : 'bg-gradient-to-br from-[#6691E5] to-[#4A7BD4] text-white'
+                        ? 'bg-gradient-to-br from-[var(--accent-gold)] to-[#D4AF37] text-[#1A1A1A]'
+                        : 'bg-gradient-to-br from-[var(--accent-blue)] to-[#4A7BD4] text-white'
                         }`}
                     >
                       {achievement.student_name.charAt(0)}
                     </div>
-                    <h3 className="text-lg font-bold text-white group-hover:text-[#F5D76E] transition-colors">
+                    <h3 className="text-lg font-bold text-[var(--text-primary)] group-hover:text-[var(--accent-gold)] transition-colors">
                       {achievement.student_name}
                     </h3>
                   </div>
 
                   {/* Achievement Title */}
-                  <h4 className="text-base font-semibold text-white/90 mb-3 line-clamp-2">
+                  <h4 className="text-base font-semibold text-[var(--text-primary)]/90 mb-3 line-clamp-2">
                     {achievement.title}
                   </h4>
 
                   {/* Description */}
-                  <p className="text-sm text-white/50 leading-relaxed line-clamp-3">
+                  <p className="text-sm text-[var(--text-secondary)] leading-relaxed line-clamp-3">
                     {achievement.description}
                   </p>
 
                   {/* Hover Indicator */}
-                  <div className="mt-4 pt-4 border-t border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="text-xs text-[#F5D76E] font-medium flex items-center gap-1">
+                  <div className="mt-4 pt-4 border-t border-[var(--glass-border)] opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="text-xs text-[var(--accent-gold)] font-medium flex items-center gap-1">
                       <Sparkles className="w-3 h-3" />
                       Featured Achievement
                     </span>

@@ -64,6 +64,42 @@
   --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+[data-theme="light"] {
+  /* Core light palette */
+  --bg-primary: #F8F9FC;
+  --bg-secondary: #FFFFFF;
+  --bg-tertiary: #F0F2F7;
+  --bg-elevated: #E4E7ED;
+
+  /* Text colors */
+  --text-primary: #1A1A2E;
+  --text-secondary: #5A5A7A;
+  --text-muted: #8A8AA0;
+
+  /* Accent colors */
+  --accent-blue: #4A78CC;
+  --accent-blue-glow: rgba(74, 120, 204, 0.3);
+  --accent-gold: #D4A520;
+  --accent-gold-glow: rgba(212, 165, 32, 0.2);
+
+  /* Gradients */
+  --gradient-dark: linear-gradient(180deg, #F8F9FC 0%, #FFFFFF 50%, #F8F9FC 100%);
+  --gradient-radial: radial-gradient(ellipse at center, #FFFFFF 0%, #F0F2F7 70%);
+  --gradient-accent: linear-gradient(135deg, #4A78CC 0%, #3560A8 100%);
+  --gradient-gold: linear-gradient(135deg, #D4A520 0%, #B8860B 100%);
+  --gradient-glass: linear-gradient(135deg, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.02) 100%);
+
+  /* Glass effects */
+  --glass-bg: rgba(255, 255, 255, 0.6);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-hover: rgba(0, 0, 0, 0.04);
+
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.12);
+}
+
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    BASE STYLES
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
@@ -76,6 +112,13 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-snap-type: y proximity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-snap-type: none;
+  }
 }
 
 html,
@@ -94,6 +137,7 @@ body {
   color: var(--text-primary);
   background: var(--bg-primary);
   min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -779,26 +823,22 @@ body {
 /* Chromatic Aberration Overlay - scroll transition effect */
 .chromatic-aberration-overlay {
   background:
-    linear-gradient(
-      135deg,
+    linear-gradient(135deg,
       rgba(102, 145, 229, 0.08) 0%,
       transparent 30%,
       transparent 70%,
-      rgba(245, 215, 110, 0.06) 100%
-    );
+      rgba(245, 215, 110, 0.06) 100%);
   mix-blend-mode: screen;
 }
 
 /* Hero chromatic shift on scroll */
 .chromatic-hero-scroll {
   background:
-    linear-gradient(
-      0deg,
+    linear-gradient(0deg,
       rgba(102, 145, 229, 0.12) 0%,
       transparent 30%,
       transparent 70%,
-      rgba(245, 215, 110, 0.08) 100%
-    );
+      rgba(245, 215, 110, 0.08) 100%);
   mix-blend-mode: screen;
 }
 
@@ -818,8 +858,13 @@ body {
 
 /* Scan line animation */
 @keyframes scanLine {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(100vh); }
+  0% {
+    transform: translateY(-100%);
+  }
+
+  100% {
+    transform: translateY(100vh);
+  }
 }
 
 .scan-line {
@@ -831,11 +876,13 @@ body {
   0% {
     box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.4);
   }
+
   50% {
     box-shadow:
       0 -10px 40px rgba(0, 0, 0, 0.4),
       0 -2px 30px rgba(102, 145, 229, 0.15);
   }
+
   100% {
     box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.4);
   }
@@ -846,6 +893,7 @@ body {
   0% {
     clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
   }
+
   100% {
     clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
   }
@@ -857,11 +905,27 @@ body {
 
 /* Glitch text effect */
 @keyframes glitch {
-  0%, 100% { transform: translate(0); }
-  20% { transform: translate(-2px, 2px); }
-  40% { transform: translate(-2px, -2px); }
-  60% { transform: translate(2px, 2px); }
-  80% { transform: translate(2px, -2px); }
+
+  0%,
+  100% {
+    transform: translate(0);
+  }
+
+  20% {
+    transform: translate(-2px, 2px);
+  }
+
+  40% {
+    transform: translate(-2px, -2px);
+  }
+
+  60% {
+    transform: translate(2px, 2px);
+  }
+
+  80% {
+    transform: translate(2px, -2px);
+  }
 }
 
 .glitch-text:hover {
@@ -907,22 +971,31 @@ body {
 
 /* Infinite scroll transition flash */
 @keyframes loopFlash {
-  0% { opacity: 0; }
-  15% { opacity: 1; }
-  50% { opacity: 1; }
-  100% { opacity: 0; }
+  0% {
+    opacity: 0;
+  }
+
+  15% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
 }
 
 /* Section divider glow line */
 .section-divider-glow {
   height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(102, 145, 229, 0.5) 20%,
-    rgba(245, 215, 110, 0.5) 50%,
-    rgba(102, 145, 229, 0.5) 80%,
-    transparent 100%
-  );
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(102, 145, 229, 0.5) 20%,
+      rgba(245, 215, 110, 0.5) 50%,
+      rgba(102, 145, 229, 0.5) 80%,
+      transparent 100%);
   box-shadow: 0 0 20px rgba(102, 145, 229, 0.3);
 }

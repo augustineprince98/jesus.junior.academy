@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { registrationApi } from '@/lib/api';
 import { motion } from 'framer-motion';
 import {
-  GraduationCap,
   User,
   Phone,
   Mail,
@@ -18,6 +17,9 @@ import {
   AlertCircle,
   BookOpen,
   Calendar,
+  ArrowRight,
+  Sparkles,
+  Loader2,
 } from 'lucide-react';
 
 type RegistrationStep = 'form' | 'success' | 'check';
@@ -131,9 +133,9 @@ export default function RegisterPage() {
       });
       setStep('success');
     } catch (err: any) {
-      const errorMessage = typeof err.detail === 'string' ? err.detail : 
-                          err.message || 
-                          'Registration failed. Please try again.';
+      const errorMessage = typeof err.detail === 'string' ? err.detail :
+        err.message ||
+        'Registration failed. Please try again.';
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -156,9 +158,9 @@ export default function RegisterPage() {
       const result = await registrationApi.checkStatus(checkPhone.trim());
       setStatusResult(result);
     } catch (err: any) {
-      const errorMessage = typeof err.detail === 'string' ? err.detail : 
-                          err.message || 
-                          'Could not find registration';
+      const errorMessage = typeof err.detail === 'string' ? err.detail :
+        err.message ||
+        'Could not find registration';
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -166,23 +168,31 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <main className="min-h-screen flex items-center justify-center bg-[var(--bg-primary)] px-4 py-8 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 bg-dots" />
+
+      {/* Glow orbs */}
+      <div className="glow-orb glow-orb-blue w-[400px] h-[400px] -top-20 -right-20 opacity-20" />
+      <div className="glow-orb glow-orb-gold w-[300px] h-[300px] bottom-20 -left-20 opacity-15" />
+
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
+        initial={{ opacity: 0, y: 20, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="relative w-full max-w-md z-10"
       >
-        {/* Logo */}
+        {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-primary-600 to-primary-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <GraduationCap className="w-10 h-10 text-white" />
+          <div className="icon-circle icon-circle-lg icon-circle-accent mx-auto mb-6">
+            <Sparkles className="w-7 h-7" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Jesus Junior Academy</h1>
-          <p className="text-gray-600">Digital Campus Registration</p>
+          <h1 className="font-bambi text-lg sm:text-2xl text-[var(--text-primary)] mb-2 whitespace-nowrap">JESUS JUNIOR ACADEMY</h1>
+          <p className="text-[var(--text-secondary)] text-sm tracking-wide">Digital Campus Registration</p>
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="gradient-border p-8 md:p-10">
           {step === 'success' ? (
             /* Success State */
             <motion.div
@@ -190,23 +200,29 @@ export default function RegisterPage() {
               animate={{ opacity: 1, scale: 1 }}
               className="text-center py-8"
             >
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle2 className="w-10 h-10 text-green-600" />
-              </div>
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Registration Successful!</h2>
-              <p className="text-gray-600 mb-6">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 200 }}
+                className="icon-circle icon-circle-lg icon-circle-gold mx-auto mb-6"
+              >
+                <CheckCircle2 className="w-8 h-8" />
+              </motion.div>
+              <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Registration Successful!</h2>
+              <p className="text-[var(--text-secondary)] mb-6">
                 Your account is pending admin approval. You will be notified once your account is activated.
               </p>
               <div className="space-y-3">
                 <button
                   onClick={() => router.push('/login')}
-                  className="w-full py-3 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 transition-colors"
+                  className="w-full btn btn-primary py-4 flex items-center justify-center gap-2"
                 >
                   Go to Login
+                  <ArrowRight className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setStep('check')}
-                  className="w-full py-3 border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+                  className="w-full py-3 border border-[var(--glass-border)] text-[var(--text-secondary)] rounded-xl font-semibold hover:bg-[var(--glass-hover)] transition-colors"
                 >
                   Check Status
                 </button>
@@ -217,141 +233,176 @@ export default function RegisterPage() {
             <div>
               <button
                 onClick={() => setStep('form')}
-                className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
+                className="flex items-center gap-2 text-white/40 hover:text-white mb-6 transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Back to Register
               </button>
 
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Check Registration Status</h2>
-              <p className="text-gray-600 mb-6">Enter your phone number to check your approval status.</p>
+              <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Check Registration Status</h2>
+              <p className="text-[var(--text-secondary)] mb-6">Enter your phone number to check your approval status.</p>
 
               <form onSubmit={handleCheckStatus} className="space-y-4">
-                <div className="relative">
-                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="tel"
-                    value={checkPhone}
-                    onChange={(e) => setCheckPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                    placeholder="10-digit Phone Number"
-                    className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    maxLength={10}
-                    pattern="[0-9]{10}"
-                  />
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">
+                    Phone Number
+                  </label>
+                  <div className="relative">
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
+                    <input
+                      type="tel"
+                      value={checkPhone}
+                      onChange={(e) => setCheckPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                      placeholder="10-digit Phone Number"
+                      className="input pl-12"
+                      maxLength={10}
+                      pattern="[0-9]{10}"
+                    />
+                  </div>
                 </div>
 
                 {error && (
-                  <div className="flex items-center gap-2 text-red-600 text-sm">
-                    <AlertCircle className="w-4 h-4" />
-                    {error}
-                  </div>
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl"
+                  >
+                    <p className="text-sm text-red-400 flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4" />
+                      {error}
+                    </p>
+                  </motion.div>
                 )}
 
                 {statusResult && (
-                  <div className={`p-4 rounded-xl ${
-                    statusResult.status === 'APPROVED'
-                      ? 'bg-green-50 border border-green-200'
-                      : statusResult.status === 'REJECTED'
-                      ? 'bg-red-50 border border-red-200'
-                      : 'bg-yellow-50 border border-yellow-200'
-                  }`}>
-                    <p className={`font-semibold ${
-                      statusResult.status === 'APPROVED'
-                        ? 'text-green-800'
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`p-4 rounded-xl ${statusResult.status === 'APPROVED'
+                        ? 'bg-green-500/10 border border-green-500/30'
                         : statusResult.status === 'REJECTED'
-                        ? 'text-red-800'
-                        : 'text-yellow-800'
-                    }`}>
+                          ? 'bg-red-500/10 border border-red-500/30'
+                          : 'bg-yellow-500/10 border border-yellow-500/30'
+                      }`}
+                  >
+                    <p className={`font-semibold ${statusResult.status === 'APPROVED'
+                        ? 'text-green-400'
+                        : statusResult.status === 'REJECTED'
+                          ? 'text-red-400'
+                          : 'text-yellow-400'
+                      }`}>
                       Status: {statusResult.status}
                     </p>
-                    <p className={`text-sm mt-1 ${
-                      statusResult.status === 'APPROVED'
-                        ? 'text-green-600'
+                    <p className={`text-sm mt-1 ${statusResult.status === 'APPROVED'
+                        ? 'text-green-400/70'
                         : statusResult.status === 'REJECTED'
-                        ? 'text-red-600'
-                        : 'text-yellow-600'
-                    }`}>
+                          ? 'text-red-400/70'
+                          : 'text-yellow-400/70'
+                      }`}>
                       {statusResult.message}
                     </p>
-                  </div>
+                  </motion.div>
                 )}
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50"
+                  className={`w-full btn btn-primary py-4 flex items-center justify-center gap-2 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
                 >
-                  {loading ? 'Checking...' : 'Check Status'}
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Checking...
+                    </>
+                  ) : (
+                    'Check Status'
+                  )}
                 </button>
               </form>
             </div>
           ) : (
             /* Registration Form */
             <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Create Account</h2>
+              <h2 className="text-xl font-bold text-[var(--text-primary)] mb-6">Create Account</h2>
 
-              <form onSubmit={handleRegister} className="space-y-4">
+              <form onSubmit={handleRegister} className="space-y-5">
                 {/* Name */}
-                <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Full Name"
-                    className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  />
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] mb-2">
+                    Full Name
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-secondary)]" />
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Enter your full name"
+                      className="input pl-12"
+                    />
+                  </div>
                 </div>
 
                 {/* Phone */}
-                <div className="relative">
-                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                    placeholder="10-digit Phone Number"
-                    className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    maxLength={10}
-                    pattern="[0-9]{10}"
-                  />
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">
+                    Phone Number
+                  </label>
+                  <div className="relative">
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                      placeholder="10-digit phone number"
+                      className="input pl-12 pr-16"
+                      maxLength={10}
+                      pattern="[0-9]{10}"
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-white/30">
+                      {phone.length}/10
+                    </span>
+                  </div>
                 </div>
 
                 {/* Email (optional) */}
-                <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Email (optional)"
-                    className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  />
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] mb-2">
+                    Email <span className="text-[var(--text-secondary)]/70">(optional)</span>
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-secondary)]" />
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Enter your email"
+                      className="input pl-12"
+                    />
+                  </div>
                 </div>
 
                 {/* Role Selection */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">I am a:</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] mb-2">I am a:</label>
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
                       onClick={() => setRole('PARENT')}
-                      className={`py-3 px-4 rounded-xl border-2 font-medium transition-all ${
-                        role === 'PARENT'
-                          ? 'border-primary-500 bg-primary-50 text-primary-700'
-                          : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                      }`}
+                      className={`py-3 px-4 rounded-xl border font-medium transition-all ${role === 'PARENT'
+                          ? 'border-[var(--accent-blue)] bg-[var(--accent-blue)]/10 text-[var(--accent-blue)]'
+                          : 'border-[var(--glass-border)] text-[var(--text-secondary)] hover:border-[var(--text-primary)]/20'
+                        }`}
                     >
                       Parent
                     </button>
                     <button
                       type="button"
                       onClick={() => setRole('STUDENT')}
-                      className={`py-3 px-4 rounded-xl border-2 font-medium transition-all ${
-                        role === 'STUDENT'
-                          ? 'border-primary-500 bg-primary-50 text-primary-700'
-                          : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                      }`}
+                      className={`py-3 px-4 rounded-xl border font-medium transition-all ${role === 'STUDENT'
+                          ? 'border-[var(--accent-blue)] bg-[var(--accent-blue)]/10 text-[var(--accent-blue)]'
+                          : 'border-[var(--glass-border)] text-[var(--text-secondary)] hover:border-[var(--text-primary)]/20'
+                        }`}
                     >
                       Student
                     </button>
@@ -360,16 +411,20 @@ export default function RegisterPage() {
 
                 {/* Student-specific fields */}
                 {role === 'STUDENT' && (
-                  <div className="space-y-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
-                    <p className="text-sm font-medium text-blue-800">Student Information</p>
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    className="space-y-4 p-4 bg-[var(--bg-card)] rounded-xl border border-[var(--glass-border)]"
+                  >
+                    <p className="text-sm font-medium text-[var(--accent-blue)]">Student Information</p>
 
                     {/* Class Selection */}
                     <div className="relative">
-                      <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
                       <select
                         value={classId || ''}
                         onChange={(e) => setClassId(Number(e.target.value) || null)}
-                        className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white appearance-none"
+                        className="input pl-12 appearance-none"
                         disabled={loadingClasses}
                       >
                         <option value="">
@@ -385,36 +440,36 @@ export default function RegisterPage() {
 
                     {/* Father's Name */}
                     <div className="relative">
-                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
                       <input
                         type="text"
                         value={fatherName}
                         onChange={(e) => setFatherName(e.target.value)}
                         placeholder="Father's Name *"
-                        className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        className="input pl-12"
                       />
                     </div>
 
                     {/* Mother's Name */}
                     <div className="relative">
-                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
                       <input
                         type="text"
                         value={motherName}
                         onChange={(e) => setMotherName(e.target.value)}
                         placeholder="Mother's Name *"
-                        className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        className="input pl-12"
                       />
                     </div>
 
                     {/* Date of Birth */}
                     <div className="relative">
-                      <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
                       <input
                         type="date"
                         value={dob}
                         onChange={(e) => setDob(e.target.value)}
-                        className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        className="input pl-12"
                         placeholder="Date of Birth"
                       />
                     </div>
@@ -426,68 +481,86 @@ export default function RegisterPage() {
                           key={g}
                           type="button"
                           onClick={() => setGender(g)}
-                          className={`py-2 px-3 rounded-lg border text-sm font-medium transition-all ${
-                            gender === g
-                              ? 'border-primary-500 bg-primary-50 text-primary-700'
-                              : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                          }`}
+                          className={`py-2 px-3 rounded-lg border text-sm font-medium transition-all ${gender === g
+                              ? 'border-[var(--accent-gold)] bg-[var(--accent-gold)]/10 text-[var(--accent-gold)]'
+                              : 'border-[var(--glass-border)] text-[var(--text-secondary)] hover:border-[var(--text-primary)]/20'
+                            }`}
                         >
                           {g}
                         </button>
                       ))}
                     </div>
-                  </div>
+                  </motion.div>
                 )}
 
                 {/* Password */}
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Password"
-                    className="w-full pl-12 pr-12 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] mb-2">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-secondary)]" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter your password"
+                      className="input pl-12 pr-12"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Confirm Password */}
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Confirm Password"
-                    className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  />
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] mb-2">
+                    Confirm Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-secondary)]" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Confirm your password"
+                      className="input pl-12"
+                    />
+                  </div>
                 </div>
 
                 {error && (
-                  <div className="flex items-center gap-2 text-red-600 text-sm">
-                    <AlertCircle className="w-4 h-4" />
-                    {error}
-                  </div>
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl"
+                  >
+                    <p className="text-sm text-red-400 flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4" />
+                      {error}
+                    </p>
+                  </motion.div>
                 )}
 
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-white/30">
                   By registering, your account will be reviewed by the school administration. You will be notified once approved.
                 </p>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  className={`w-full btn btn-primary py-4 flex items-center justify-center gap-2 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
                 >
                   {loading ? (
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Registering...
+                    </>
                   ) : (
                     <>
                       <UserPlus className="w-5 h-5" />
@@ -498,18 +571,18 @@ export default function RegisterPage() {
               </form>
 
               {/* Links */}
-              <div className="mt-6 text-center space-y-2">
+              <div className="mt-8 pt-8 border-t border-white/10 text-center space-y-3">
                 <button
                   onClick={() => setStep('check')}
-                  className="text-sm text-gray-600 hover:text-primary-600"
+                  className="text-sm text-white/30 hover:text-white transition-colors"
                 >
                   Check registration status
                 </button>
                 <div>
-                  <span className="text-sm text-gray-600">Already have an account? </span>
+                  <span className="text-sm text-[var(--text-secondary)]">Already have an account? </span>
                   <button
                     onClick={() => router.push('/login')}
-                    className="text-sm text-primary-600 font-semibold hover:text-primary-700"
+                    className="text-sm text-[var(--accent-blue)] font-semibold hover:text-[var(--text-primary)] transition-colors"
                   >
                     Login
                   </button>
@@ -518,7 +591,12 @@ export default function RegisterPage() {
             </div>
           )}
         </div>
+
+        {/* Footer Note */}
+        <p className="text-center text-xs text-[var(--text-secondary)] mt-6">
+          Protected by Jesus Junior Academy Administration
+        </p>
       </motion.div>
-    </div>
+    </main>
   );
 }

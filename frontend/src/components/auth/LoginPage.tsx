@@ -72,7 +72,7 @@ export default function AccessGate() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-[#0A0A0A] px-4 py-8 relative overflow-hidden">
+    <main className="min-h-screen flex items-center justify-center bg-[var(--bg-primary)] px-4 py-8 relative overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 bg-dots" />
 
@@ -93,15 +93,15 @@ export default function AccessGate() {
             <div className="icon-circle icon-circle-lg icon-circle-accent mx-auto mb-6">
               <Sparkles className="w-7 h-7" />
             </div>
-            <h1 className="font-bambi text-lg sm:text-2xl text-white mb-2 whitespace-nowrap">JESUS JUNIOR ACADEMY</h1>
-            <p className="text-white/40 text-sm tracking-wide">Digital Campus Access</p>
+            <h1 className="font-bambi text-lg sm:text-2xl text-[var(--text-primary)] mb-2 whitespace-nowrap">JESUS JUNIOR ACADEMY</h1>
+            <p className="text-[var(--text-secondary)] text-sm tracking-wide">Digital Campus Access</p>
           </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Phone Input */}
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] mb-2">
                 Phone Number
               </label>
               <div className="relative">
@@ -115,7 +115,7 @@ export default function AccessGate() {
                   pattern="[0-9]{10}"
                   required
                 />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-white/30">
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-[var(--text-secondary)]">
                   {phone.length}/10
                 </span>
               </div>
@@ -123,7 +123,7 @@ export default function AccessGate() {
 
             {/* Password Input */}
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] mb-2">
                 Password
               </label>
               <div className="relative">
@@ -138,7 +138,7 @@ export default function AccessGate() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -181,18 +181,18 @@ export default function AccessGate() {
           <div className="mt-6 text-center">
             <Link
               href="/forgot-password"
-              className="text-sm text-white/40 hover:text-white transition-colors"
+              className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
             >
               Forgot your password?
             </Link>
           </div>
 
           {/* Registration Link */}
-          <div className="mt-8 pt-8 border-t border-white/10 text-center">
-            <p className="text-sm text-white/30 mb-3">New to the academy?</p>
+          <div className="mt-8 pt-8 border-t border-[var(--glass-border)] text-center">
+            <p className="text-sm text-[var(--text-secondary)] mb-3">New to the academy?</p>
             <Link
               href="/register"
-              className="inline-flex items-center gap-2 text-[#6691E5] hover:text-white font-semibold transition-colors group"
+              className="inline-flex items-center gap-2 text-[var(--accent-blue)] hover:text-[var(--text-primary)] font-semibold transition-colors group"
             >
               Request Access
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -201,7 +201,7 @@ export default function AccessGate() {
         </div>
 
         {/* Footer Note */}
-        <p className="text-center text-xs text-white/20 mt-6">
+        <p className="text-center text-xs text-[var(--text-secondary)] mt-6">
           Protected by Jesus Junior Academy Administration
         </p>
       </motion.div>

@@ -39,7 +39,7 @@ export default function Footer() {
       <div className="section-divider-glow" />
 
       {/* Main Footer */}
-      <div className="bg-[#0A0A0A]">
+      <div className="bg-[var(--bg-primary)]">
         <motion.div
           style={{ opacity: contentOpacity, y: contentY }}
           className="max-w-6xl mx-auto px-6 py-16"
@@ -52,12 +52,12 @@ export default function Footer() {
               viewport={{ once: true }}
               transition={{ duration: 0.7 }}
             >
-              <h2 className="font-bambi text-2xl text-white mb-4">JESUS JUNIOR ACADEMY</h2>
-              <p className="text-[#F5D76E] text-sm font-medium mb-4 flex items-center gap-2">
+              <h2 className="font-bambi text-2xl text-[var(--text-primary)] mb-4">JESUS JUNIOR ACADEMY</h2>
+              <p className="text-[var(--accent-gold)] text-sm font-medium mb-4 flex items-center gap-2">
                 <Sparkles className="w-4 h-4" />
                 "THE TRUTH SHALL MAKE YOU FREE."
               </p>
-              <p className="text-white/40 text-sm leading-relaxed">
+              <p className="text-[var(--text-secondary)] text-sm leading-relaxed">
                 Providing quality education rooted in Christian values. Nurturing young minds to
                 become responsible citizens and future leaders.
               </p>
@@ -70,7 +70,7 @@ export default function Footer() {
               viewport={{ once: true }}
               transition={{ duration: 0.7, delay: 0.1 }}
             >
-              <h3 className="text-white font-bold text-lg mb-6">Quick Links</h3>
+              <h3 className="text-[var(--text-primary)] font-bold text-lg mb-6">Quick Links</h3>
               <ul className="space-y-3">
                 {quickLinks.map((link, index) => (
                   <motion.li
@@ -82,9 +82,9 @@ export default function Footer() {
                   >
                     <Link
                       href={link.href}
-                      className="flex items-center gap-2 text-white/40 hover:text-white transition-colors group text-sm"
+                      className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors group text-sm"
                     >
-                      <ArrowRight className="w-4 h-4 text-[#6691E5] group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight className="w-4 h-4 text-[var(--accent-blue)] group-hover:translate-x-1 transition-transform" />
                       {link.label}
                     </Link>
                   </motion.li>
@@ -99,13 +99,13 @@ export default function Footer() {
               viewport={{ once: true }}
               transition={{ duration: 0.7, delay: 0.2 }}
             >
-              <h3 className="text-white font-bold text-lg mb-6">Contact Us</h3>
+              <h3 className="text-[var(--text-primary)] font-bold text-lg mb-6">Contact Us</h3>
               <ul className="space-y-4">
                 <li className="flex items-start gap-3">
                   <div className="icon-circle icon-circle-sm icon-circle-accent flex-shrink-0">
                     <MapPin className="w-4 h-4" />
                   </div>
-                  <div className="text-sm text-white/40">
+                  <div className="text-sm text-[var(--text-secondary)]">
                     <p>Church House, Near SBI Bank</p>
                     <p>Rewari, Haryana, India</p>
                   </div>
@@ -115,7 +115,7 @@ export default function Footer() {
                     <div className="icon-circle icon-circle-sm icon-circle-gold flex-shrink-0">
                       <Phone className="w-4 h-4" />
                     </div>
-                    <span className="text-sm text-white/40 group-hover:text-white transition-colors">
+                    <span className="text-sm text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors">
                       +91-8059589595
                     </span>
                   </a>
@@ -125,7 +125,7 @@ export default function Footer() {
                     <div className="icon-circle icon-circle-sm icon-circle-accent flex-shrink-0">
                       <Mail className="w-4 h-4" />
                     </div>
-                    <span className="text-sm text-white/40 group-hover:text-white transition-colors">
+                    <span className="text-sm text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors">
                       info@jesusja.com
                     </span>
                   </a>
@@ -146,26 +146,26 @@ export default function Footer() {
           <motion.div
             animate={{ y: [0, -8, 0] }}
             transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-            className="flex flex-col items-center gap-2 text-white/20"
+            className="flex flex-col items-center gap-2 text-[var(--text-muted)]"
           >
             <ArrowUp className="w-4 h-4" />
             <span className="text-[10px] uppercase tracking-[0.3em]">Keep scrolling</span>
           </motion.div>
-          <div className="w-[1px] h-8 bg-gradient-to-b from-white/20 to-transparent mt-2" />
+          <div className="w-[1px] h-8 bg-gradient-to-b from-[var(--text-primary)]/20 to-transparent mt-2" />
         </motion.div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-white/5">
+        <div className="border-t border-[var(--glass-border)]">
           <div className="max-w-6xl mx-auto px-6 py-6">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              <p className="text-sm text-white/30">
+              <p className="text-sm text-[var(--text-secondary)]">
                 &copy; {currentYear} Jesus Junior Academy. All Rights Reserved.
               </p>
-              <div className="flex gap-6 text-sm text-white/30">
-                <Link href="/privacy-policy" className="hover:text-white transition-colors">
+              <div className="flex gap-6 text-sm text-[var(--text-secondary)]">
+                <Link href="/privacy-policy" className="hover:text-[var(--text-primary)] transition-colors">
                   Privacy Policy
                 </Link>
-                <Link href="/terms" className="hover:text-white transition-colors">
+                <Link href="/terms" className="hover:text-[var(--text-primary)] transition-colors">
                   Terms of Service
                 </Link>
               </div>

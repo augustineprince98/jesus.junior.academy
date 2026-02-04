@@ -232,8 +232,17 @@ export default function Scene3D() {
         <div className="absolute inset-0 z-0 pointer-events-none">
             <Canvas
                 camera={{ position: [0, 0, 8], fov: 60 }}
-                dpr={[1, 1.5]} // Limit pixel ratio for performance
-                gl={{ antialias: true, alpha: true }}
+                dpr={[1, 1.5]}
+                gl={{
+                    antialias: true,
+                    alpha: true,
+                    powerPreference: 'high-performance',
+                    failIfMajorPerformanceCaveat: false,
+                    stencil: false,
+                    depth: true,
+                }}
+                frameloop="always"
+                performance={{ min: 0.5 }}
                 style={{ background: 'transparent' }}
             >
                 <Suspense fallback={null}>

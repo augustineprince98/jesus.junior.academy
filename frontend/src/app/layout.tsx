@@ -3,6 +3,8 @@ import { Nunito } from 'next/font/google';
 import './globals.css';
 import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
+import ThemeToggle from '@/components/ThemeToggle';
+import Script from 'next/script';
 
 // Main UI font - Nunito (used everywhere except school name)
 const nunito = Nunito({
@@ -51,10 +53,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={nunito.variable}>
+    <html lang="en" className={nunito.variable} suppressHydrationWarning>
       <body className={nunito.className}>
+        {/* Anti-FOUC script to set theme before paint */}
+        <Script id="theme-script" strategy="beforeInteractive">
+          {`
+            (function() {
+              try {
+                var localTheme = localStorage.getItem('theme');
+                var systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                var theme = localTheme || systemTheme;
+                document.documentElement.setAttribute('data-theme', theme);
+              } catch (e) {}
+            })();
+          `}
+        </Script>
         <ServiceWorkerRegistration />
         {children}
+        <ThemeToggle />
         <PWAInstallPrompt />
       </body>
     </html>
