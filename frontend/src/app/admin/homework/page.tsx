@@ -21,6 +21,7 @@ import {
   Clock,
   CheckCircle,
 } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/runtime-config';
 
 interface SchoolClass {
   id: number;
@@ -44,8 +45,6 @@ interface Homework {
   due_date: string;
   is_published: boolean;
 }
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://jja-backend.onrender.com';
 
 export default function HomeworkPage() {
   const router = useRouter();
@@ -90,7 +89,7 @@ export default function HomeworkPage() {
       setLoading(true);
 
       // Get current academic year
-      const yearRes = await fetch(`${API_BASE}/academic-years/current`, {
+      const yearRes = await fetch(`${API_BASE_URL}/academic-years/current`, {
         headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       });
@@ -100,7 +99,7 @@ export default function HomeworkPage() {
       }
 
       // Get classes
-      const classesRes = await fetch(`${API_BASE}/enrollment/classes`, {
+      const classesRes = await fetch(`${API_BASE_URL}/enrollment/classes`, {
         headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       });
@@ -110,7 +109,7 @@ export default function HomeworkPage() {
       }
 
       // Get subjects
-      const subjectsRes = await fetch(`${API_BASE}/subjects/`, {
+      const subjectsRes = await fetch(`${API_BASE_URL}/subjects/`, {
         headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       });
@@ -132,7 +131,7 @@ export default function HomeworkPage() {
     try {
       setLoading(true);
       const response = await fetch(
-        `${API_BASE}/homework/class/${selectedClassId}/year/${academicYearId}`,
+        `${API_BASE_URL}/homework/class/${selectedClassId}/year/${academicYearId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
           credentials: 'include',
@@ -159,7 +158,7 @@ export default function HomeworkPage() {
 
       if (editingHomework) {
         // Update existing homework
-        const response = await fetch(`${API_BASE}/homework/${editingHomework.id}`, {
+        const response = await fetch(`${API_BASE_URL}/homework/${editingHomework.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -182,7 +181,7 @@ export default function HomeworkPage() {
         }
       } else {
         // Create new homework
-        const response = await fetch(`${API_BASE}/homework/create`, {
+        const response = await fetch(`${API_BASE_URL}/homework/create`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -220,7 +219,7 @@ export default function HomeworkPage() {
 
   const handlePublish = async (homeworkId: number) => {
     try {
-      const response = await fetch(`${API_BASE}/homework/${homeworkId}/publish`, {
+      const response = await fetch(`${API_BASE_URL}/homework/${homeworkId}/publish`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -247,7 +246,7 @@ export default function HomeworkPage() {
     if (!confirm('Are you sure you want to delete this homework?')) return;
 
     try {
-      const response = await fetch(`${API_BASE}/homework/${homeworkId}`, {
+      const response = await fetch(`${API_BASE_URL}/homework/${homeworkId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',

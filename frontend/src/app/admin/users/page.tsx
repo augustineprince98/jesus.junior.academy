@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useStore';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { adminApi, enrollmentApi } from '@/lib/api';
+import { API_BASE_URL } from '@/lib/runtime-config';
 import {
   Users,
   UserPlus,
@@ -89,7 +90,7 @@ export default function UsersPage() {
     }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://jja-backend.onrender.com'}/users/${userId}/permanent`, {
+      const response = await fetch(`${API_BASE_URL}/users/${userId}/permanent`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',

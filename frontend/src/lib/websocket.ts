@@ -5,6 +5,8 @@
  * event handling, and type-safe message handling.
  */
 
+import { WS_URL } from '@/lib/runtime-config';
+
 type MessageHandler = (data: any) => void;
 
 interface WebSocketMessage {
@@ -25,10 +27,7 @@ class WebSocketClient {
   private isConnecting = false;
 
   constructor() {
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-    const wsProtocol = apiBase.startsWith('https') ? 'wss' : 'ws';
-    const wsHost = apiBase.replace(/^https?:\/\//, '');
-    this.url = `${wsProtocol}://${wsHost}/ws`;
+    this.url = WS_URL;
   }
 
   /**

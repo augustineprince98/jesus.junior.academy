@@ -17,6 +17,7 @@ import {
   Search,
   Filter,
 } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/runtime-config';
 
 interface Teacher {
   id: number;
@@ -38,8 +39,6 @@ interface User {
   is_active: boolean;
   teacher_id?: number;
 }
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://jja-backend.onrender.com';
 
 export default function TeachersPage() {
   const router = useRouter();
@@ -72,12 +71,12 @@ export default function TeachersPage() {
     try {
       setLoading(true);
       // Get all users with TEACHER or CLASS_TEACHER role
-      const response = await fetch(`${API_BASE}/users/?role=TEACHER`, {
+      const response = await fetch(`${API_BASE_URL}/users/?role=TEACHER`, {
         headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       });
 
-      const classTeacherResponse = await fetch(`${API_BASE}/users/?role=CLASS_TEACHER`, {
+      const classTeacherResponse = await fetch(`${API_BASE_URL}/users/?role=CLASS_TEACHER`, {
         headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       });
@@ -119,7 +118,7 @@ export default function TeachersPage() {
       setAddingTeacher(true);
       setError('');
 
-      const response = await fetch(`${API_BASE}/users/create`, {
+      const response = await fetch(`${API_BASE_URL}/users/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

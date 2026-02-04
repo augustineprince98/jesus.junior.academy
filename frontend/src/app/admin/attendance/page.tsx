@@ -14,6 +14,7 @@ import {
   Search,
   Save,
 } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/runtime-config';
 
 interface SchoolClass {
   id: number;
@@ -31,8 +32,6 @@ interface AttendanceRecord {
   student_id: number;
   is_present: boolean;
 }
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://jja-backend.onrender.com';
 
 export default function AttendancePage() {
   const router = useRouter();
@@ -66,7 +65,7 @@ export default function AttendancePage() {
 
   const loadCurrentAcademicYear = async () => {
     try {
-      const response = await fetch(`${API_BASE}/academic-years/current`, {
+      const response = await fetch(`${API_BASE_URL}/academic-years/current`, {
         headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       });
@@ -82,7 +81,7 @@ export default function AttendancePage() {
   const loadClasses = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE}/enrollment/classes`, {
+      const response = await fetch(`${API_BASE_URL}/enrollment/classes`, {
         headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       });
@@ -100,7 +99,7 @@ export default function AttendancePage() {
   const loadStudents = async (classId: number) => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE}/enrollment/class/${classId}/students`, {
+      const response = await fetch(`${API_BASE_URL}/enrollment/class/${classId}/students`, {
         headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       });
@@ -168,7 +167,7 @@ export default function AttendancePage() {
         is_present: attendance[s.id] ?? true,
       }));
 
-      const response = await fetch(`${API_BASE}/attendance/mark-bulk`, {
+      const response = await fetch(`${API_BASE_URL}/attendance/mark-bulk`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

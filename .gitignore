@@ -55,6 +55,9 @@ tmp/
 temp/
 *.tmp
 tmpclaude-*
+debug.json
+debug_new.json
+analyze_har.py
 
 # Coverage
 coverage/

@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useStore';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { eventsApi } from '@/lib/api';
+import { API_BASE_URL } from '@/lib/runtime-config';
 import {
   Plus,
   Edit,
@@ -109,7 +110,7 @@ export default function EventsPage() {
         formData.append('category', 'events');
 
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/uploads/image`,
+          `${API_BASE_URL}/uploads/image`,
           {
             method: 'POST',
             headers: {
@@ -475,7 +476,7 @@ export default function EventsPage() {
                       {uploadedImages.map((img, idx) => (
                         <div key={idx} className="relative group">
                           <img
-                            src={`${process.env.NEXT_PUBLIC_API_URL}${img}`}
+                            src={`${API_BASE_URL}${img}`}
                             alt={`Upload ${idx + 1}`}
                             className="w-24 h-24 object-cover rounded-lg border border-gray-200"
                           />

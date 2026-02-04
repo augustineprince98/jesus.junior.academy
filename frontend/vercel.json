@@ -3,6 +3,7 @@
   "outputDirectory": ".next",
   "framework": "nextjs",
   "env": {
-    "NEXT_PUBLIC_API_URL": "https://jja-backend.onrender.com"
+    "NEXT_PUBLIC_API_URL": "https://jesus-junior-academy.onrender.com",
+    "NEXT_PUBLIC_WS_URL": "wss://jesus-junior-academy.onrender.com/ws"
   }
 }

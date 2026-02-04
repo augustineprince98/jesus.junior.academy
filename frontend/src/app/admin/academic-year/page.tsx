@@ -14,6 +14,7 @@ import {
   X,
   Save,
 } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/runtime-config';
 
 interface AcademicYear {
   id: number;
@@ -24,8 +25,6 @@ interface AcademicYear {
   classes_count: number;
   enrollments_count: number;
 }
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://jja-backend.onrender.com';
 
 function formatDate(dateStr: string): string {
   if (!dateStr) return '';
@@ -63,7 +62,7 @@ export default function AcademicYearPage() {
     try {
       setLoading(true);
       setError('');
-      const response = await fetch(`${API_BASE}/academic-years/`, {
+      const response = await fetch(`${API_BASE_URL}/academic-years/`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -144,8 +143,8 @@ export default function AcademicYearPage() {
       setError('');
 
       const url = editingYear
-        ? `${API_BASE}/academic-years/${editingYear.id}`
-        : `${API_BASE}/academic-years/`;
+        ? `${API_BASE_URL}/academic-years/${editingYear.id}`
+        : `${API_BASE_URL}/academic-years/`;
 
       const response = await fetch(url, {
         method: editingYear ? 'PUT' : 'POST',
@@ -175,7 +174,7 @@ export default function AcademicYearPage() {
   const handleSetActive = async (yearId: number) => {
     try {
       setError('');
-      const response = await fetch(`${API_BASE}/academic-years/${yearId}/set-active`, {
+      const response = await fetch(`${API_BASE_URL}/academic-years/${yearId}/set-active`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -200,7 +199,7 @@ export default function AcademicYearPage() {
 
     try {
       setError('');
-      const response = await fetch(`${API_BASE}/academic-years/${yearId}`, {
+      const response = await fetch(`${API_BASE_URL}/academic-years/${yearId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,

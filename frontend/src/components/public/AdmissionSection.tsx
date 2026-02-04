@@ -10,6 +10,7 @@
 import { Send, Phone, Mail, MapPin, CheckCircle, GraduationCap, Loader2, Users, Sparkles } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
+import { API_BASE_URL } from '@/lib/runtime-config';
 
 export default function AdmissionSection() {
   const [formData, setFormData] = useState({
@@ -45,7 +46,7 @@ export default function AdmissionSection() {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'https://jja-backend.onrender.com'}/admissions/enquiry`,
+        `${API_BASE_URL}/admissions/enquiry`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

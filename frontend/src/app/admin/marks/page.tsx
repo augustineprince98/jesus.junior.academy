@@ -14,6 +14,7 @@ import {
   CheckCircle,
   X,
 } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/runtime-config';
 
 interface SchoolClass {
   id: number;
@@ -42,8 +43,6 @@ interface MarkEntry {
   student_id: number;
   marks: number | null;
 }
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://jja-backend.onrender.com';
 
 export default function MarksPage() {
   const router = useRouter();
@@ -83,7 +82,7 @@ export default function MarksPage() {
       setLoading(true);
 
       // Get current academic year
-      const yearRes = await fetch(`${API_BASE}/academic-years/current`, {
+      const yearRes = await fetch(`${API_BASE_URL}/academic-years/current`, {
         headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       });
@@ -93,7 +92,7 @@ export default function MarksPage() {
       }
 
       // Get classes
-      const classesRes = await fetch(`${API_BASE}/enrollment/classes`, {
+      const classesRes = await fetch(`${API_BASE_URL}/enrollment/classes`, {
         headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       });
@@ -103,7 +102,7 @@ export default function MarksPage() {
       }
 
       // Get subjects
-      const subjectsRes = await fetch(`${API_BASE}/subjects/`, {
+      const subjectsRes = await fetch(`${API_BASE_URL}/subjects/`, {
         headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       });
@@ -127,7 +126,7 @@ export default function MarksPage() {
 
       // Get students
       const studentsRes = await fetch(
-        `${API_BASE}/enrollment/class/${selectedClassId}/students?academic_year_id=${academicYearId}`,
+        `${API_BASE_URL}/enrollment/class/${selectedClassId}/students?academic_year_id=${academicYearId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
           credentials: 'include',
@@ -146,7 +145,7 @@ export default function MarksPage() {
 
       // Get exams for the class
       const examsRes = await fetch(
-        `${API_BASE}/admin/classes/${selectedClassId}/exams?academic_year_id=${academicYearId}`,
+        `${API_BASE_URL}/admin/classes/${selectedClassId}/exams?academic_year_id=${academicYearId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
           credentials: 'include',
@@ -188,7 +187,7 @@ export default function MarksPage() {
         if (marksValue === null || marksValue === undefined) continue;
 
         try {
-          const response = await fetch(`${API_BASE}/marks/enter`, {
+          const response = await fetch(`${API_BASE_URL}/marks/enter`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

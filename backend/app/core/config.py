@@ -1,6 +1,7 @@
 from pydantic_settings import BaseSettings
 import os
 import logging
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +15,8 @@ class Settings(BaseSettings):
     APP_ENV: str = "development"  # development, staging, production
 
     class Config:
-        env_file = ".env"
+        # Resolve to backend/.env regardless of current working directory.
+        env_file = str(Path(__file__).resolve().parents[2] / ".env")
         extra = "ignore"  # Changed from "forbid" to allow extra env vars
 
     def __init__(self, **kwargs):

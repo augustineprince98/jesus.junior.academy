@@ -1,8 +1,7 @@
 import { useEffect, useCallback } from 'react';
 import { useAuthStore, useAcademicYearStore } from '@/store/useStore';
 import { Calendar, ChevronDown } from 'lucide-react';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://jja-backend.onrender.com';
+import { API_BASE_URL } from '@/lib/runtime-config';
 
 interface YearSelectorProps {
     /** If provided, uses controlled mode instead of global store */
@@ -25,7 +24,7 @@ export default function YearSelector({ selectedYearId: controlledYearId, onChang
         if (!token) return;
         try {
             store.setLoading(true);
-            const response = await fetch(`${API_BASE}/academic-years/`, {
+            const response = await fetch(`${API_BASE_URL}/academic-years/`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

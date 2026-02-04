@@ -4,7 +4,7 @@
  * Clean, type-safe API calls with automatic token management
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://jja-backend.onrender.com';
+import { API_BASE_URL } from '@/lib/runtime-config';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
@@ -29,7 +29,7 @@ async function request<T>(endpoint: string, options: ApiOptions = {}): Promise<T
   const { method = 'GET', body, token, params } = options;
 
   // Build URL with query params
-  const url = new URL(`${API_BASE}${endpoint}`);
+  const url = new URL(`${API_BASE_URL}${endpoint}`);
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined) {
@@ -671,7 +671,7 @@ export const uploadsApi = {
     formData.append('category', category);
     formData.append('prefix', prefix);
 
-    const response = await fetch(`${API_BASE}/uploads/image`, {
+    const response = await fetch(`${API_BASE_URL}/uploads/image`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -693,7 +693,7 @@ export const uploadsApi = {
     files.forEach(file => formData.append('files', file));
     formData.append('category', category);
 
-    const response = await fetch(`${API_BASE}/uploads/images/bulk`, {
+    const response = await fetch(`${API_BASE_URL}/uploads/images/bulk`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -717,7 +717,7 @@ export const uploadsApi = {
   },
 
   deleteFile: async (token: string, filePath: string) => {
-    const response = await fetch(`${API_BASE}/uploads/?file_path=${encodeURIComponent(filePath)}`, {
+    const response = await fetch(`${API_BASE_URL}/uploads/?file_path=${encodeURIComponent(filePath)}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,

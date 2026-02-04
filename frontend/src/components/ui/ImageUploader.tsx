@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   AlertCircle,
 } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/runtime-config';
 
 interface ImageUploaderProps {
   onUpload: (url: string) => void;
@@ -19,8 +20,6 @@ interface ImageUploaderProps {
   className?: string;
   aspectRatio?: 'square' | 'video' | 'wide';
 }
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export default function ImageUploader({
   onUpload,
@@ -78,7 +77,7 @@ export default function ImageUploader({
       formData.append('category', category);
       if (prefix) formData.append('prefix', prefix);
 
-      const response = await fetch(`${API_BASE}/uploads/image`, {
+      const response = await fetch(`${API_BASE_URL}/uploads/image`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -92,7 +91,7 @@ export default function ImageUploader({
       }
 
       const data = await response.json();
-      onUpload(`${API_BASE}${data.file_path}`);
+      onUpload(`${API_BASE_URL}${data.file_path}`);
     } catch (err: any) {
       setError(err.message || 'Upload failed');
       setPreview(currentImage || null);
