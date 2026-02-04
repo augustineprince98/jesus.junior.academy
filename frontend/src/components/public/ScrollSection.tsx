@@ -56,6 +56,13 @@ export default function ScrollSection({
   // Scale: starts at 0.95, grows to full size, shrinks slightly on exit
   // === Slider Transitions ===
 
+  // Scale: Subtle scale down as it gets covered to create depth
+  const scale = useTransform(smoothProgress, [0, 1], [1, 0.9]);
+
+  // Brightness/Filter: Darken as it recedes
+  const brightness = useTransform(smoothProgress, [0, 1], [1, 0.5]);
+  const filter = useTransform(brightness, (b) => `brightness(${b})`);
+
   // Y parallax - Current section moves slightly slower than scroll to create depth
   const y = useTransform(smoothProgress, [0, 1], [0, 50]);
 
@@ -87,14 +94,13 @@ export default function ScrollSection({
       }}
     >
 
-
       <motion.div
         style={{
-          // Removed scale/opacity/rotate for solid slider effect
-          // Only keep parallax if needed, or minimal transforms
-          y, // Keep slight parallax if desired, or remove for pure static stickiness
+          scale,
+          filter,
+          y,
         }}
-        className="sticky top-0 min-h-screen w-full flex flex-col overflow-hidden"
+        className="sticky top-0 min-h-screen w-full flex flex-col overflow-hidden shadow-2xl origin-center"
         data-section-index={index}
       >
         {/* Border removed for seamless look */}
