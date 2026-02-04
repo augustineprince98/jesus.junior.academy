@@ -495,7 +495,7 @@ export default function UsersPage() {
                 </button>
               </div>
 
-              <form onSubmit={handleAddUser} className="p-6 space-y-4">
+              <form onSubmit={handleAddUser} className="p-6 space-y-4" autoComplete="off">
                 {addError && (
                   <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
                     {addError}
@@ -513,6 +513,7 @@ export default function UsersPage() {
                     onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                     placeholder="Enter full name"
+                    autoComplete="off"
                     required
                   />
                 </div>
@@ -528,6 +529,7 @@ export default function UsersPage() {
                     onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                     placeholder="Enter phone number"
+                    autoComplete="off"
                     required
                   />
                 </div>
@@ -538,11 +540,13 @@ export default function UsersPage() {
                     Email (Optional)
                   </label>
                   <input
-                    type="email"
+                    type="text"
+                    inputMode="email"
                     value={newUser.email}
                     onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                     placeholder="Enter email address"
+                    autoComplete="off"
                   />
                 </div>
 
@@ -557,6 +561,7 @@ export default function UsersPage() {
                     onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                     placeholder="Enter password (min 6 characters)"
+                    autoComplete="new-password"
                     minLength={6}
                     required
                   />
