@@ -109,7 +109,7 @@ export default function AchieversPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-gray-50 text-gray-900">
       <Navbar />
 
       {/* Hero Banner */}

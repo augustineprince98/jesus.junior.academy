@@ -60,7 +60,7 @@ export default function AdminLayout({ children, activeSection }: AdminLayoutProp
 
   if (isLoading || !isAuthenticated || user?.role !== 'ADMIN') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 text-gray-900 flex items-center justify-center">
         <div className="loading-spinner w-12 h-12" />
       </div>
     );
@@ -92,7 +92,7 @@ export default function AdminLayout({ children, activeSection }: AdminLayoutProp
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-nunito">
+    <div className="min-h-screen bg-gray-50 text-gray-900 font-nunito">
       {/* Sidebar */}
       <aside
         className={`fixed top-0 left-0 h-full bg-gradient-to-b from-slate-900 to-slate-800 text-white transition-all duration-300 z-50 flex flex-col ${sidebarOpen ? 'w-72' : 'w-20'

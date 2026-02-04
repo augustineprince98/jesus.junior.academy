@@ -319,8 +319,10 @@ input:-webkit-autofill:active {
 }
 
 /* Ensure text is visible in all contexts */
-input {
-  color: var(--text-primary);
+input,
+select,
+textarea {
+  color: inherit;
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
