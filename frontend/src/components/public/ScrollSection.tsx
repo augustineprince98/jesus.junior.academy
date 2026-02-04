@@ -54,69 +54,10 @@ export default function ScrollSection({
   // === Card Stacking Transforms (Optimized for no gaps) ===
 
   // Scale: starts at 0.95, grows to full size, shrinks slightly on exit
-  const scale = useTransform(
-    smoothProgress,
-    [0, 0.2, 0.4, 0.6, 1],
-    [0.92, 0.98, 1, 1, 0.96]
-  );
+  // === Slider Transitions ===
 
-  // Opacity: Start more visible to avoid blank gaps
-  const opacity = useTransform(
-    smoothProgress,
-    [0, 0.1, 0.3, 0.7, 0.9, 1],
-    [0.6, 0.85, 1, 1, 0.9, 0.4]
-  );
-
-  // Y translation - reduced range to prevent gaps
-  const y = useTransform(
-    smoothProgress,
-    [0, 0.2, 0.4, 0.6, 1],
-    [60, 15, 0, 0, -30]
-  );
-
-  // Blur during transition - reduced intensity
-  const blurValue = useTransform(
-    smoothProgress,
-    [0, 0.15, 0.3, 0.7, 0.85, 1],
-    [4, 1, 0, 0, 1, 3]
-  );
-  const filterBlur = useTransform(blurValue, (v) => `blur(${v}px)`);
-
-  // Rotation for 3D card tilt effect - subtle
-  const rotateX = useTransform(
-    smoothProgress,
-    [0, 0.2, 0.5, 0.8, 1],
-    [2, 0.5, 0, -0.5, -1]
-  );
-
-  // Shadow intensity (increases as section comes into view)
-  const shadowOpacity = useTransform(
-    smoothProgress,
-    [0, 0.3, 0.5, 0.7, 1],
-    [0.2, 0.4, 0.5, 0.4, 0.2]
-  );
-
-  // Border glow intensity
-  const borderOpacity = useTransform(
-    smoothProgress,
-    [0, 0.3, 0.5, 0.7, 1],
-    [0.1, 0.2, 0.25, 0.2, 0.1]
-  );
-
-  // Chromatic aberration overlay opacity - reduced
-  const chromaticOpacity = useTransform(
-    smoothProgress,
-    [0, 0.1, 0.2, 0.8, 0.9, 1],
-    [0.3, 0.15, 0, 0, 0.15, 0.3]
-  );
-
-  // Scan line opacity & position
-  const scanOpacity = useTransform(
-    smoothProgress,
-    [0, 0.15, 0.25, 0.75, 0.85, 1],
-    [0.3, 0.15, 0, 0, 0.15, 0.3]
-  );
-  const scanY = useTransform(smoothProgress, [0, 1], ['-50%', '150%']);
+  // Y parallax - Current section moves slightly slower than scroll to create depth
+  const y = useTransform(smoothProgress, [0, 1], [0, 50]);
 
   // Edge sections (hero/footer) - minimal transforms but with proper background
   if (isEdge) {
@@ -145,55 +86,25 @@ export default function ScrollSection({
         minHeight: '100vh',
       }}
     >
-      {/* Shadow beneath card */}
-      < motion.div
-        style={{ opacity: shadowOpacity }}
-        className="absolute inset-x-0 -top-6 h-12 bg-gradient-to-b from-black/60 to-transparent blur-xl pointer-events-none"
-      />
+
 
       <motion.div
         style={{
-          scale,
-          opacity,
-          y,
-          rotateX,
-          filter: filterBlur,
-          transformPerspective: 1500,
-          transformOrigin: 'center top',
+          // Removed scale/opacity/rotate for solid slider effect
+          // Only keep parallax if needed, or minimal transforms
+          y, // Keep slight parallax if desired, or remove for pure static stickiness
         }}
-        className="sticky top-0 min-h-screen w-full flex flex-col overflow-hidden rounded-t-[2rem]"
+        className="sticky top-0 min-h-screen w-full flex flex-col overflow-hidden"
         data-section-index={index}
       >
-        {/* Glowing border */}
-        <motion.div
-          style={{ opacity: borderOpacity }}
-          className="absolute inset-0 rounded-t-[2rem] pointer-events-none z-10"
-        >
-          <div className="absolute inset-0 rounded-t-[2rem] border-t-2 border-x border-[var(--glass-border)]" />
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--glass-highlight)] to-transparent" />
-        </motion.div>
+        {/* Border removed for seamless look */}
 
         <div
           className="min-h-screen flex flex-col justify-center relative"
           style={{ background: bgColor }}
         >
-          {/* Chromatic aberration overlay - appears during transitions */}
-          <motion.div
-            style={{ opacity: chromaticOpacity }}
-            className="absolute inset-0 pointer-events-none z-50 chromatic-aberration-overlay"
-          />
-
-          {/* Scan line effect during scroll */}
-          <motion.div
-            style={{ opacity: scanOpacity, y: scanY }}
-            className="absolute inset-0 pointer-events-none z-50"
-            aria-hidden
-          >
-            <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-[var(--accent-blue)]/50 to-transparent shadow-[0_0_20px_var(--accent-blue-glow)]" />
-          </motion.div>
-
-          {/* Inner glow at top */}
-          <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-[var(--text-primary)]/[0.02] to-transparent pointer-events-none" />
+          {/* Inner glow at top for depth separation */}
+          <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-black/5 to-transparent pointer-events-none" />
 
           {children}
         </div>
