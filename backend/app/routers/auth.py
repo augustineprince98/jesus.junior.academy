@@ -80,7 +80,8 @@ async def login(
     For web apps: Use the cookies (automatic with credentials: 'include')
     For mobile/API: Use the access_token from the response body
     """
-    user = db.query(User).filter(User.phone == payload.phone).first()
+    phone = payload.phone.strip()
+    user = db.query(User).filter(User.phone == phone).first()
 
     if not user or not verify_password(
         payload.password, user.password_hash

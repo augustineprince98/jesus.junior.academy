@@ -230,8 +230,8 @@ export default function UsersPage() {
       setAddingUser(true);
       setAddError('');
       await adminApi.createUser(token!, {
-        name: newUser.name,
-        phone: newUser.phone,
+        name: newUser.name.trim(),
+        phone: newUser.phone.trim(),
         password: newUser.password,
         role: newUser.role,
         email: newUser.email || undefined,
@@ -684,8 +684,8 @@ export default function UsersPage() {
                       <label
                         key={cls.id}
                         className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${selectedTeacherClassIds.includes(cls.id)
-                            ? 'bg-indigo-50 border border-indigo-200'
-                            : 'hover:bg-gray-50'
+                          ? 'bg-indigo-50 border border-indigo-200'
+                          : 'hover:bg-gray-50'
                           }`}
                       >
                         <input
