@@ -47,9 +47,9 @@ function BreathingCenterpiece({ scrollYProgress }: { scrollYProgress: any }) {
           <svg viewBox="0 0 200 200" className="w-full h-full">
             <defs>
               <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#222" />
-                <stop offset="50%" stopColor="#111" />
-                <stop offset="100%" stopColor="#000" />
+                <stop offset="0%" stopColor="var(--bg-tertiary)" />
+                <stop offset="50%" stopColor="var(--bg-secondary)" />
+                <stop offset="100%" stopColor="var(--bg-primary)" />
               </linearGradient>
               <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="var(--accent-blue)" />

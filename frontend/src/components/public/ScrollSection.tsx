@@ -140,13 +140,13 @@ export default function ScrollSection({
       ref={sectionRef}
       className="relative"
       style={{
-        zIndex: totalSections - index + 10,
-        marginTop: index === 1 ? '-2rem' : '-4rem', // Overlap sections
+        zIndex: 1,
         scrollSnapAlign: 'start',
+        minHeight: '100vh',
       }}
     >
       {/* Shadow beneath card */}
-      <motion.div
+      < motion.div
         style={{ opacity: shadowOpacity }}
         className="absolute inset-x-0 -top-6 h-12 bg-gradient-to-b from-black/60 to-transparent blur-xl pointer-events-none"
       />
@@ -198,6 +198,6 @@ export default function ScrollSection({
           {children}
         </div>
       </motion.div>
-    </div>
+    </div >
   );
 }

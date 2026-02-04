@@ -65,16 +65,16 @@
 }
 
 [data-theme="light"] {
-  /* Core light palette */
-  --bg-primary: #F8F9FC;
-  --bg-secondary: #FFFFFF;
-  --bg-tertiary: #F0F2F7;
-  --bg-elevated: #E4E7ED;
+  /* Core light palette - Turbulent.ca High Contrast */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F4F4F4;
+  --bg-tertiary: #EAEAEA;
+  --bg-elevated: #Dcdcdc;
 
   /* Text colors */
-  --text-primary: #1A1A2E;
-  --text-secondary: #5A5A7A;
-  --text-muted: #8A8AA0;
+  --text-primary: #000000;
+  --text-secondary: #333333;
+  --text-muted: #666666;
 
   /* Accent colors */
   --accent-blue: #4A78CC;
