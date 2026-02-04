@@ -120,6 +120,9 @@ export const authApi = {
       method: 'POST',
       body: { phone, otp, new_password: newPassword },
     }),
+
+  getMe: (token: string) =>
+    request<LoginUser>('/auth/me', { token }),
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

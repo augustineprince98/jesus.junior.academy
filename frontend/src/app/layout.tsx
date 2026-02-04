@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Nunito } from 'next/font/google';
 import './globals.css';
 import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration';
+import SessionValidator from '@/components/SessionValidator';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 import ThemeToggle from '@/components/ThemeToggle';
 import Script from 'next/script';
@@ -69,6 +70,7 @@ export default function RootLayout({
           `}
         </Script>
         <ServiceWorkerRegistration />
+        <SessionValidator />
         {children}
         <ThemeToggle />
         <PWAInstallPrompt />
