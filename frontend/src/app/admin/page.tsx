@@ -63,13 +63,18 @@ export default function AdminDashboard() {
 
   const loadStats = async () => {
     try {
-      if (!token) return;
+      if (!token) {
+        console.warn('Dashboard: No token available');
+        return;
+      }
 
+      console.log('Dashboard: Fetching stats...');
       const result = await usersApi.getDashboardStats(token);
+      console.log('Dashboard: Stats received:', result);
       setStats(result);
-    } catch (error) {
-      console.error('Failed to load stats:', error);
-      // Keep default values on error
+    } catch (error: unknown) {
+      console.error('Failed to load dashboard stats:', error);
+      // If it's an auth error, the user will be redirected by the API handler
     } finally {
       setLoading(false);
     }
