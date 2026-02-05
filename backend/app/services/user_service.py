@@ -290,6 +290,8 @@ def deactivate_user(db: Session, user_id: int) -> User:
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
+    # Increment token_version to invalidate all existing tokens
+    user.token_version = (user.token_version or 0) + 1
     user.is_active = False
     db.commit()
     db.refresh(user)

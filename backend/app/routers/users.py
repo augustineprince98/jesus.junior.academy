@@ -186,6 +186,9 @@ def update_user(
         else:
             user.email = None
     if payload.is_active is not None:
+        # If deactivating user, increment token_version to invalidate tokens immediately
+        if payload.is_active is False and user.is_active is True:
+            user.token_version = (user.token_version or 0) + 1
         user.is_active = payload.is_active
     
     db.commit()

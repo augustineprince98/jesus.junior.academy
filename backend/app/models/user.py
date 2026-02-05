@@ -48,6 +48,9 @@ class User(Base):
     rejection_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
+    # Token invalidation - increment to invalidate all existing tokens
+    token_version: Mapped[int] = mapped_column(default=0)
+
     # Role-specific entity links (multiple can be set for role switching)
     student_id: Mapped[int | None] = mapped_column(
         ForeignKey("students.id"), nullable=True

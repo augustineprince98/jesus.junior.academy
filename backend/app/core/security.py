@@ -33,18 +33,19 @@ COOKIE_HTTPONLY = True  # Prevents JavaScript access
 COOKIE_SAMESITE = "lax"  # CSRF protection
 
 
-def create_access_token(data: dict, expires_minutes: int = ACCESS_TOKEN_EXPIRE_MINUTES):
+def create_access_token(data: dict, expires_minutes: int = ACCESS_TOKEN_EXPIRE_MINUTES, token_version: int = 0):
     """Create a short-lived access token."""
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(minutes=expires_minutes)
     to_encode.update({
         "exp": expire,
-        "type": "access"
+        "type": "access",
+        "tv": token_version,  # Token version for invalidation
     })
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
-def create_refresh_token(data: dict, expires_days: int = REFRESH_TOKEN_EXPIRE_DAYS):
+def create_refresh_token(data: dict, expires_days: int = REFRESH_TOKEN_EXPIRE_DAYS, token_version: int = 0):
     """Create a long-lived refresh token."""
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(days=expires_days)
@@ -52,7 +53,8 @@ def create_refresh_token(data: dict, expires_days: int = REFRESH_TOKEN_EXPIRE_DA
     to_encode.update({
         "exp": expire,
         "type": "refresh",
-        "jti": secrets.token_urlsafe(16)  # Unique token ID
+        "jti": secrets.token_urlsafe(16),  # Unique token ID
+        "tv": token_version,  # Token version for invalidation
     })
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 

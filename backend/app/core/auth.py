@@ -90,7 +90,12 @@ def get_current_user(
     if not user:
         raise _unauthorized()
 
-    # 5️⃣ Ensure user is active
+    # 5️⃣ Validate token version (enables token invalidation on password change/deletion)
+    token_version = payload.get("tv", 0)
+    if token_version != user.token_version:
+        raise _unauthorized()  # Token was invalidated
+
+    # 6️⃣ Ensure user is active
     if not user.is_active:
         raise _unauthorized()
 

@@ -113,8 +113,8 @@ async def login(
 
     # Create tokens
     token_data = {"sub": str(user.id)}
-    access_token = create_access_token(token_data)
-    refresh_token = create_refresh_token(token_data)
+    access_token = create_access_token(token_data, token_version=user.token_version)
+    refresh_token = create_refresh_token(token_data, token_version=user.token_version)
 
     # Set httpOnly cookies
     set_auth_cookies(response, access_token, refresh_token)
@@ -199,10 +199,19 @@ async def refresh_token(
             detail="User not found or inactive",
         )
 
-    # Create new tokens
+    # Validate token version - reject if token was invalidated
+    token_version = payload.get("tv", 0)
+    if token_version != user.token_version:
+        clear_auth_cookies(response)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has been invalidated. Please login again.",
+        )
+
+    # Create new tokens with current token_version
     token_data = {"sub": str(user.id)}
-    new_access_token = create_access_token(token_data)
-    new_refresh_token = create_refresh_token(token_data)
+    new_access_token = create_access_token(token_data, token_version=user.token_version)
+    new_refresh_token = create_refresh_token(token_data, token_version=user.token_version)
 
     # Set new cookies
     set_auth_cookies(response, new_access_token, new_refresh_token)
@@ -284,8 +293,8 @@ async def switch_role(
 
     # Generate new tokens with updated role info
     token_data = {"sub": str(user.id)}
-    access_token = create_access_token(token_data)
-    refresh_token = create_refresh_token(token_data)
+    access_token = create_access_token(token_data, token_version=user.token_version)
+    refresh_token = create_refresh_token(token_data, token_version=user.token_version)
 
     # Set new cookies
     set_auth_cookies(response, access_token, refresh_token)
@@ -438,6 +447,8 @@ def verify_password_reset(
 
     user = db.query(User).filter(User.phone == payload.phone).first()
     user.password_hash = hash_password(payload.new_password)
+    # Increment token_version to invalidate all existing tokens
+    user.token_version = (user.token_version or 0) + 1
 
     record.is_used = True
 
