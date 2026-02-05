@@ -326,6 +326,13 @@ input:-webkit-autofill:active {
   -webkit-text-fill-color: var(--text-primary) !important;
 }
 
+/* Hide placeholder when input is autofilled to prevent text overlap */
+.input:-webkit-autofill::placeholder,
+input:-webkit-autofill::placeholder {
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
 /* Ensure text is visible in all contexts */
 input,
 select,
